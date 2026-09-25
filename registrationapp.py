@@ -30,7 +30,6 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # Default admin credentials
 ADMIN_PASSWORD = "admin"
-ADMIN_SECRET_ROUTE = "zenith-secret-admin"
 
 # --- TELEGRAM CONFIGURATION ---
 TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
@@ -508,7 +507,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                                 </form>
                             {% else %}
                                 <span>{{ inv.status }}</span>
-                            {% html_placeholder="" %}
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -650,7 +649,6 @@ def track():
     if not investors_found and searched_number:
       flash("No investment record found for this phone number.")
 
-    # Check if redirected from a successful action
     action = request.args.get("action")
     amt = request.args.get("amt", "")
     if action == "topup":
@@ -757,10 +755,10 @@ def withdraw(index):
   return redirect(url_for("track"))
 
 
-# --- SECRET ADMIN ROUTES ---
+# --- ADMIN ROUTES (SECRET URL) ---
 
 
-@app.route(f"/{ADMIN_SECRET_ROUTE}", methods=["GET", "POST"])
+@app.route("/zenith-secret-admin", methods=["GET", "POST"])
 def admin_login():
   if request.method == "POST":
     password = request.form.get("password")
@@ -769,7 +767,7 @@ def admin_login():
       return redirect(url_for("admin_dashboard"))
     else:
       flash("Incorrect admin password.")
-      return redirect(url_for(f"admin_login"))
+      return redirect(url_for("admin_login"))
 
   return render_template_string(ADMIN_LOGIN_TEMPLATE)
 
@@ -809,10 +807,10 @@ def confirm_payment(index):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
 
-  investors = load_investors()
-  if 0 <= index < len(investors):
-    investors[index]["status"] = "Payment Confirmed & Active"
-    save_all_investors(investors)
+  visitors = load_investors()
+  if 0 <= index < len(visitors):
+    visitors[index]["status"] = "Payment Confirmed & Active"
+    save_all_investors(visitors)
   return redirect(url_for("admin_dashboard"))
 
 
@@ -841,4 +839,3 @@ def uploaded_file(filename):
 if __name__ == "__main__":
   port = int(os.environ.get("PORT", 5001))
   app.run(host="0.0.0.0", port=port)
-
