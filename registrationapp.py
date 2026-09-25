@@ -508,9 +508,55 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; }
-        .main-layout { max-width: 1100px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
-        .dashboard-container { flex: 2; background: #ffffff; padding: 35px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .sidebar-ticker { flex: 1; background: #0f172a; color: #34d399; padding: 20px; border-radius: 12px; position: sticky; top: 20px; max-height: 80vh; overflow-y: auto; border: 1px solid #334155; }
+        .main-layout { max-width: 1200px; margin: auto; display: flex; gap: 24px; align-items: flex-start; }
+        .dashboard-container { flex: 1.7; background: #ffffff; padding: 35px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        
+        /* ENLARGED & REDESIGNED LIVE WITHDRAWALS TICKER SIDEBAR */
+        .sidebar-ticker { 
+            flex: 1.3; 
+            background: linear-gradient(135deg, #06230f, #0d3b1e); 
+            color: #ffffff; 
+            padding: 25px; 
+            border-radius: 12px; 
+            position: sticky; 
+            top: 20px; 
+            max-height: 88vh; 
+            overflow-y: auto; 
+            border: 2px solid #00ff66; 
+            box-shadow: 0 10px 30px rgba(0,255,102,0.15);
+        }
+        .sidebar-ticker h3 {
+            color: #00ff66; 
+            font-size: 16px; 
+            margin-top: 0; 
+            border-bottom: 2px solid rgba(0,255,102,0.3); 
+            padding-bottom: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .side-ticker-item { 
+            background: rgba(15, 23, 42, 0.85); 
+            border-left: 4px solid #00ff66; 
+            padding: 15px; 
+            margin-bottom: 14px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-top: 1px solid rgba(255,255,155,0.05);
+            animation: fadeInTicker 0.5s ease-in-out;
+        }
+        @keyframes fadeInTicker {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .side-ticker-item b { color: #facc15; font-size: 14px; }
+        .side-ticker-amount { color: #00ff66; font-weight: 700; font-size: 14px; }
+        .side-ticker-time { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; }
+
         h2 { color: #047857; margin-top: 0; font-size: 24px; }
         .logout { float: right; }
         .logout a { background: #ef4444; color: white; padding: 7px 14px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px; transition: background 0.2s; }
@@ -539,8 +585,6 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: 600; border: 1px solid #334155; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 12px; margin-bottom: 20px; border-radius: 6px; text-align: center; font-weight: 600; font-size: 13px; border: 1px solid #bae6fd; }
-        .side-ticker-item { background: #1e293b; border-left: 3px solid #34d399; padding: 12px; margin-bottom: 10px; border-radius: 6px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .side-ticker-item b { color: #facc15; }
         .company-momo-display { background: #fef3c7; border: 1px solid #fde68a; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; color: #92400e; text-align: center; }
     </style>
 </head>
@@ -638,8 +682,13 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% endif %}
         </div>
 
+        <!-- ENLARGED SIDEBAR TICKER FEED -->
         <div class="sidebar-ticker">
-            <h3 style="color: #34d399; font-size: 14px; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; text-transform:uppercase; letter-spacing:0.5px;">🟢 Live Zenith Withdrawals</h3>
+            <h3>
+                <span>🟢 Live Withdrawals Feed</span>
+                <span style="font-size: 11px; background: rgba(0,255,102,0.2); color: #00ff66; padding: 2px 6px; border-radius: 4px;">LIVE</span>
+            </h3>
+            <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px; margin-bottom: 15px;">Real-time mobile money payouts across Ghana.</p>
             <div id="sideTickerList"></div>
         </div>
     </div>
@@ -692,23 +741,35 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         updateTrackers();
         updateWithdrawalCountdowns();
 
-        const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong"];
-        const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani"];
+        const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Kwaku Duah"];
+        const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema", "Koforidua", "Obuasi"];
+        
         function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
             const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
-            const amt = (Math.floor(Math.random() * 15) + 3) * 100 * 1.5;
+            const amt = (Math.floor(Math.random() * 20) + 3) * 100 * 1.5;
             
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
+            item.innerHTML = `
+                <div>🟢 <b>${name}</b> (${town})</div>
+                <div style="margin-top: 4px;">Cashed out <span class="side-ticker-amount">GHs ${amt.toLocaleString()}</span> via MTN/Vodafone MoMo</div>
+                <span class="side-ticker-time">Verified Payout • Today at ${timeString}</span>
+            `;
             list.prepend(item);
-            if (list.children.length > 5) list.lastChild.remove();
+            if (list.children.length > 7) list.lastChild.remove();
         }
-        setInterval(addSideTickerItem, 6000);
-        addSideTickerItem();
+        
+        // Pre-populate items immediately
+        for(let i=0; i<4; i++) {
+            addSideTickerItem();
+        }
+        setInterval(addSideTickerItem, 4500);
     </script>
 </body>
 </html>
