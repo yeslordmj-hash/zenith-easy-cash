@@ -35,9 +35,9 @@ ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amount
 ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
-ZENITH_SIDEBAR_WIDTH = "90px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
-ZENITH_SIDEBAR_PADDING = "20px"      # Inner padding of the sidebar card
-ZENITH_SIDEBAR_MAX_HEIGHT = "88vh"   # Maximum vertical height limit
+ZENITH_SIDEBAR_WIDTH = "120px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
+ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
+ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 # ==========================================
 
 app = Flask(__name__)
