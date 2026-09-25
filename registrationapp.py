@@ -34,6 +34,7 @@ ADMIN_PASSWORD = "admin"
 # --- TELEGRAM CONFIGURATION ---
 TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
 TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
+ADMIN_TELEGRAM_LINK = "https://t.me/YourAdminUsername"  # Replace with your actual telegram username link
 
 
 def send_telegram_alert(message, photo_path=None):
@@ -116,14 +117,13 @@ def save_investor_data(data):
 
 POPUP_MODAL_CSS = """
 <style>
-    /* Popup Modal Animation Styles */
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center;
         z-index: 9999; animation: fadeIn 0.3s ease-in-out;
     }
     .modal-card {
-        background: #1e1e1e; color: #fff; width: 90%; max-width: 400px;
+        background: #1e1e1e; color: #fff; width: 90%; max-width: 450px;
         padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         animation: scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -133,18 +133,19 @@ POPUP_MODAL_CSS = """
         box-shadow: 0 0 20px rgba(46, 125, 50, 0.6);
         animation: rotateIn 0.6s ease-in-out;
     }
-    .checkmark {
-        font-size: 45px; color: white; font-weight: bold;
-    }
+    .checkmark { font-size: 45px; color: white; font-weight: bold; }
     .modal-card h3 { color: #4caf50; font-size: 24px; margin-bottom: 10px; }
     .modal-card p { color: #ccc; font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
     .modal-btn {
         background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; border: none;
         padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%;
-        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4); transition: opacity 0.2s;
+        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4); transition: opacity 0.2s; text-decoration: none; display: inline-block;
+        box-sizing: border-box; margin-top: 10px;
     }
-    .modal-btn:hover { opacity: 0.9; }
-
+    .modal-btn:hover { opacity: 0.9; color: #fff; }
+    .telegram-quick-btn {
+        background: linear-gradient(135deg, #0088cc, #229ed9);
+    }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes scaleUp { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     @keyframes rotateIn { 
@@ -158,9 +159,10 @@ POPUP_MODAL_CSS = """
         <div class="icon-container">
             <div class="checkmark">✓</div>
         </div>
-        <h3 id="modalTitle">{{ modal_title }}</h3>
-        <p id="modalDesc">{{ modal_desc|safe }}</p>
-        <button class="modal-btn" onclick="closeModal()">Continue</button>
+        <h3>{{ modal_title }}</h3>
+        <p>{{ modal_desc|safe }}</p>
+        <a href="{{ admin_telegram_link }}" target="_blank" class="modal-btn telegram-quick-btn">💬 Chat Admin on Telegram for Quick Approval</a>
+        <button class="modal-btn" onclick="closeModal()" style="background: #444; margin-top: 8px;">Continue to Portal</button>
     </div>
 </div>
 
@@ -192,7 +194,27 @@ HTML_TEMPLATE = """
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
         .nav-links { text-align: center; margin-top: 20px; font-size: 14px; }
         .nav-links a { color: #028a0f; text-decoration: none; font-weight: bold; margin: 0 10px; }
-        .ticker-wrap { background: #111; color: #0f0; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 13px; margin-bottom: 20px; text-align: center; overflow: hidden; white-space: nowrap; }
+        
+        /* Drop & Slide Ticker Styles */
+        .ticker-wrapper {
+            background: #111; color: #0f0; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-bottom: 20px; overflow: hidden; position: relative; height: 24px;
+            animation: dropDownTicker 0.8s ease-out;
+        }
+        @keyframes dropDownTicker {
+            0% { transform: translateY(-30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .ticker-text {
+            position: absolute; white-space: nowrap; animation: slideLeft 16s linear infinite; width: 100%;
+        }
+        @keyframes slideLeft {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .telegram-float-btn {
+            display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px;
+        }
+        .telegram-float-btn:hover { background: #006699; }
     </style>
 </head>
 <body>
@@ -200,15 +222,19 @@ HTML_TEMPLATE = """
         <h2>Zenith Easy Cash Ghana</h2>
         <h3>Online Investor Registration & Portal</h3>
 
-        <div class="ticker-wrap" id="payoutTicker">
-            <span>Live Payouts: Loading recent withdrawals...</span>
+        <!-- Drop-in & Sliding Ticker -->
+        <div class="ticker-wrapper">
+            <div class="ticker-text" id="payoutTicker">
+                <span>🟢 LIVE PAYOUT: Loading recent high-yield withdrawals...</span>
+            </div>
         </div>
 
         <div class="instructions">
-            <strong>Guidelines:</strong>
+            <strong>Investment Guidelines & Payout Structure:</strong>
             <ul>
                 <li>Minimum Investment: <strong>200 GHs</strong> | Maximum Investment: <strong>500,000 GHs</strong></li>
-                <li>Duration: <strong>7 Days Maturity</strong> (Top-ups & Multiple Accounts Allowed!)</li>
+                <li>Standard Returns: <strong>50% Profit Payout</strong> on top of capital upon maturity!</li>
+                <li>Bonus Payouts: Referral & Milestone bonuses (e.g., GHs 20, 50, 100, 200) credited instantly.</li>
             </ul>
         </div>
 
@@ -255,8 +281,10 @@ HTML_TEMPLATE = """
             <button type="submit">Submit Registration & Investment</button>
         </form>
 
+        <a href="{{ admin_telegram_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
+
         <div class="nav-links">
-            <a href="{{ url_for('track') }}">🔍 Track / Top-Up Investment</a>
+            <a href="{{ url_for('track') }}">🔍 Track / Manage Investment</a>
         </div>
     </div>
 
@@ -265,17 +293,35 @@ HTML_TEMPLATE = """
     {% endif %}
 
     <script>
-        const ghanaNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Nii Armah"];
-        const towns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Koforidua"];
+        // Popular names across Ghana regions
+        const ghanaNames = [
+            "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
+            "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Nii Armah",
+            "Fiifi Kwakye", "Adwoa Pomaa", "Kwabena Appiah", "Yaa Asantewaa", "Kweku Bonsu",
+            "Nana Yaw", "Efua Baker", "Owusu Ansah", "Latif Ibrahim", "Patience Mensah",
+            "Selorm Agbeshie", "Dzifa Gidiglo", "Mahama Sadique", "Priscilla Quaye", "Bright Odoom"
+        ];
+        const towns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Koforidua", "Tema", "Wa", "Bolgatanga", "Obuasi"];
+        const payoutTypes = ["50% Profit Payout", "50% Profit Payout", "50% Profit Payout", "Bonus Payout (GHs 50)", "Bonus Payout (GHs 100)", "Bonus Payout (GHs 200)", "Bonus Payout (GHs 20)"];
         
         function updateTicker() {
             const randomName = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
             const randomTown = towns[Math.floor(Math.random() * towns.length)];
-            const randomAmount = (Math.floor(Math.random() * 4800) + 200).toLocaleString();
+            const type = payoutTypes[Math.floor(Math.random() * payoutTypes.length)];
+            let amountText = "";
+            
+            if (type.includes("50%")) {
+                const baseAmt = Math.floor(Math.random() * 9800) + 200;
+                const payoutAmt = baseAmt * 1.5;
+                amountText = `Capital GHs ${baseAmt.toLocaleString()} + 50% Profit = <b>GHs ${payoutAmt.toLocaleString()}</b>`;
+            } else {
+                amountText = `<b>${type}</b>`;
+            }
+
             const tickerEl = document.getElementById('payoutTicker');
-            tickerEl.innerHTML = `🟢 <b>LIVE PAYOUT:</b> ${randomName} from ${randomTown} successfully withdrew <b>GHs ${randomAmount}</b> via MoMo!`;
+            tickerEl.innerHTML = `🟢 <b>LIVE PAYOUT:</b> ${randomName} from ${randomTown} successfully received ${amountText} via MoMo!`;
         }
-        setInterval(updateTicker, 5000);
+        setInterval(updateTicker, 7000);
         updateTicker();
     </script>
 </body>
@@ -305,12 +351,24 @@ TRACK_TEMPLATE = """
         .btn-withdraw { background: #028a0f; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; }
         .btn-topup { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer;}
         .topup-box { background: #fff8e1; padding: 10px; margin-top: 10px; border-radius: 4px; }
+        
+        /* Loading Status Animation */
+        .loading-badge {
+            display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;
+        }
+        .spinner {
+            width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Pending Countdown Timer */
+        .countdown-box { background: #fffbeb; border: 1px solid #f59e0b; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; color: #b45309; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Track & Manage Your Investments</h2>
-        <p style="text-align: center; color: #666; font-size: 14px;">Enter your phone number to view all your active investment accounts, countdowns, and top-ups.</p>
+        <p style="text-align: center; color: #666; font-size: 14px;">Enter your phone number to view live countdowns, 50% profit status, and manage top-ups.</p>
 
         {% with messages = get_flashed_messages() %}
           {% if messages %}
@@ -331,16 +389,35 @@ TRACK_TEMPLATE = """
             {% for inv in investors %}
             <div class="card">
                 <p><strong>Name:</strong> {{ inv.name }}</p>
-                <p><strong>Investment Amount:</strong> {{ inv.amount }} GHs</p>
+                <p><strong>Capital Amount:</strong> {{ inv.amount }} GHs <span style="color:#028a0f; font-size:12px;">(+50% Expected Return: GHs {{ inv.expected_return }})</span></p>
                 <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
                 <p><strong>Job / Region:</strong> {{ inv.work }} / {{ inv.region }}</p>
                 <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
                 <p><strong>Maturity Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
-                <p><strong>Status:</strong> <span style="color: #e65100; font-weight: bold;">{{ inv.status }}</span></p>
+                
+                <p><strong>Status:</strong> 
+                    {% if inv.status == 'Pending Admin Payment Confirmation' %}
+                        <span style="color: #c2410c;">⏳ Pending Admin Confirmation</span>
+                        <div class="countdown-box" id="pendingTimer_{{ loop.index }}" data-time="{{ inv.date_time }}">
+                            Approval Pending...
+                        </div>
+                        <a href="{{ admin_telegram_link }}" target="_blank" style="display:block; text-align:center; background:#0088cc; color:#fff; padding:6px; border-radius:4px; margin-top:8px; text-decoration:none; font-size:13px; font-weight:bold;">💬 Chat Admin on Telegram for Instant Approval</a>
+                    {% elif inv.status == 'Payment Confirmed & Active' %}
+                        <div class="loading-badge">
+                            <div class="spinner"></div> Investment Active & Yielding 50% Profit...
+                        </div>
+                    {% elif inv.status == 'Withdrawal Requested' %}
+                        <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested (Processing Payout)</span>
+                    {% elif inv.status == 'Withdrawn Completed' %}
+                        <span style="color: #15803d; font-weight: bold;">✅ Completed & Paid Out (Capital + 50% Profit)</span>
+                    {% else %}
+                        <span style="color: #555; font-weight: bold;">{{ inv.status }}</span>
+                    {% endif %}
+                </p>
                 
                 {% if inv.status == 'Payment Confirmed & Active' %}
                 <form action="{{ url_for('topup', index=inv.global_idx) }}" method="POST" class="topup-box" enctype="multipart/form-data">
-                    <label style="font-size:12px;">Top-Up Amount (GHs):</label>
+                    <label style="font-size:12px;">Top-Up Capital (GHs):</label>
                     <input type="number" name="topup_amount" min="10" step="0.01" required placeholder="Enter amount to add" style="padding:6px; margin-bottom:5px;">
                     <label style="font-size:11px;">Top-up Transaction ID or Screenshot:</label>
                     <input type="text" name="topup_proof" placeholder="Transaction ID or leave blank" style="padding:5px; margin-bottom:5px; font-size:12px;">
@@ -350,11 +427,7 @@ TRACK_TEMPLATE = """
                 {% endif %}
 
                 {% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}
-                    <a href="{{ url_for('withdraw', index=inv.global_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now</a>
-                {% elif inv.status == 'Withdrawal Requested' %}
-                    <p style="color: #2e7d32; font-weight: bold; margin-top:10px;">⏳ Withdrawal Requested. Admin is processing payment.</p>
-                {% elif inv.status == 'Withdrawn Completed' %}
-                    <p style="color: #555; font-weight: bold; margin-top:10px;">✅ Investment Completed & Paid Out.</p>
+                    <a href="{{ url_for('withdraw', index=inv.global_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{ inv.expected_return }})</a>
                 {% endif %}
             </div>
             {% endfor %}
@@ -370,6 +443,27 @@ TRACK_TEMPLATE = """
     {% if show_modal %}
         {{ popup_html|safe }}
     {% endif %}
+
+    <script>
+        // Live elapsed timer for pending approvals
+        function updateTimers() {
+            document.querySelectorAll('.countdown-box').forEach(el => {
+                const regDateStr = el.getAttribute('data-time');
+                const regDate = new Date(regDateStr.replace(/-/g, "/"));
+                const now = new Date();
+                const diff = Math.floor((now - regDate) / 1000); // seconds elapsed
+                
+                if (diff >= 0) {
+                    const hrs = Math.floor(diff / 3600);
+                    const mins = Math.floor((diff % 3600) / 60);
+                    const secs = diff % 60;
+                    el.innerHTML = `⏱️ Waiting Time Elapsed: ${hrs}h ${mins}m ${secs}s (Awaiting Admin Approval)`;
+                }
+            });
+        }
+        setInterval(updateTimers, 1000);
+        updateTimers();
+    </script>
 </body>
 </html>
 """
@@ -422,20 +516,23 @@ ADMIN_DASHBOARD_TEMPLATE = """
     <title>Admin Dashboard - Zenith Easy Cash</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { color: #028a0f; float: left; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; }
         .settings-box { background: #fff8e1; border: 1px solid #ffa000; padding: 15px; margin-bottom: 25px; border-radius: 5px; clear: both; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 13px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 12px; }
         th { background-color: #2e7d32; color: white; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .btn-action { background: #2e7d32; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; border: none; cursor: pointer; display: inline-block; margin: 2px;}
+        .btn-action { background: #2e7d32; color: white; padding: 5px 8px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; border: none; cursor: pointer; display: inline-block; margin: 2px;}
         .btn-payout { background: #d32f2f; }
+        .btn-delete { background: #6b7280; }
         .status-pending { color: #e65100; font-weight: bold; }
         .clear { clear: both; }
-        img.proof-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
+        img.proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
+        .edit-time-form { display: flex; gap: 5px; margin-top: 5px; align-items: center; }
+        .edit-time-form input { padding: 4px; font-size: 11px; width: 120px; }
     </style>
 </head>
 <body>
@@ -465,15 +562,15 @@ ADMIN_DASHBOARD_TEMPLATE = """
             </form>
         </div>
 
-        <h3>Registered Investors & Active Accounts</h3>
+        <h3>Registered Investors & Active Accounts Management</h3>
         <table>
             <thead>
                 <tr>
                     <th>Name / Number</th>
-                    <th>Amount & Proof</th>
+                    <th>Capital & Proof</th>
                     <th>Job / Region</th>
                     <th>Registered</th>
-                    <th>Maturity</th>
+                    <th>Maturity Time & Date (Editable)</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -485,6 +582,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                         <td><strong>{{ inv.name }}</strong><br>{{ inv.number }}</td>
                         <td>
                             <strong>{{ inv.amount }} GHs</strong><br>
+                            <small style="color:#028a0f;">Return: {{ inv.expected_return }} GHs</small><br>
                             <small>ID: {{ inv.transaction_id }}</small><br>
                             {% if inv.screenshot %}
                                 <a href="{{ url_for('uploaded_file', filename=inv.screenshot) }}" target="_blank">
@@ -494,20 +592,30 @@ ADMIN_DASHBOARD_TEMPLATE = """
                         </td>
                         <td>{{ inv.work }}<br><small>{{ inv.region }}</small></td>
                         <td>{{ inv.date_time }}</td>
-                        <td>{{ inv.maturity_date }}</td>
+                        <td>
+                            <span>{{ inv.maturity_date }}</span>
+                            <form action="{{ url_for('update_maturity', index=idx) }}" method="POST" class="edit-time-form">
+                                <input type="text" name="new_maturity" value="{{ inv.maturity_date }}" required title="Format: YYYY-MM-DD HH:MM:SS">
+                                <button type="submit" class="btn-action" style="background:#0284c7;">Set Time</button>
+                            </form>
+                        </td>
                         <td><span class="status-pending">{{ inv.status }}</span></td>
                         <td>
                             {% if inv.status == 'Pending Admin Payment Confirmation' %}
                                 <form action="{{ url_for('confirm_payment', index=idx) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn-action">Confirm Payment</button>
+                                    <button type="submit" class="btn-action">Confirm</button>
                                 </form>
                             {% elif inv.status == 'Withdrawal Requested' %}
                                 <form action="{{ url_for('complete_withdrawal', index=idx) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn-action btn-payout">Pay Out & Close</button>
+                                    <button type="submit" class="btn-action btn-payout">Pay Out</button>
                                 </form>
                             {% else %}
                                 <span>{{ inv.status }}</span>
                             {% endif %}
+                            
+                            <form action="{{ url_for('delete_investor', index=idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this record?');">
+                                <button type="submit" class="btn-action btn-delete">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -555,12 +663,16 @@ def index():
         return redirect(url_for("index"))
 
       now = datetime.now()
-      maturity = now + timedelta(days=7)
+      maturity = now + timedelta(days=7)  # default 7 days maturity
+
+      # Calculate 50% profit return on top of capital
+      expected_return = amount * 1.5
 
       investor_data = {
           "name": request.form["name"],
           "number": request.form["number"].strip(),
           "amount": amount,
+          "expected_return": expected_return,
           "work": request.form["work"],
           "region": request.form["region"],
           "transaction_id": transaction_id
@@ -579,7 +691,8 @@ def index():
           f"🚨 <b>NEW INVESTMENT REGISTRATION</b>\n\n"
           f"👤 <b>Name:</b> {investor_data['name']}\n"
           f"📞 <b>Number:</b> {investor_data['number']}\n"
-          f"💰 <b>Amount:</b> GHs {investor_data['amount']}\n"
+          f"💰 <b>Capital:</b> GHs {investor_data['amount']}\n"
+          f"📈 <b>Expected Return (50%):</b> GHs {investor_data['expected_return']}\n"
           f"🧾 <b>Proof:</b> {investor_data['transaction_id']}\n"
           f"🛠 <b>Job:</b> {investor_data['work']}\n"
           f"📍 <b>Region:</b> {investor_data['region']}\n"
@@ -592,11 +705,13 @@ def index():
       )
       send_telegram_alert(alert_msg, photo_path)
 
-      # Render index with success modal popup
+      # Render modal popup with direct Telegram Admin link
       modal_title = "Successfully Registered!"
-      modal_desc = f"Your investment of <b>GHs {amount:,.2f}</b> has been submitted successfully.<br>Waiting for Admin confirmation."
-      popup_html = POPUP_MODAL_CSS.replace("{{ modal_title }}", modal_title).replace(
-          "{{ modal_desc }}", modal_desc
+      modal_desc = f"Your investment of <b>GHs {amount:,.2f}</b> (Expected 50% Return: <b>GHs {expected_return:,.2f}</b>) has been submitted.<br>Click below to message the admin on Telegram for instant approval!"
+      popup_html = (
+          POPUP_MODAL_CSS.replace("{{ modal_title }}", modal_title)
+          .replace("{{ modal_desc }}", modal_desc)
+          .replace("{{ admin_telegram_link }}", ADMIN_TELEGRAM_LINK)
       )
 
       return render_template_string(
@@ -604,6 +719,7 @@ def index():
           settings=settings,
           show_modal=True,
           popup_html=popup_html,
+          admin_telegram_link=ADMIN_TELEGRAM_LINK,
       )
 
     except ValueError:
@@ -611,7 +727,10 @@ def index():
       return redirect(url_for("index"))
 
   return render_template_string(
-      HTML_TEMPLATE, settings=settings, show_modal=False
+      HTML_TEMPLATE,
+      settings=settings,
+      show_modal=False,
+      admin_telegram_link=ADMIN_TELEGRAM_LINK,
   )
 
 
@@ -633,6 +752,9 @@ def track():
       if inv.get("number") == searched_number:
         inv_copy = inv.copy()
         inv_copy["global_idx"] = idx
+        if "expected_return" not in inv_copy:
+          inv_copy["expected_return"] = inv_copy["amount"] * 1.5
+
         try:
           maturity_dt = datetime.strptime(
               inv["maturity_date"], "%Y-%m-%d %H:%M:%S"
@@ -654,17 +776,21 @@ def track():
     if action == "topup":
       show_modal = True
       modal_title = "Top-Up Successful!"
-      modal_desc = f"Your top-up of <b>GHs {amt}</b> has been successfully added to your investment account!"
-      popup_html = POPUP_MODAL_CSS.replace(
-          "{{ modal_title }}", modal_title
-      ).replace("{{ modal_desc }}", modal_desc)
+      modal_desc = f"Your top-up of <b>GHs {amt}</b> has been added to your account!"
+      popup_html = (
+          POPUP_MODAL_CSS.replace("{{ modal_title }}", modal_title)
+          .replace("{{ modal_desc }}", modal_desc)
+          .replace("{{ admin_telegram_link }}", ADMIN_TELEGRAM_LINK)
+      )
     elif action == "withdraw":
       show_modal = True
       modal_title = "Withdrawal Requested!"
-      modal_desc = f"Your withdrawal request for <b>GHs {amt}</b> has been submitted successfully! Admin will pay out shortly."
-      popup_html = POPUP_MODAL_CSS.replace(
-          "{{ modal_title }}", modal_title
-      ).replace("{{ modal_desc }}", modal_desc)
+      modal_desc = f"Your withdrawal request for <b>GHs {amt}</b> has been submitted successfully!"
+      popup_html = (
+          POPUP_MODAL_CSS.replace("{{ modal_title }}", modal_title)
+          .replace("{{ modal_desc }}", modal_desc)
+          .replace("{{ admin_telegram_link }}", ADMIN_TELEGRAM_LINK)
+      )
 
   return render_template_string(
       TRACK_TEMPLATE,
@@ -672,6 +798,7 @@ def track():
       searched_number=searched_number,
       show_modal=show_modal,
       popup_html=popup_html,
+      admin_telegram_link=ADMIN_TELEGRAM_LINK,
   )
 
 
@@ -694,6 +821,7 @@ def topup(index):
 
       if topup_amt > 0:
         inv["amount"] += topup_amt
+        inv["expected_return"] = inv["amount"] * 1.5
         save_all_investors(investors)
 
         proof_text = (
@@ -703,9 +831,10 @@ def topup(index):
             f"📈 <b>INVESTMENT TOP-UP RECEIVED</b>\n\n"
             f"👤 <b>Name:</b> {inv['name']}\n"
             f"📞 <b>Number:</b> {inv['number']}\n"
-            f"➕ <b>Added:</b> GHs {topup_amt}\n"
+            f"➕ <b>Added Capital:</b> GHs {topup_amt}\n"
             f"🧾 <b>Proof:</b> {proof_text}\n"
-            f"💰 <b>New Total:</b> GHs {inv['amount']}",
+            f"💰 <b>New Total Capital:</b> GHs {inv['amount']}\n"
+            f"📈 <b>New Expected Return:</b> GHs {inv['expected_return']}",
             os.path.join(app.config["UPLOAD_FOLDER"], filename)
             if filename
             else None,
@@ -726,6 +855,9 @@ def withdraw(index):
   if 0 <= index < len(investors):
     inv = investors[index]
     now = datetime.now()
+    if "expected_return" not in inv:
+      inv["expected_return"] = inv["amount"] * 1.5
+
     try:
       maturity_dt = datetime.strptime(inv["maturity_date"], "%Y-%m-%d %H:%M:%S")
       if (
@@ -739,14 +871,14 @@ def withdraw(index):
             f"📥 <b>WITHDRAWAL REQUESTED</b>\n\n"
             f"👤 <b>Name:</b> {inv['name']}\n"
             f"📞 <b>Number:</b> {inv['number']}\n"
-            f"💰 <b>Amount Due:</b> GHs {inv['amount']}"
+            f"💰 <b>Total Payout Due (50% ROI):</b> GHs {inv['expected_return']}"
         )
         return redirect(
             url_for(
                 "track",
                 number=inv["number"],
                 action="withdraw",
-                amt=inv["amount"],
+                amt=inv["expected_return"],
             )
         )
     except Exception:
@@ -778,6 +910,10 @@ def admin_dashboard():
     return redirect(url_for("admin_login"))
 
   investors = load_investors()
+  for inv in investors:
+    if "expected_return" not in inv:
+      inv["expected_return"] = inv["amount"] * 1.5
+
   settings = load_settings()
   return render_template_string(
       ADMIN_DASHBOARD_TEMPLATE,
@@ -826,6 +962,34 @@ def complete_withdrawal(index):
   return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/admin/update-maturity/<int:index>", methods=["POST"])
+def update_maturity(index):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+
+  investors = load_investors()
+  if 0 <= index < len(investors):
+    new_time = request.form.get("new_maturity", "").strip()
+    if new_time:
+      investors[index]["maturity_date"] = new_time
+      save_all_investors(investors)
+      flash("Investment maturity time successfully updated!")
+  return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/delete/<int:index>", methods=["POST"])
+def delete_investor(index):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+
+  investors = load_investors()
+  if 0 <= index < len(investors):
+    investors.pop(index)
+    save_all_investors(investors)
+    flash("Test / registration entry deleted successfully!")
+  return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/admin-logout")
 def admin_logout():
   session.pop("admin_logged_in", None)
@@ -835,6 +999,7 @@ def admin_logout():
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
   return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
 
 if __name__ == "__main__":
   port = int(os.environ.get("PORT", 5001))
