@@ -22,7 +22,7 @@ from werkzeug.utils import secure_filename
 # ⚙️ USER CONFIGURATION & WITHDRAWAL SETTINGS
 # ==========================================
 ADMIN_PASSWORD = "admin"
-ONLINE_USERS_BASE = 850
+ONLINE_USERS_BASE = 1700
 
 TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
@@ -35,8 +35,8 @@ ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amount
 ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
-ZENITH_SIDEBAR_WIDTH = "100px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
-ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
+ZENITH_SIDEBAR_WIDTH = "220px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
+ZENITH_SIDEBAR_PADDING = "12px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "88vh"   # Maximum vertical height limit
 # ==========================================
 
@@ -542,6 +542,45 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             overflow-y: auto;
             border: 1px solid #1f2937;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            box-sizing: border-box;
+        }
+
+        /* STICKY HEADER WITH GPS BLINKING TAG */
+        .sidebar-sticky-header {
+            position: sticky;
+            top: 0;
+            background: #111827;
+            z-index: 10;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .gps-online-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #064e3b;
+            color: #34d399;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .gps-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #22c55e;
+            animation: gpsBlink 1.2s infinite ease-in-out;
+        }
+        @keyframes gpsBlink {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+            100% { transform: scale(0.9); opacity: 0.5; }
         }
         
         h2 { color: #028a0f; margin-top: 0; }
@@ -568,26 +607,37 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
         
-        /* SIDEBAR FEED ITEM STYLING */
+        /* SIDEBAR FEED ITEM STYLING WITH SMOOTH FADE OUT */
         .side-ticker-item { 
             background: #1e293b; 
             border: 1px solid #334155;
             border-left: 4px solid #22c55e; 
-            padding: 12px 14px; 
-            margin-bottom: 12px; 
+            padding: 10px 12px; 
+            margin-bottom: 10px; 
             border-radius: 6px; 
-            font-size: 13px;
+            font-size: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
             line-height: 1.4;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.4s ease-in-out;
+        }
+        .side-ticker-item.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .side-ticker-item.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
         }
         .side-ticker-item .name-town { 
-            font-size: 14px; 
+            font-size: 13px; 
             font-weight: bold; 
             color: #facc15; 
-            margin-bottom: 4px; 
+            margin-bottom: 2px; 
         }
         .side-ticker-item .payout-text { 
-            font-size: 13px; 
+            font-size: 12px; 
             color: #cbd5e1; 
         }
         .side-ticker-item .payout-text b { 
@@ -692,8 +742,11 @@ INVESTOR_DASHBOARD_TEMPLATE = """
 
         <!-- SIDEBAR TICKER CARD -->
         <div class="sidebar-ticker">
-            <h3 style="color: #4ade80; font-size: 15px; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Zenith Withdrawals</h3>
-            <div id="sideTickerList" style="margin-top: 12px;"></div>
+            <div class="sidebar-sticky-header">
+                <div class="gps-online-tag"><span class="gps-dot"></span> Live Tracking</div>
+                <h3 style="color: #4ade80; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Zenith Withdrawals</h3>
+            </div>
+            <div id="sideTickerList" style="margin-top: 8px;"></div>
         </div>
     </div>
 
@@ -771,14 +824,22 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             item.className = 'side-ticker-item';
             item.innerHTML = `
                 <div class="name-town">${name}</div>
-                <div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">(${town})</div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">(${town})</div>
                 <div class="payout-text">Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo</div>
             `;
             list.prepend(item);
-            if (list.children.length > maxVisibleItems) list.lastChild.remove();
+            
+            // Trigger roll-in animation
+            setTimeout(() => { item.classList.add('show'); }, 50);
+
+            // Manage maximum visible items with a fade-out effect
+            if (list.children.length > maxVisibleItems) {
+                const lastItem = list.lastElementChild;
+                lastItem.classList.add('fade-out');
+                setTimeout(() => { lastItem.remove(); }, 400);
+            }
         }
         setInterval(addSideTickerItem, tickerIntervalMs);
-        addSideTickerItem();
         addSideTickerItem();
         addSideTickerItem();
         addSideTickerItem();
