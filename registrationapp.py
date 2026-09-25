@@ -113,7 +113,7 @@ def save_investor_data(data):
   save_all_investors(investors)
 
 
-# --- TOP BANNER TICKER FOR REGISTRATION PAGE (RIGHT TO LEFT) ---
+# --- TOP BANNER TICKER FOR REGISTRATION PAGE (SMOOTH CONTINUOUS SCROLLER) ---
 ZENITH_ALERTS_TOP_HTML = """
 <style>
     #zenithAlertsBanner {
@@ -137,21 +137,24 @@ ZENITH_ALERTS_TOP_HTML = """
         display: flex;
         justify-content: space-between;
     }
-    .alerts-content {
-        font-size: 13px;
-        line-height: 1.4;
-        transform: translateX(100%);
-        opacity: 0;
-        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.8s ease;
-        white-space: nowrap;
+    .marquee-container {
         overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+        position: relative;
     }
-    .alerts-content.show {
-        transform: translateX(0);
-        opacity: 1;
+    .marquee-text {
+        display: inline-block;
+        padding-left: 100%;
+        animation: marquee 22s linear infinite;
+        font-size: 13px;
+        color: #fff;
     }
-    .alerts-content b { color: #facc15; }
+    .marquee-text b { color: #facc15; }
+    @keyframes marquee {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(-100%, 0); }
+    }
 </style>
 
 <div id="zenithAlertsBanner">
@@ -159,7 +162,9 @@ ZENITH_ALERTS_TOP_HTML = """
         <span>🟢 Live Zenith Alerts</span>
         <span>Verified Payout Feed</span>
     </div>
-    <div id="alertsText" class="alerts-content">Connecting to Zenith secure payout stream...</div>
+    <div class="marquee-container">
+        <div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div>
+    </div>
 </div>
 
 <script>
@@ -174,34 +179,32 @@ ZENITH_ALERTS_TOP_HTML = """
     const roundInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000];
     const roundBonuses = [50, 100, 150, 200, 300, 400, 500, 800, 1000, 1500, 2000];
 
-    function rotateZenithAlerts() {
-        const el = document.getElementById('alertsText');
-        if (!el) return;
+    function generateTickerMessages() {
+        let messages = [];
+        for (let i = 0; i < 8; i++) {
+            const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
+            const town = towns[Math.floor(Math.random() * towns.length)];
+            const isBonus = Math.random() < 0.3;
 
-        const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
-        const town = towns[Math.floor(Math.random() * towns.length)];
-        const isBonus = Math.random() < 0.3;
-
-        let rewardText = "";
-        if (!isBonus) {
-            const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
-            const total = base * 1.5;
-            rewardText = `Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b>`;
-        } else {
-            const bonusAmt = roundBonuses[Math.floor(Math.random() * roundBonuses.length)];
-            rewardText = `<b>Bonus Payout (GHs ${bonusAmt.toLocaleString()})</b>`;
+            let rewardText = "";
+            if (!isBonus) {
+                const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
+                const total = base * 1.5;
+                rewardText = `Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b>`;
+            } else {
+                const bonusAmt = roundBonuses[Math.floor(Math.random() * roundBonuses.length)];
+                rewardText = `<b>Bonus Payout (GHs ${bonusAmt.toLocaleString()})</b>`;
+            }
+            messages.push(`🟢 <b>${name}</b> (${town}) just cashed out ${rewardText} via MoMo!`);
         }
-
-        el.classList.remove('show');
-
-        setTimeout(() => {
-            el.innerHTML = `<b>${name}</b> (${town}) just cashed out ${rewardText} via MoMo!`;
-            el.classList.add('show');
-        }, 300);
+        const el = document.getElementById('alertsText');
+        if (el) {
+            el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+        }
     }
 
-    setInterval(rotateZenithAlerts, 6000);
-    setTimeout(rotateZenithAlerts, 500);
+    generateTickerMessages();
+    setInterval(generateTickerMessages, 20000);
 </script>
 """
 
