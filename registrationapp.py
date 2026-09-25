@@ -113,112 +113,90 @@ def save_all_investors(investors):
     json.dump(investors, f, indent=4)
 
 
-def save_investor_data(data):
-  investors = load_investors()
-  number = data.get("number")
-  found_user = False
-  for inv in investors:
-    if inv.get("number") == number:
-      inv["password"] = data.get("password", inv.get("password"))
-      inv["name"] = data.get("name", inv.get("name"))
-      inv["work"] = data.get("work", inv.get("work"))
-      inv["region"] = data.get("region", inv.get("region"))
-      if data.get("profile_pic"):
-        inv["profile_pic"] = data.get("profile_pic")
-
-      if "investments" not in inv:
-        inv["investments"] = [
-            {
-                "amount": inv.get("amount"),
-                "expected_return": inv.get("expected_return"),
-                "transaction_id": inv.get("transaction_id"),
-                "screenshot": inv.get("screenshot"),
-                "date_time": inv.get("date_time"),
-                "maturity_date": inv.get("maturity_date", "Pending Approval"),
-                "status": inv.get("status"),
-            }
-        ]
-      inv["investments"].append(
-          {
-              "amount": data["amount"],
-              "expected_return": data["expected_return"],
-              "transaction_id": data["transaction_id"],
-              "screenshot": data["screenshot"],
-              "date_time": data["date_time"],
-              "maturity_date": data["maturity_date"],
-              "status": data["status"],
-          }
-      )
-      found_user = True
-      break
-
-  if not found_user:
-    data["investments"] = [
-        {
-            "amount": data["amount"],
-            "expected_return": data["expected_return"],
-            "transaction_id": data["transaction_id"],
-            "screenshot": data["screenshot"],
-            "date_time": data["date_time"],
-            "maturity_date": data["maturity_date"],
-            "status": data["status"],
-        }
-    ]
-    investors.append(data)
-
-  save_all_investors(investors)
-
-
 ZENITH_ALERTS_TOP_HTML = """
 <style>
     #zenithAlertsBanner {
-        background: linear-gradient(135deg, #0b130b, #132e13);
-        border-bottom: 2px solid #00ff66; color: #fff; padding: 12px 15px;
-        margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        font-family: Arial, sans-serif; overflow: hidden; position: relative;
+        background: #111;
+        border: 1px solid #1e293b;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
     }
-    .alerts-header { font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
-    .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; }
-    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 32s linear infinite; font-size: 13px; color: #fff; line-height: 1.5; }
-    .marquee-text b { color: #facc15; }
-    @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-    .live-online-counter { background: #064e3b; color: #34d399; padding: 6px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }
+    .alerts-header { font-size: 12px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding-bottom: 8px; }
+    .horizontal-ticker-scroll {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        scrollbar-width: thin;
+        scrollbar-color: #00ff66 #1e293b;
+    }
+    .horizontal-ticker-scroll::-webkit-scrollbar { height: 6px; }
+    .horizontal-ticker-scroll::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 3px; }
+    
+    .ticker-card-item {
+        background: #182232;
+        border: 1px solid #283548;
+        border-left: 3px solid #00ff66;
+        padding: 10px 14px;
+        border-radius: 6px;
+        min-width: 210px;
+        flex-shrink: 0;
+        font-size: 12px;
+        color: #fff;
+        line-height: 1.5;
+        box-sizing: border-box;
+    }
+    .ticker-card-item b { color: #facc15; }
+    .ticker-card-item .payout-amt { color: #00ff66; font-weight: bold; }
+
+    .live-online-counter { background: #064e3b; color: #34d399; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; display: block; margin-bottom: 15px; text-align: center; }
 </style>
+
 <div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
 <div id="zenithAlertsBanner">
     <div class="alerts-header"><span>🟢 Live Zenith Verified Payouts</span><span>Secure Mobile Money Feed</span></div>
-    <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div></div>
+    <div class="horizontal-ticker-scroll" id="alertsCardsContainer">
+        <!-- Cards dynamically injected -->
+    </div>
 </div>
+
 <script>
     const ghanaNames = [
         "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
         "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills",
-        "Paa Kwesi Boadu", "Selorm Agbeko", "Edem Quarshie", "Latif Mohammed", "Hawa Yakubu",
-        "Bernard Nyarko", "Priscilla Agyei", "Bright Ofori", "Blessing Nartey", "Cynthia Quaye"
+        "Paa Kwesi Boadu", "Selorm Agbeko", "Edem Quarshie", "Latif Mohammed", "Hawa Yakubu"
     ];
     const towns = [
         "Accra (East Legon)", "Kumasi (Adum)", "Takoradi", "Tamale", "Cape Coast", 
-        "Sunyani", "Ho", "Tema (Community 25)", "Koforidua", "Obuasi", 
-        "Techiman", "Bolgatanga", "Wa", "Swedru", "Teshie-Nungua"
+        "Sunyani", "Ho", "Tema (Community 25)", "Koforidua", "Obuasi"
     ];
-    const roundInvestments = [250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
+    const roundInvestments = [250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000];
 
-    function generateTickerMessages() {
-        let messages = [];
+    function generateTickerCards() {
+        let html = '';
         for (let i = 0; i < 8; i++) {
             const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
             const town = towns[Math.floor(Math.random() * towns.length)];
             const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
             const total = base * 1.5;
-            // Structured into 3 clear horizontal visual lines for name, location, and payout details
-            messages.text = `🟢 <b>Investor:</b> ${name}<br>📍 <b>Location:</b> ${town}<br>💰 <b>Cashed Out (Capital + 50% Profit):</b> GHs ${total.toLocaleString()} via MoMo`;
-            messages.push(`🟢 <b>Investor:</b> ${name}<br>📍 <b>Location:</b> ${town}<br>💰 <b>Cashed Out (Capital + 50% Profit):</b> GHs ${total.toLocaleString()} via MoMo`);
+            
+            html += `
+                <div class="ticker-card-item">
+                    👤 <b>${name}</b><br>
+                    📍 (${town})<br>
+                    Cashed out <span class="payout-amt">GHs ${total.toLocaleString()}</span><br>
+                    <span style="font-size:10px; color:#94a3b8;">via MoMo Instant</span>
+                </div>
+            `;
         }
-        const el = document.getElementById('alertsText');
-        if (el) el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+        const container = document.getElementById('alertsCardsContainer');
+        if (container) container.innerHTML = html;
     }
-    generateTickerMessages();
-    setInterval(generateTickerMessages, 25000);
+    generateTickerCards();
+    setInterval(generateTickerCards, 20000);
 
     let currentOnline = 850;
     function updateOnlineCounter() {
@@ -537,8 +515,22 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
-        .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; line-height: 1.4; }
+        
+        /* Updated side ticker item matching screenshot card style */
+        .side-ticker-item { 
+            background: #182232; 
+            border: 1px solid #283548;
+            border-left: 3px solid #00ff66; 
+            padding: 12px; 
+            margin-bottom: 12px; 
+            border-radius: 6px; 
+            font-size: 12px; 
+            line-height: 1.5; 
+            color: #fff;
+        }
         .side-ticker-item b { color: #facc15; }
+        .side-ticker-item .payout-amt { color: #00ff66; font-weight: bold; }
+        
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
     </style>
 </head>
@@ -637,7 +629,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         </div>
 
         <div class="sidebar-ticker">
-            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Payout Feed</h3>
+            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Zenith Withdrawals</h3>
             <div id="sideTickerList"></div>
         </div>
     </div>
@@ -708,7 +700,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `👤 <b>${name}</b><br>📍 <b>Town:</b> ${town}<br>💰 <b>Cashed Out:</b> GHs ${amt.toLocaleString()}`;
+            item.innerHTML = `<b>${name}</b><br><span style="color:#94a3b8;">(${town})</span><br>Cashed out <span class="payout-amt">GHs ${amt.toLocaleString()}</span><br><span style="font-size:10px; color:#94a3b8;">via MoMo</span>`;
             list.prepend(item);
             if (list.children.length > 5) list.lastChild.remove();
         }
