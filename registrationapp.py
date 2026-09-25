@@ -508,12 +508,13 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; }
-        .main-layout { max-width: 1200px; margin: auto; display: flex; gap: 24px; align-items: flex-start; }
-        .dashboard-container { flex: 1.7; background: #ffffff; padding: 35px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .main-layout { max-width: 1250px; margin: auto; display: flex; gap: 24px; align-items: flex-start; }
+        .dashboard-container { flex: 1.5; background: #ffffff; padding: 35px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         
-        /* ENLARGED & REDESIGNED LIVE WITHDRAWALS TICKER SIDEBAR */
+        /* EXPANDED BROADER LIVE WITHDRAWALS TICKER SIDEBAR */
         .sidebar-ticker { 
-            flex: 1.3; 
+            flex: 1.8; 
+            min-width: 380px;
             background: linear-gradient(135deg, #06230f, #0d3b1e); 
             color: #ffffff; 
             padding: 25px; 
@@ -540,22 +541,22 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .side-ticker-item { 
             background: rgba(15, 23, 42, 0.85); 
             border-left: 4px solid #00ff66; 
-            padding: 15px; 
+            padding: 16px; 
             margin-bottom: 14px; 
             border-radius: 8px; 
-            font-size: 13px; 
+            font-size: 14px; 
             line-height: 1.5;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            border-top: 1px solid rgba(255,255,155,0.05);
+            border-top: 1px solid rgba(255,255,255,0.05);
             animation: fadeInTicker 0.5s ease-in-out;
         }
         @keyframes fadeInTicker {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .side-ticker-item b { color: #facc15; font-size: 14px; }
-        .side-ticker-amount { color: #00ff66; font-weight: 700; font-size: 14px; }
-        .side-ticker-time { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; }
+        .side-ticker-item b { color: #facc15; font-size: 15px; }
+        .side-ticker-amount { color: #00ff66; font-weight: 700; font-size: 15px; }
+        .side-ticker-time { font-size: 12px; color: #94a3b8; display: block; margin-top: 6px; }
 
         h2 { color: #047857; margin-top: 0; font-size: 24px; }
         .logout { float: right; }
@@ -685,10 +686,10 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         <!-- ENLARGED SIDEBAR TICKER FEED -->
         <div class="sidebar-ticker">
             <h3>
-                <span>🟢 Live Withdrawals Feed</span>
+                <span>🟢 Zenith Withdrawals</span>
                 <span style="font-size: 11px; background: rgba(0,255,102,0.2); color: #00ff66; padding: 2px 6px; border-radius: 4px;">LIVE</span>
             </h3>
-            <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px; margin-bottom: 15px;">Real-time mobile money payouts across Ghana.</p>
+            <p style="font-size: 12px; color: #cbd5e1; margin-top: 4px; margin-bottom: 15px;">Real-time mobile money payouts across Ghana.</p>
             <div id="sideTickerList"></div>
         </div>
     </div>
@@ -758,7 +759,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             item.className = 'side-ticker-item';
             item.innerHTML = `
                 <div>🟢 <b>${name}</b> (${town})</div>
-                <div style="margin-top: 4px;">Cashed out <span class="side-ticker-amount">GHs ${amt.toLocaleString()}</span> via MTN/Vodafone MoMo</div>
+                <div style="margin-top: 6px;">Cashed out <span class="side-ticker-amount">GHs ${amt.toLocaleString()}</span> via MoMo</div>
                 <span class="side-ticker-time">Verified Payout • Today at ${timeString}</span>
             `;
             list.prepend(item);
