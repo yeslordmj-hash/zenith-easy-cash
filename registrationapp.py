@@ -18,6 +18,28 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
+# ==========================================
+# ⚙️ USER CONFIGURATION & WITHDRAWAL SETTINGS
+# ==========================================
+ADMIN_PASSWORD = "admin"
+ONLINE_USERS_BASE = 850
+
+TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
+TELEGRAM_CHAT_ID = "8393567505"
+ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
+
+# Zenith Side Ticker Withdrawal Adjustments (Adjust these values anytime)
+ZENITH_TICKER_INTERVAL_MS = 4500  # How fast new withdrawals appear (in milliseconds)
+ZENITH_MIN_WITHDRAWAL_MULTIPLE = 3  # Minimum multiplier base for random amounts (x100)
+ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amounts (x100)
+ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
+
+# 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
+ZENITH_SIDEBAR_WIDTH = "320px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
+ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
+ZENITH_SIDEBAR_MAX_HEIGHT = "88vh"   # Maximum vertical height limit
+# ==========================================
+
 app = Flask(__name__)
 app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 
@@ -29,14 +51,6 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
   os.makedirs(UPLOAD_FOLDER)
 
-ADMIN_PASSWORD = "admin"
-ONLINE_USERS_BASE = 850
-
-TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
-TELEGRAM_CHAT_ID = "8393567505"
-ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
-
-# Default SVG human head data URI for the fallback profile avatar
 DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
 
 
@@ -514,16 +528,17 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
         .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* WIDER SIDEBAR TICKER CARD LAYOUT MATCHING REFERENCE */
+        /* SIDEBAR TICKER CARD LAYOUT CONTROLLED BY TOP CONFIG VARIABLES */
         .sidebar-ticker { 
-            flex: 1; 
+            width: {{ zenith_sidebar_width }}; 
+            flex-shrink: 0;
             background: #111827; 
             color: #ffffff; 
-            padding: 16px; 
+            padding: {{ zenith_sidebar_padding }}; 
             border-radius: 8px; 
             position: sticky; 
             top: 20px; 
-            max-height: 88vh; 
+            max-height: {{ zenith_sidebar_max_height }}; 
             overflow-y: auto;
             border: 1px solid #1f2937;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
@@ -553,7 +568,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
         
-        /* CLEAN CARD ITEM STYLING FOR SIDEBAR FEED (MATCHING REFERENCE IMAGE) */
+        /* SIDEBAR FEED ITEM STYLING */
         .side-ticker-item { 
             background: #1e293b; 
             border: 1px solid #334155;
@@ -675,7 +690,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% endif %}
         </div>
 
-        <!-- WIDER SIDEBAR TICKER CARD LAYOUT (MATCHING REFERENCE) -->
+        <!-- SIDEBAR TICKER CARD -->
         <div class="sidebar-ticker">
             <h3 style="color: #4ade80; font-size: 15px; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">Zenith Withdrawals</h3>
             <div id="sideTickerList" style="margin-top: 12px;"></div>
@@ -683,6 +698,11 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     </div>
 
     <script>
+        const tickerIntervalMs = {{ zenith_ticker_interval_ms }};
+        const minMultiplier = {{ zenith_min_withdrawal_multiple }};
+        const maxMultiplier = {{ zenith_max_withdrawal_multiple }};
+        const maxVisibleItems = {{ zenith_max_visible_items }};
+
         function toggleTopup(idx) {
             const box = document.getElementById('topupBox_' + idx);
             if (box) {
@@ -744,7 +764,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
             const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
-            const amt = (Math.floor(Math.random() * 30) + 3) * 100 * 1.5;
+            const randomMultiplier = Math.floor(Math.random() * (maxMultiplier - minMultiplier + 1)) + minMultiplier;
+            const amt = randomMultiplier * 100 * 1.5;
             
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
@@ -754,9 +775,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 <div class="payout-text">Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo</div>
             `;
             list.prepend(item);
-            if (list.children.length > 5) list.lastChild.remove();
+            if (list.children.length > maxVisibleItems) list.lastChild.remove();
         }
-        setInterval(addSideTickerItem, 4500);
+        setInterval(addSideTickerItem, tickerIntervalMs);
         addSideTickerItem();
         addSideTickerItem();
         addSideTickerItem();
@@ -1205,6 +1226,13 @@ def dashboard():
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
       current_balance=current_balance,
       pending_balance=pending_balance,
+      zenith_ticker_interval_ms=ZENITH_TICKER_INTERVAL_MS,
+      zenith_min_withdrawal_multiple=ZENITH_MIN_WITHDRAWAL_MULTIPLE,
+      zenith_max_withdrawal_multiple=ZENITH_MAX_WITHDRAWAL_MULTIPLE,
+      zenith_max_visible_items=ZENITH_MAX_VISIBLE_ITEMS,
+      zenith_sidebar_width=ZENITH_SIDEBAR_WIDTH,
+      zenith_sidebar_padding=ZENITH_SIDEBAR_PADDING,
+      zenith_sidebar_max_height=ZENITH_SIDEBAR_MAX_HEIGHT,
   )
 
 
