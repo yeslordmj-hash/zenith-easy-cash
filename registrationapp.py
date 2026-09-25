@@ -1393,4 +1393,3 @@ def confirm_payment(parent_idx, sub_idx):
         return redirect(url_for("admin_login"))
     investors = load_investors()
     if 0 <= parent_idx < len(investors):
-    ...
