@@ -1050,15 +1050,13 @@ def delete_investor(index):
 
 @app.route("/admin-logout")
 def admin_logout():
-  session.pop("admin_logged_in", None)
-  return redirect(url_for("index"))
-
+    session.pop("admin_logged_in", None)
+    return redirect(url_for("index"))
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
-  return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
-  port = int(os.environ.com("PORT", 5001) if "PORT" in os.environ else 5001)
-  app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host="0.0.0.0", port=port)
