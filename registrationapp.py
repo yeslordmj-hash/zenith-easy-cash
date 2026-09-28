@@ -730,7 +730,7 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             {{% if investments %}}
                 {{% for inv in investments %}}
                 <div class="card">
-                    <p style="margin-top:0;"><strong>Investment Slot #{{{{ loop.index }}}}</strong> <span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">Platform: {{{{ inv.company }}} }</span></p>
+                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong> <span style="font-size:11px; background:#e2e8f0; padding:2px 6px; border-radius:4px;">Platform: {{{{ inv.company }}} }</span></p>
                     <p><strong>Capital Invested:</strong> GHs {{{{ "%.2f"|format(inv.amount) }}}} <span style="color:{{{{ company.color }}}}; font-size:12px;">(+50% Expected Payout: GHs {{{{ "%.2f"|format(inv.expected_return) }}}})</span></p>
                     <p><strong>Payment Proof / ID:</strong> {{{{ inv.transaction_id }}}}</p>
                     <p><strong>Registered On:</strong> {{{{ inv.date_time }}}}</p>
