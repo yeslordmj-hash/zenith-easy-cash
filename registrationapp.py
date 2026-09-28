@@ -32,10 +32,10 @@ ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 ZENITH_TICKER_INTERVAL_MS = 4500  # How fast new withdrawals appear (in milliseconds)
 ZENITH_MIN_WITHDRAWAL_MULTIPLE = 3  # Minimum multiplier base for random amounts (x100)
 ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amounts (x100)
-ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
+ZENITH_MAX_VISIBLE_ITEMS = 6  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
-ZENITH_SIDEBAR_WIDTH = "120px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
+ZENITH_SIDEBAR_WIDTH = "260px"       # Change breadth/width 
 ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
@@ -519,7 +519,6 @@ INVESTOR_LOGIN_TEMPLATE = """
 </html>
 """
 
-# Fixed: Removed 'f' prefix from INVESTOR_DASHBOARD_TEMPLATE to prevent Jinja2 bracket evaluation conflicts
 INVESTOR_DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -839,10 +838,14 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 setTimeout(() => { lastItem.remove(); }, 400);
             }
         }
-        setInterval(addSideTickerItem, tickerIntervalMs);
-        addSideTickerItem();
-        addSideTickerItem();
-        addSideTickerItem();
+        
+        // Initial population of the side ticker list
+        if (document.getElementById('sideTickerList')) {
+            addSideTickerItem();
+            addSideTickerItem();
+            addSideTickerItem();
+            setInterval(addSideTickerItem, tickerIntervalMs);
+        }
     </script>
 </body>
 </html>
