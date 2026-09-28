@@ -57,13 +57,28 @@ GHANA_TOWNS_POOL = [
 app = Flask(__name__)
 app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 
-DATA_FILE = "Master.json"
-SETTINGS_FILE = "settings.json"
-UPLOAD_FOLDER = "uploads"
+# ==========================================
+# 🗄️ RENDER PERSISTENT DISK PATH CONFIGURATION
+# ==========================================
+# If you mounted a persistent disk on Render (e.g., at /var/data), 
+# specify it here or via environment variables so files persist across redeploys.
+DISK_PATH = os.environ.get("RENDER_DISK_PATH", "")
+if not DISK_PATH and os.path.exists("/var/data"):
+    DISK_PATH = "/var/data"
+
+if DISK_PATH:
+    DATA_FILE = os.path.join(DISK_PATH, "Master.json")
+    SETTINGS_FILE = os.path.join(DISK_PATH, "settings.json")
+    UPLOAD_FOLDER = os.path.join(DISK_PATH, "uploads")
+else:
+    DATA_FILE = "Master.json"
+    SETTINGS_FILE = "settings.json"
+    UPLOAD_FOLDER = "uploads"
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
-  os.makedirs(UPLOAD_FOLDER)
+  os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
 
@@ -106,8 +121,11 @@ def load_settings():
       "momo_name": "EMELIA DOOWELPOUR",
   }
   if not os.path.exists(SETTINGS_FILE):
-    with open(SETTINGS_FILE, "w") as f:
-      json.dump(default_settings, f, indent=4)
+    try:
+      with open(SETTINGS_FILE, "w") as f:
+        json.dump(default_settings, f, indent=4)
+    except Exception:
+      pass
     return default_settings
   try:
     with open(SETTINGS_FILE, "r") as f:
@@ -117,8 +135,11 @@ def load_settings():
 
 
 def save_settings(settings):
-  with open(SETTINGS_FILE, "w") as f:
-    json.dump(settings, f, indent=4)
+  try:
+    with open(SETTINGS_FILE, "w") as f:
+      json.dump(settings, f, indent=4)
+  except Exception as e:
+    print(f"Error saving settings: {e}")
 
 
 def load_investors():
@@ -137,8 +158,11 @@ def load_investors():
 
 
 def save_all_investors(investors):
-  with open(DATA_FILE, "w") as f:
-    json.dump(investors, f, indent=4)
+  try:
+    with open(DATA_FILE, "w") as f:
+      json.dump(investors, f, indent=4)
+  except Exception as e:
+    print(f"Error saving investors data: {e}")
 
 
 def save_investor_data(data):
