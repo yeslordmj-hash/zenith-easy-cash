@@ -35,7 +35,7 @@ ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amount
 ZENITH_MAX_VISIBLE_ITEMS = 6  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
-ZENITH_SIDEBAR_WIDTH = "120px"       # Change breadth/width 
+ZENITH_SIDEBAR_WIDTH = "260px"       # Change breadth/width 
 ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
@@ -535,8 +535,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         
         /* WIDE SIDE-BY-SIDE LAYOUT */
-        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-        .dashboard-container { flex: 2.3; min-width: 300px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         /* SIDEBAR TICKER CARD LAYOUT CONTROLLED BY TOP CONFIG VARIABLES */
         .sidebar-ticker { 
@@ -734,7 +734,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                         <label style="font-size:12px;">Top-Up Amount (GHs):</label>
                         <input type="number" name="topup_amount" min="200" step="1" required placeholder="Enter amount (Min 200 GHs)" style="padding:8px; margin-bottom:8px; width:100%; box-sizing:border-box;">
                         <input type="text" name="topup_proof" placeholder="MoMo Transaction ID" style="padding:8px; margin-bottom:8px; font-size:12px; width:100%; box-sizing:border-box;">
-                        <label style="font-size:11px; color:#555;">Upload Screenshot Receipt:</label>
+                        <label style="font-size:11px; color:#555; display:block;">Upload Screenshot Receipt:</label>
                         <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px;">
                         <button type="submit" style="background:#2e7d32; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
                     </form>
@@ -844,9 +844,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             }
         }
         
-        // Initial population of the side ticker list (FIXED: Added function calls & loop startup)
-        const sideTickerListEl = document.getElementById('sideTickerList');
-        if (sideTickerListEl) {
+        // Initial population of the side ticker list and loop generator
+        if (document.getElementById('sideTickerList')) {
             addSideTickerItem();
             addSideTickerItem();
             addSideTickerItem();
@@ -1468,15 +1467,17 @@ def admin_dashboard():
           }
       ]
     for s_idx, slot in enumerate(inv_list):
-      item = slot.copy()
-      item["parent_idx"] = p_idx
-      item["sub_idx"] = s_idx
-      item["name"] = inv.get("name")
-      item["number"] = inv.get("number")
-      item["password"] = inv.get("password", "123456")
-      item["work"] = inv.get("work", "-")
-      item["region"] = inv.get("region", "-")
-      flat_investments.append(item)
+      slot_copy = slot.copy()
+      slot_copy["parent_idx"] = p_idx
+      slot_copy["sub_idx"] = s_idx
+      slot_copy["name"] = inv.get("name", "Unknown")
+      slot_copy["number"] = inv.get("number", "Unknown")
+      slot_copy["password"] = inv.get("password", "N/A")
+      slot_copy["work"] = inv.get("work", "N/A")
+      slot_copy["region"] = inv.get("region", "N/A")
+      if "expected_return" not in slot_copy:
+        slot_copy["expected_return"] = slot_copy["amount"] * 1.5
+      flat_investments.append(slot_copy)
 
   settings = load_settings()
   return render_template_string(
@@ -1486,7 +1487,7 @@ def admin_dashboard():
   )
 
 
-@app.route("/admin/settings", methods=["POST"])
+@app.route("/admin/update-settings", methods=["POST"])
 def update_settings():
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
@@ -1496,62 +1497,51 @@ def update_settings():
   )
   settings["momo_name"] = request.form.get("momo_name", settings["momo_name"])
   save_settings(settings)
-  flash("Company details updated.")
+  flash("Company MoMo details updated successfully!")
   return redirect(url_for("admin_dashboard"))
 
 
 @app.route(
-    "/admin/confirm/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+    "/admin/confirm-payment/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
 )
 def confirm_payment(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
-    inv_list = investors[parent_idx].get("investments", [])
+    inv = investors[parent_idx]
+    inv_list = inv.get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list[sub_idx]["status"] = "Payment Confirmed & Active"
-      now = datetime.now()
-      maturity = now + timedelta(days=7)
+      maturity = datetime.now() + timedelta(days=7)
       inv_list[sub_idx]["maturity_date"] = maturity.strftime(
           "%Y-%m-%d %H:%M:%S"
       )
       save_all_investors(investors)
+      send_telegram_alert(
+          f"✅ <b>PAYMENT CONFIRMED & ACTIVE</b>\n👤 Name: {inv.get('name')}\n📞 Number: {inv.get('number')}\n⏰ Maturity Set to 7 Days Later."
+      )
+      flash("Payment confirmed and countdown started!")
   return redirect(url_for("admin_dashboard"))
 
 
 @app.route(
-    "/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>",
-    methods=["POST"],
+    "/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
 )
 def complete_withdrawal(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
-    inv_list = investors[parent_idx].get("investments", [])
+    inv = investors[parent_idx]
+    inv_list = inv.get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list[sub_idx]["status"] = "Withdrawn Completed"
       save_all_investors(investors)
-  return redirect(url_for("admin_dashboard"))
-
-
-@app.route(
-    "/admin/update-maturity/<int:parent_idx>/<int:sub_idx>",
-    methods=["POST"],
-)
-def update_maturity(parent_idx, sub_idx):
-  if not session.get("admin_logged_in"):
-    return redirect(url_for("admin_login"))
-  investors = load_investors()
-  if 0 <= parent_idx < len(investors):
-    inv_list = investors[parent_idx].get("investments,", []) # type: ignore
-    if 0 <= sub_idx < len(inv_list):
-      new_time = request.form.get("new_maturity", "").strip()
-      if new_time:
-        inv_list[sub_idx]["maturity_date"] = new_time
-        save_all_investors(investors)
-        flash("Maturity date successfully updated.")
+      send_telegram_alert(
+          f"💸 <b>PAYOUT COMPLETED</b>\n👤 Name: {inv.get('name')}\n📞 Number: {inv.get('number')}\n💰 Amount Paid Out Successfully!"
+      )
+      flash("Withdrawal marked as completed!")
   return redirect(url_for("admin_dashboard"))
 
 
@@ -1565,11 +1555,31 @@ def update_password(parent_idx):
     if new_pass:
       investors[parent_idx]["password"] = new_pass
       save_all_investors(investors)
-      flash("Password updated.")
+      flash("Investor password updated successfully!")
   return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/admin/delete/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
+@app.route(
+    "/admin/update-maturity/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+)
+def update_maturity(parent_idx, sub_idx):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+  investors = load_investors()
+  if 0 <= parent_idx < len(investors):
+    new_mat = request.form.get("new_maturity", "").strip()
+    if new_mat:
+      inv_list = investors[parent_idx].get("investments", [])
+      if 0 <= sub_idx < len(inv_list):
+        inv_list[sub_idx]["maturity_date"] = new_mat
+        save_all_investors(investors)
+        flash("Maturity date updated successfully!")
+  return redirect(url_for("admin_dashboard"))
+
+
+@app.route(
+    "/admin/delete-slot/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+)
 def delete_slot(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
@@ -1578,17 +1588,15 @@ def delete_slot(parent_idx, sub_idx):
     inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list.pop(sub_idx)
-      if not inv_list:
-        investors.pop(parent_idx)
       save_all_investors(investors)
-      flash("Investment slot deleted.")
+      flash("Investment slot deleted successfully!")
   return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/admin-logout")
 def admin_logout():
   session.pop("admin_logged_in", None)
-  return redirect(url_for("index"))
+  return redirect(url_for("admin_login"))
 
 
 @app.route("/uploads/<filename>")
@@ -1597,5 +1605,4 @@ def uploaded_file(filename):
 
 
 if __name__ == "__main__":
-  port = int(os.environ.get("PORT", 5001))
-  app.run(host="0.0.0.0", port=port)
+  app.run(host="0.0.0.0", port=5000, debug=True)
