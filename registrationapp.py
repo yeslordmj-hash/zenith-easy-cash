@@ -1609,7 +1609,7 @@ def update_maturity(parent_idx, sub_idx):
     return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
-    inv_list = investors[parent_idx].get("investments", /dev/null) # handled safe
+    inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       new_time = request.form.get("new_maturity", "").strip()
       if new_time:
