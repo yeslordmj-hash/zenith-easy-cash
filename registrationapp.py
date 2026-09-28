@@ -28,6 +28,14 @@ TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
 ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 
+# 📖 COMPANY ABOUT US SECTION (Configure text here easily!)
+COMPANY_ABOUT_TEXT = (
+    "Zenith Easy Cash Ghana is a premier online investment and empowerment platform "
+    "dedicated to financial growth across Ghana. We connect smart investors with high-yield "
+    "opportunities, ensuring transparent 50% profit returns within 7 days backed by secure "
+    "Mobile Money (MoMo) verification."
+)
+
 # Zenith Side Ticker Withdrawal Adjustments (Adjust these values anytime)
 ZENITH_TICKER_INTERVAL_MS = 4500  # How fast new withdrawals appear (in milliseconds)
 ZENITH_MIN_WITHDRAWAL_MULTIPLE = 3  # Minimum multiplier base for random amounts (x100)
@@ -617,6 +625,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
         .profile-btn-link { background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
         .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
+        .about-company-card { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 5px solid #0284c7; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        .about-company-card h4 { margin: 0 0 6px 0; color: #0369a1; font-size: 14px; }
         
         .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
@@ -679,6 +689,12 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 <a href="{{ url_for('index') }}">← Back to Home Page</a>
                 <a href="{{ url_for('profile_page') }}" class="profile-btn-link">👤 My Profile Settings</a>
             </div>
+            
+            <div class="about-company-card">
+                <h4>ℹ️ About Our Company</h4>
+                <p style="margin:0;">{{ company_about }}</p>
+            </div>
+
             <div>
                 <h2>Welcome, {{ investor.name }}</h2>
                 <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
@@ -700,6 +716,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
               {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
             {% endwith %}
 
+            <div id="investorSlotsContainer">
             {% if investments %}
                 {% for inv in investments %}
                 <div class="card">
@@ -761,8 +778,9 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 </div>
                 {% endfor %}
             {% else %}
-                <p style="text-align:center; color:#666;">No investment records found.</p>
+                <p style="text-align:center; color:#666;" id="noInvestmentsMsg">No investment records found.</p>
             {% endif %}
+            </div>
         </div>
 
         <div class="sidebar-ticker">
@@ -826,6 +844,20 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         }, 1000);
         updateTrackers();
         updateWithdrawalCountdowns();
+
+        // Automatic background polling to keep investor dashboard live without refreshing page
+        async function pollDashboardStatus() {
+            try {
+                const response = await fetch('/api/dashboard-status');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.reload_required) {
+                        window.location.reload();
+                    }
+                }
+            } catch (e) {}
+        }
+        setInterval(pollDashboardStatus, 5000);
 
         const sideNames = __GHANA_NAMES_POOL__;
         const sideTowns = __GHANA_TOWNS_POOL__;
@@ -1007,7 +1039,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
         </div>
 
         <h3>Registered Investors & Portfolio Management</h3>
-        <table>
+        <table id="adminInvestorsTable">
             <thead>
                 <tr>
                     <th>Investor Info</th>
@@ -1075,6 +1107,25 @@ ADMIN_DASHBOARD_TEMPLATE = """
             </tbody>
         </table>
     </div>
+    
+    <script>
+        // Automatic live polling for Admin Dashboard to see new users and updates instantly without refresh
+        let lastKnownSignature = "";
+        async function pollAdminUpdates() {
+            try {
+                const response = await fetch('/admin/api/status-signature');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!lastKnownSignature) {
+                        lastKnownSignature = data.signature;
+                    } else if (lastKnownSignature !== data.signature) {
+                        window.location.reload();
+                    }
+                }
+            } catch (e) {}
+        }
+        setInterval(pollAdminUpdates, 5000);
+    </script>
 </body>
 </html>
 """
@@ -1219,6 +1270,54 @@ def api_track():
   )
 
 
+@app.route("/api/dashboard-status")
+def api_dashboard_status():
+  number = session.get("investor_number")
+  if not number:
+    return jsonify({"reload_required": False})
+  investors = load_investors()
+  for inv in investors:
+    if inv.get("number") == number:
+      # Create a signature string representing current statuses and slot counts
+      inv_list = inv.get("investments", [])
+      sig = "_".join(
+          [
+              s.get("status", "") + str(s.get("maturity_date", ""))
+              for s in inv_list
+          ]
+      )
+      cached_sig = session.get("dashboard_sig", "")
+      if not cached_sig:
+        session["dashboard_sig"] = sig
+        return jsonify({"reload_required": False})
+      if cached_sig != sig:
+        session["dashboard_sig"] = sig
+        return jsonify({"reload_required": True})
+  return jsonify({"reload_required": False})
+
+
+@app.route("/admin/api/status-signature")
+def admin_status_signature():
+  if not session.get("admin_logged_in"):
+    return jsonify({"signature": ""})
+  investors = load_investors()
+  sig_parts = []
+  for inv in investors:
+    for slot in inv.get("investments", []):
+      sig_parts.append(
+          inv.get("number", "")
+          + slot.get("status", "")
+          + str(slot.get("maturity_date", ""))
+      )
+  return jsonify({"signature": hashlib_sig("".join(sig_parts))})
+
+
+def hashlib_sig(val):
+  import hashlib
+
+  return hashlib.md5(val.encode("utf-8")).hexdigest()
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
   if request.method == "POST":
@@ -1229,6 +1328,13 @@ def login():
       if inv.get("number") == number and inv.get("password") == password:
         session.permanent = True
         session["investor_number"] = number
+        inv_list = inv.get("investments", [])
+        session["dashboard_sig"] = "_".join(
+            [
+                s.get("status", "") + str(s.get("maturity_date", ""))
+                for s in inv_list
+            ]
+        )
         return redirect(url_for("dashboard"))
     flash("Invalid phone number or password.")
     return redirect(url_for("login"))
@@ -1311,6 +1417,7 @@ def dashboard():
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
       current_balance=current_balance,
       pending_balance=pending_balance,
+      company_about=COMPANY_ABOUT_TEXT,
   )
 
 
@@ -1371,6 +1478,7 @@ def update_profile():
 @app.route("/logout")
 def logout():
   session.pop("investor_number", None)
+  session.pop("dashboard_sig", None)
   return redirect(url_for("index"))
 
 
