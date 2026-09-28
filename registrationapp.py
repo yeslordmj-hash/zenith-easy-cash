@@ -60,8 +60,6 @@ app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 # ==========================================
 # 🗄️ RENDER PERSISTENT DISK PATH CONFIGURATION
 # ==========================================
-# If you mounted a persistent disk on Render (e.g., at /var/data), 
-# specify it here or via environment variables so files persist across redeploys.
 DISK_PATH = os.environ.get("RENDER_DISK_PATH", "")
 if not DISK_PATH and os.path.exists("/var/data"):
     DISK_PATH = "/var/data"
@@ -543,6 +541,9 @@ INVESTOR_LOGIN_TEMPLATE = """
 </html>
 """
 
+# ==========================================
+# 🛠️ FIXED F-STRING TEMPLATE (Escaped braces: {{ and }})
+# ==========================================
 INVESTOR_DASHBOARD_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -553,28 +554,25 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
     <style>
         body {{ font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }}
         
-        /* WIDE SIDE-BY-SIDE LAYOUT */
         .main-layout {{ max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }}
         .dashboard-container {{ flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }}
         
-        /* SIDEBAR TICKER CARD LAYOUT CONTROLLED BY TOP CONFIG VARIABLES */
         .sidebar-ticker {{ 
-            width: {{{{ zenith_sidebar_width }}}}; 
+            width: {ZENITH_SIDEBAR_WIDTH}; 
             flex-shrink: 0;
             background: #111827; 
             color: #ffffff; 
-            padding: {{{{ zenith_sidebar_padding }}}}; 
+            padding: {ZENITH_SIDEBAR_PADDING}; 
             border-radius: 8px; 
             position: sticky; 
             top: 20px; 
-            max-height: {{{{ zenith_sidebar_max_height }}}}; 
+            max-height: {ZENITH_SIDEBAR_MAX_HEIGHT}; 
             overflow-y: auto;
             border: 1px solid #1f2937;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             box-sizing: border-box;
         }}
 
-        /* STICKY HEADER WITH GPS BLINKING TAG */
         .sidebar-sticky-header {{
             position: sticky;
             top: 0;
@@ -636,7 +634,6 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
         .countdown-live-box {{ background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }}
         .flash {{ background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }}
         
-        /* SIDEBAR FEED ITEM STYLING WITH SMOOTH FADE OUT */
         .side-ticker-item {{ 
             background: #1e293b; 
             border: 1px solid #334155;
@@ -688,7 +685,6 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
                 <div style="clear: both;"></div>
             </div>
 
-            <!-- BALANCE CARDS (CURRENT BALANCE & PENDING BALANCE) -->
             <div class="balance-cards-grid">
                 <div class="balance-card current">
                     <h4>Current Balance Available</h4>
@@ -769,7 +765,6 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             {{% endif %}}
         </div>
 
-        <!-- SIDEBAR TICKER CARD -->
         <div class="sidebar-ticker">
             <div class="sidebar-sticky-header">
                 <div class="gps-online-tag"><span class="gps-dot"></span> Live Tracking</div>
@@ -780,10 +775,10 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
     </div>
 
     <script>
-        const tickerIntervalMs = {{{{ zenith_ticker_interval_ms }}}};
-        const minMultiplier = {{{{ zenith_min_withdrawal_multiple }}}};
-        const maxMultiplier = {{{{ zenith_max_withdrawal_multiple }}}};
-        const maxVisibleItems = {{{{ zenith_max_visible_items }}}};
+        const tickerIntervalMs = {ZENITH_TICKER_INTERVAL_MS};
+        const minMultiplier = {ZENITH_MIN_WITHDRAWAL_MULTIPLE};
+        const maxMultiplier = {ZENITH_MAX_WITHDRAWAL_MULTIPLE};
+        const maxVisibleItems = {ZENITH_MAX_VISIBLE_ITEMS};
 
         function toggleTopup(idx) {{
             const box = document.getElementById('topupBox_' + idx);
@@ -852,10 +847,8 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             `;
             list.prepend(item);
             
-            // Trigger roll-in animation
             setTimeout(() => {{ item.classList.add('show'); }}, 50);
 
-            // Manage maximum visible items with a fade-out effect
             if (list.children.length > maxVisibleItems) {{
                 const lastItem = list.lastElementChild;
                 lastItem.classList.add('fade-out');
@@ -1310,13 +1303,6 @@ def dashboard():
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
       current_balance=current_balance,
       pending_balance=pending_balance,
-      zenith_ticker_interval_ms=ZENITH_TICKER_INTERVAL_MS,
-      zenith_min_withdrawal_multiple=ZENITH_MIN_WITHDRAWAL_MULTIPLE,
-      zenith_max_withdrawal_multiple=ZENITH_MAX_WITHDRAWAL_MULTIPLE,
-      zenith_max_visible_items=ZENITH_MAX_VISIBLE_ITEMS,
-      zenith_sidebar_width=ZENITH_SIDEBAR_WIDTH,
-      zenith_sidebar_padding=ZENITH_SIDEBAR_PADDING,
-      zenith_sidebar_max_height=ZENITH_SIDEBAR_MAX_HEIGHT,
   )
 
 
