@@ -57,13 +57,18 @@ GHANA_TOWNS_POOL = [
 app = Flask(__name__)
 app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 
-DATA_FILE = "Master.json"
-SETTINGS_FILE = "settings.json"
-UPLOAD_FOLDER = "uploads"
+# DISK CONFIGURATION MOUNT PATH (/var/data)
+DISK_MOUNT_PATH = "/var/data"
+if not os.path.exists(DISK_MOUNT_PATH):
+  os.makedirs(DISK_MOUNT_PATH, exist_ok=True)
+
+DATA_FILE = os.path.join(DISK_MOUNT_PATH, "Master.json")
+SETTINGS_FILE = os.path.join(DISK_MOUNT_PATH, "settings.json")
+UPLOAD_FOLDER = os.path.join(DISK_MOUNT_PATH, "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
-  os.makedirs(UPLOAD_FOLDER)
+  os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
 
