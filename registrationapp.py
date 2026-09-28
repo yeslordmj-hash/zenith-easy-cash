@@ -38,8 +38,8 @@ COMPANY_ABOUT_TEXT = (
 
 # Zenith Side Ticker Withdrawal Adjustments (Adjust these values anytime)
 ZENITH_TICKER_INTERVAL_MS = 4500  # How fast new withdrawals appear (in milliseconds)
-ZENITH_MIN_WITHDRAWAL_MULTIPLE = 3  # Minimum multiplier base for random amounts (x100)
-ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amounts (x100)
+ZENITH_MIN_WITHDRAWAL_MULTIPLE = 2  # Minimum multiplier base for random amounts (x100)
+ZENITH_MAX_WITHDRAWAL_MULTIPLE = 256  # Maximum multiplier base for random amounts (x100)
 ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
@@ -48,17 +48,157 @@ ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
 # 🌐 TICKER POOL NAMES & TOWNS CONFIGURATION (Add or modify names/towns here anytime!)
-GHANA_NAMES_POOL = [
-    "Kwame Mensah", "Abena Osei", "Kofi Boateng", "Afia Serwaa", "Yaw Ansah", 
-    "Akosua Frimpong", "Esi Dapaah", "Kojo Addo", "Nana Ama Owusu", "Fiifi Atta Mills",
-    "Paa Kwesi Boadu", "Selorm Agbeko", "Edem Quarshie", "Latif Mohammed", "Hawa Yakubu",
-    "Bernard Nyarko", "Priscilla Agyei", "Bright Ofori", "Blessing Nartey", "Cynthia Quaye"
+GHANAIAN_NAMES = [
+    # Akan (Ashanti, Fante, Akuapem, Bono, etc.)
+    "Kwame Mensah", "Kofi Annan", "Kwaku Boateng", "Yaw Osei", "Kojo Frimpong",
+    "Kwabena Appiah", "Kwesi Addo", "Kwaku Baffour", "Kofi Owusu", "Kwame Asare",
+    "Kwaku Darko", "Yaw Boakye", "Kofi Sarpong", "Kwabena Agyemang", "Kwesi Bonsu",
+    "Kwame Poku", "Kojo Kwarteng", "Kwaku Antwi", "Yaw Mensah", "Kofi Ofori",
+    "Akosua Agyei", "Abena Mensah", "Yaa Asantewaa", "Adwoa Serwaa", "Afia Kobi",
+    "Amoabea Osei", "Ama Frimpong", "Esi Buahin", "Adwoa Amponsah", "Abena Pokua",
+    "Akosua Owusu", "Yaa Boakyewaa", "Afia Darkowaa", "Ama Serwaa", "Adwoa Addo",
+    "Kwame Boateng-Mensah", "Kofi Acheampong", "Kwaku Tuffour", "Yaw Asiedu", "Kojo Nketia",
+    "Kwabena Kufuor", "Kwesi Bekoe", "Kwaku Duah", "Kofi Odoom", "Kwame Gyasi",
+    "Akosua Nyarko", "Abena Pomaa", "Yaa Gyanma", "Adwoa Tawiah", "Afia Boakyewaa",
+    
+    # Ewe (Volta Region)
+    "Kofi Agboka", "Korku Senyo", "Mawuli Dzifa", "K Mensah", "Togbe Adza",
+    "Kodzo Gbedemah", "Kwami Nyavor", "Eli Kpogli", "Edem Agbeko", "Sena Ablorde",
+    "Korku Gakpetor", "Kwami Ahiable", "Mawuena Agbezudor", "Kofi Tamakloe", "Kodzo Fiadjoe",
+    "Afi Mawusi", "Enyonam Gbeve", "Sena Atitsogbui", "Akofa Agbavor", "Mawuwole Dzradosi",
+    "Dzifa Kumordzie", "Adzo Ametefe", "Afi Agbeko", "Esinam Dogbe", "Selasi Gidiglo",
+    "Korku Asimah", "Kwami Blagogee", "Mawuli Kpikpi", "Kofi Amegatcher", "Kodzo Akakpo",
+    "Akofa Sika", "Enyonam Tsikata", "Sena Wovenu", "Afi Gbedze", "Mawuena Fiawoo",
+    "Dzifa Kportufe", "Adzo Tornyi", "Afi Tengey", "Esinam Avle", "Selasi Nyadedzor",
+    
+    # Ga-Adangbe (Greater Accra)
+    "Nii Ayi", "Tetteh Mensah", "Lartey Owoo", "Okine Ablorh", "Kakai Tagoe",
+    "Nii Armah", "Tetteh Kwei", "Lartey Quaye", "Okine Ankrah", "Kakai Ashong",
+    "Nii Lamptey", "Tetteh Addy", "Lartey Quarcoo", "Okine Ocansey", "Kakai Commey",
+    "Naa Ashorkor", "Naa Dede", "Naa Koshie", "Naa Ayeley", "Naa Shormeh",
+    "Naa Owoo", "Naa Amorkor", "Naa Ablah", "Naa Aklerh", "Naa Korkor",
+    "Nii Tackie", "Tetteh Quaye", "Lartey Adjei", "Okine Bruce", "Kakai Allotey",
+    "Nii Okantey", "Tetteh Hammond", "Lartey Nmai", "Okine Clottey", "Kakai Pappoe",
+    "Naa Ayiku", "Naa Densua", "Naa Ayorkor", "Naa Manye", "Naa Dzama",
+    
+    # Mole-Dagbani & Northern Tribes (Dagomba, Mamprusi, Gonja, Frafra, Kusasi)
+    "Mohammed Alhassan", "Abdulai Yakubu", "Ibrahim Salifu", "Fuseini Fuseini", "Alhassan Mohammed",
+    "Issahak Seidu", "Haruna Zakaria", "Osman Mahama", "Abubakar Tanko", "Mustapha Sulemana",
+    "Alhassan Yakubu", "Abdulai Salifu", "Ibrahim Yakubu", "Fuseini Seidu", "Issahak Mohammed",
+    "Haruna Mahama", "Osman Zakaria", "Abubakar Seidu", "Mustapha Tanko", "Alhassan Sulemana",
+    "Mariama Alhassan", "Zainabu Yakubu", "Fatima Salifu", "Aisha Fuseini", "Halima Mohammed",
+    "Safia Seidu", "Rabi Zakaria", "Aisha Mahama", "Fati Tanko", "Aminata Sulemana",
+    "Kofi Ndebugri", "Akparibo Azantilow", "Atubiga Abugre", "Apam Ayariga", "Awuni Akologo",
+    "Amina Alidu", "Zulaiha Issah", "Latifa Bawa", "Asana Mumuni", "Barikisu Gbeadese",
+    
+    # Akan (Extended / Brong & Fante variations)
+    "Kofi Baidoo", "Kwaku Mensah-Bonsu", "Yaw Annobil", "Kwame Arhin", "Kojo Eghan",
+    "Kwabena Sekyi", "Kwesi Bentsi", "Kwaku Dadzie", "Kofi Essien", "Kwame Ennin",
+    "Akosua Enchil", "Abena Eson", "Yaa Eduful", "Adwoa Ebu", "Afia Eyison",
+    "Kojo Amissah", "Kwaku Eson", "Yaw Appiah-Kubi", "Kofi Asmah", "Kwame Annan",
+    
+    # Other Diverse Groups (Ewe, Guan, Nzema, Krobo)
+    "Kofi Kponor", "Kodzo Tetteh", "Kwami Agbenyega", "Mawuli Gbekor", "Edem Kpobi",
+    "Sena Tameklo", "Afi Gborglah", "Enyonam Akoto", "Dzifa Kpentey", "Selasi Djokoto",
+    "Kaku Ackah", "Kofi Kpole", "Kwaw Blay", "Ezra Kaku", "Kojo Nzema",
+    "Nene Narh", "Nene Oklemekuku", "Kofi Koryekpor", "Tetteh Kportufe", "Mawuena Narh",
+    
+    # Mixed / Contemporary Popular Ghanaian First & Last Name Combinations
+    "Kofi Boateng", "Kwame Darko", "Yaw Ofori", "Kojo Sarpong", "Kwabena Addo",
+    "Kwesi Owusu", "Kwaku Frimpong", "Akosua Mensah", "Abena Osei", "Yaa Appiah",
+    "Adwoa Baffour", "Afia Asare", "Ama Boakye", "Esi Kwarteng", "Kofi Antwi",
+    "Kwame Mensah", "Yaw Tuffour", "Kojo Asiedu", "Kwabena Nketia", "Kwesi Kufuor",
+    "Kwaku Bekoe", "Akosua Duah", "Abena Odoom", "Yaa Gyasi", "Adwoa Nyarko",
+    "Afia Pomaa", "Ama Gyanma", "Esi Tawiah", "Kofi Boakyewaa", "Kwame Acheampong",
+    "Yaw Tetteh", "Kojo Lartey", "Kwabena Okine", "Kwesi Tagoe", "Kwaku Armah",
+    "Akosua Kwei", "Abena Quaye", "Yaa Ankrah", "Adwoa Ashong", "Afia Lamptey"
 ]
 
-GHANA_TOWNS_POOL = [
-    "Accra (East Legon)", "Kumasi (Adum)", "Takoradi", "Tamale", "Cape Coast", 
-    "Sunyani", "Ho", "Tema (Community 25)", "Koforidua", "Obuasi", 
-    "Techiman", "Bolgatanga", "Wa", "Swedru", "Teshie-Nungua"
+GHANAIAN_TOWNS = [
+    # Greater Accra Region
+    "Accra", "Tema", "Dodowa", "Oyibi", "Ada Foah", "Sege", "Prampram", 
+    "Amasaman", "Abokobi", "Madina", "Ashaiman", "Teshie", "Nungua", 
+    "Lashibi", "Dome", "Gbawe", "Weija", "Ofankor", "Taifa", "Nima",
+
+    # Ashanti Region
+    "Kumasi", "Obuasi", "Asante Mampong", "Ejisu", "Konongo", "Offinso", 
+    "Asante Bekwai", "Agogo", "Juaso", "Juaben", "Ejura", "Tepa", 
+    "Kumawu", "Nsuta", "Mamponten", "Nkawie", "Kokofu", "Jacobu", 
+    "Akrokeri", "Fomena", "Nyinahin", "Bonwire", "Barekese", "Asokore",
+
+    # Central Region
+    "Cape Coast", "Kasoa", "Assin Foso", "Agona Swedru", "Elmina", 
+    "Winneba", "Mankessim", "Dunkwa-on-Offin", "Saltpond", "Apam", 
+    "Komenda", "Moree", "Yamoransa", "Anomabo", "Kormantse", "Awutu Bereku", 
+    "Senya Bereku", "Bawjiase", "Kwanyako", "Agona Nsaba",
+
+    # Eastern Region
+    "Koforidua", "Nkawkaw", "Suhum", "Kyebi", "Akwatia", "Kade", 
+    "Asamankese", "Adeiso", "Nsawam", "Akim Oda", "Aburi", "Akuapem Mampong", 
+    "Akosombo", "Somanya", "Akropong", "Adukrom", "Mamfe", "Larteh", 
+    "Abetifi", "Mpraeso", "Nkwatia", "Anyinam", "Donkorkrom", "Somanya",
+
+    # Western Region
+    "Sekondi-Takoradi", "Tarkwa", "Shama", "Prestea", "Bogoso", "Axim", 
+    "Asankragwa", "Daboase", "Beposo", "Huni Valley", "Nsuta", "Benso", 
+    "Mpohor", "Wassa Akropong", "Dixcove", "Busua", "Half Assini", "Elubo", 
+    "Nkroful", "Atuabo", "Agona Nkwanta", "Esiama", "Beyin", "Prestea",
+
+    # Volta Region
+    "Ho", "Hohoe", "Keta", "Aflao", "Sogakope", "Kpando", "Peki", 
+    "Amedzofe", "Kpetoe", "Battor", "Akatsi", "Abor", "Denu", "Dabala", 
+    "Agbozume", "Adidome", "Anyako", "Anloga", "Mepe", "Dzodze", 
+
+    # Bono Region
+    "Sunyani", "Fiapre", "Berekum", "Dormaa Ahenkro", "Wenchi", "Wamfie", 
+    "Japekrom", "Sampa", "New Drobo", "Suma Ahenkro", "Chiraa", "Bui", 
+    "Banda Ahenkro", "Jinijini", "Goka", "Nsuatre", "Abesim", "Seikwa", 
+    "Nsawkaw", "Wamanafo",
+
+    # Bono East Region
+    "Techiman", "Kintampo", "Nkoranza", "Atebubu", "Tuobodom", "Jema", 
+    "Prang", "Yeji", "Amantin", "Bono Manso", "Ofuman", "Donkro Nkwanta", 
+    "Busunya", "Kranka", "Krobo", "Bassa", "Tanoso", "Atebubu", " Kwame Danso", "Prang",
+
+    # Ahafo Region
+    "Goaso", "Duayaw Nkwanta", "Mim", "Bechem", "Hwidiem", "Kenyasi", 
+    "Kukuom", "Ntotroso", "Nsuta", "Yamfo", "Bomaa", "Tanoso", 
+    "Techire", "Gambia No. 2", "Fawohoyeden", "Akrodie", "Asumura", "Nkrankwanta", "Sampa", "Nsuatre",
+
+    # Savannah Region
+    "Damongo", "Sawla", "Salaga", "Daboya", "Bole", "Bamboi", 
+    "Buipe", "Yapei", "Tuna", "Kalba", "Makango", "Kpalbe", 
+    "Tinga", "Gbollar", "Sonyo", "Volo", "Buipe", "Damongo", "Salaga", "Sawla",
+
+    # Northern Region
+    "Tamale", "Yendi", "Savelugu", "Bimbilla", "Sagnerigu", "Karaga", 
+    "Tatale", "Tolon", "Nanton", "Zabzugu", "Kumbungu", "Gushiegu", 
+    "Pong Tamale", "Kpandai", "Saboba", "Sang", "Wulensi", "Demon", "Kworli", "Sang",
+
+    # North East Region
+    "Nalerigu", "Walewale", "Chereponi", "Nakpanduri", "Gambaga", "Nasia", 
+    "Bunkprugu", "Yagaba", "Yunyoo", "Kpasenkpe", "Janga", "Wungu", 
+    "Gbintiri", "Sakogu", "Bongo Da", "Loagri", "Karaga", "Zaragad", "Kpemale", "Nalerigu",
+
+    # Upper East Region
+    "Bolgatanga", "Navrongo", "Bawku", "Paga", "Bongo", "Tongo", 
+    "Pwalugu", "Talensi", "Zebilla", "Pusiga", "Sandema", "Fumbisi", 
+    "Garu", "Tempane", "Zuarungu", "Sherigu", "Mirigu", "Yikpien", "Biu", "Katiu",
+
+    # Upper West Region
+    "Wa", "Tumu", "Jirapa", "Lawra", "Nandom", "Nadowli", 
+    "Lambusie", "Hamile", "Han", "Gwolu", "Kaleo", "Vieri", 
+    "Poyentanga", "Bussie", "Daffiama", "Wechiau", "Funsi", "Chirano", "Tumu", "Jirapa",
+
+    # Oti Region
+    "Dambai", "Nkwanta", "Kete Krachi", "Worawora", "Jasikan", "Kadjebi", 
+    "Asato", "Nkonya", "Kpasa", "Dodo Amanfrom", "Apesokubi", "Osramani", 
+    "Brewaniase", "Kecheibi", "Chinderi", "Borada", "Bagjamso", "Papase", "Tapa Amotoe", "Kwamekrom",
+
+    # Western North Region
+    "Sefwi Wiawso", "Juaboso", "Sefwi Bekwai", "Bibiani", "Enchi", "Asawinso", 
+    "Chirano", "Anwiaso", "Essam", "Debiso", "Asafo", "Dadieso", 
+    "Amoya", "Aboinso", "Buako", "Akontombra", "Dadieso", "Elluo", "Kwamekrom", "Bodi"
 ]
 # ==========================================
 
