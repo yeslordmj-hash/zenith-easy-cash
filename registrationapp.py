@@ -839,17 +839,32 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             // Manage maximum visible items with a fade-out effect
             if (list.children.length > maxVisibleItems) {
                 const lastItem = list.lastElementChild;
-                lastItem.classList.add('fade-out');
-                setTimeout(() => { lastItem.remove(); }, 400);
+                if (lastItem) {
+                    lastItem.classList.add('fade-out');
+                    setTimeout(() => { lastItem.remove(); }, 400);
+                }
             }
         }
         
-        // Initial population of the side ticker list
-        if (document.getElementById('sideTickerList')) {
-            addSideTickerItem();
-            addSideTickerItem();
-            addSideTickerItem();
-            setInterval(addSideTickerItem, tickerIntervalMs);
+        // Initial population of the side ticker list when DOM is ready
+        document.addEventListener("DOMContentLoaded", () => {
+            if (document.getElementById('sideTickerList')) {
+                addSideTickerItem();
+                addSideTickerItem();
+                addSideTickerItem();
+                setInterval(addSideTickerItem, tickerIntervalMs);
+            }
+        });
+        
+        // Fallback execution if DOMContentLoaded already fired
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+            const listEl = document.getElementById('sideTickerList');
+            if (listEl && listEl.children.length === 0) {
+                addSideTickerItem();
+                addSideTickerItem();
+                addSideTickerItem();
+                setInterval(addSideTickerItem, tickerIntervalMs);
+            }
         }
     </script>
 </body>
