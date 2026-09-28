@@ -35,7 +35,7 @@ ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amount
 ZENITH_MAX_VISIBLE_ITEMS = 6  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
-ZENITH_SIDEBAR_WIDTH = "260px"       # Change breadth/width 
+ZENITH_SIDEBAR_WIDTH = "120px"       # Change breadth/width 
 ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
@@ -535,8 +535,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         
         /* WIDE SIDE-BY-SIDE LAYOUT */
-        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
-        .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+        .dashboard-container { flex: 2.3; min-width: 300px; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         /* SIDEBAR TICKER CARD LAYOUT CONTROLLED BY TOP CONFIG VARIABLES */
         .sidebar-ticker { 
@@ -839,32 +839,18 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             // Manage maximum visible items with a fade-out effect
             if (list.children.length > maxVisibleItems) {
                 const lastItem = list.lastElementChild;
-                if (lastItem) {
-                    lastItem.classList.add('fade-out');
-                    setTimeout(() => { lastItem.remove(); }, 400);
-                }
+                lastItem.classList.add('fade-out');
+                setTimeout(() => { lastItem.remove(); }, 400);
             }
         }
         
-        // Initial population of the side ticker list when DOM is ready
-        document.addEventListener("DOMContentLoaded", () => {
-            if (document.getElementById('sideTickerList')) {
-                addSideTickerItem();
-                addSideTickerItem();
-                addSideTickerItem();
-                setInterval(addSideTickerItem, tickerIntervalMs);
-            }
-        });
-        
-        // Fallback execution if DOMContentLoaded already fired
-        if (document.readyState === "complete" || document.readyState === "interactive") {
-            const listEl = document.getElementById('sideTickerList');
-            if (listEl && listEl.children.length === 0) {
-                addSideTickerItem();
-                addSideTickerItem();
-                addSideTickerItem();
-                setInterval(addSideTickerItem, tickerIntervalMs);
-            }
+        // Initial population of the side ticker list (FIXED: Added function calls & loop startup)
+        const sideTickerListEl = document.getElementById('sideTickerList');
+        if (sideTickerListEl) {
+            addSideTickerItem();
+            addSideTickerItem();
+            addSideTickerItem();
+            setInterval(addSideTickerItem, tickerIntervalMs);
         }
     </script>
 </body>
@@ -1559,7 +1545,7 @@ def update_maturity(parent_idx, sub_idx):
     return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
-    inv_list = investors[parent_idx].get("investments", [])
+    inv_list = investors[parent_idx].get("investments,", []) # type: ignore
     if 0 <= sub_idx < len(inv_list):
       new_time = request.form.get("new_maturity", "").strip()
       if new_time:
