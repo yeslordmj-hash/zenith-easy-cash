@@ -48,7 +48,7 @@ ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
 ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
 # 🌐 TICKER POOL NAMES & TOWNS CONFIGURATION (Add or modify names/towns here anytime!)
-GHANAIAN_NAMES = [
+GHANA_NAMES_POOL = [
     # Akan (Ashanti, Fante, Akuapem, Bono, etc.)
     "Kwame Mensah", "Kofi Annan", "Kwaku Boateng", "Yaw Osei", "Kojo Frimpong",
     "Kwabena Appiah", "Kwesi Addo", "Kwaku Baffour", "Kofi Owusu", "Kwame Asare",
@@ -114,7 +114,7 @@ GHANAIAN_NAMES = [
     "Akosua Kwei", "Abena Quaye", "Yaa Ankrah", "Adwoa Ashong", "Afia Lamptey"
 ]
 
-GHANAIAN_TOWNS = [
+GHANAIAN_TOWNS_POOL = [
     # Greater Accra Region
     "Accra", "Tema", "Dodowa", "Oyibi", "Ada Foah", "Sege", "Prampram", 
     "Amasaman", "Abokobi", "Madina", "Ashaiman", "Teshie", "Nungua", 
