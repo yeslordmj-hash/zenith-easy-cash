@@ -113,93 +113,84 @@ GHANA_NAMES_POOL = [
     "Yaw Tetteh", "Kojo Lartey", "Kwabena Okine", "Kwesi Tagoe", "Kwaku Armah",
     "Akosua Kwei", "Abena Quaye", "Yaa Ankrah", "Adwoa Ashong", "Afia Lamptey"
 ]
-
 GHANAIAN_TOWNS_POOL = [
     # Greater Accra Region
     "Accra", "Tema", "Dodowa", "Oyibi", "Ada Foah", "Sege", "Prampram", 
     "Amasaman", "Abokobi", "Madina", "Ashaiman", "Teshie", "Nungua", 
-    "Lashibi", "Dome", "Gbawe", "Weija", "Ofankor", "Taifa", "Nima",
+    "Lashibi", "Dome", "Gbawe", "Weija", "Ofankor", "Taifa", "Nima", 
+    "Osu", "Labadi", "Dansoman", "Achimota", "Kaneshie", "East Legon", 
+    "Cantonments", "Spintex", "Lapaz", "Kwabenya", "Tesano", "Haatso",
 
     # Ashanti Region
     "Kumasi", "Obuasi", "Asante Mampong", "Ejisu", "Konongo", "Offinso", 
     "Asante Bekwai", "Agogo", "Juaso", "Juaben", "Ejura", "Tepa", 
     "Kumawu", "Nsuta", "Mamponten", "Nkawie", "Kokofu", "Jacobu", 
-    "Akrokeri", "Fomena", "Nyinahin", "Bonwire", "Barekese", "Asokore",
+    "Akrokeri", "Fomena", "Nyinahin", "Bonwire", "Barekese", "Asokore", 
+    "Adum", "Bantama", "Ahodwo", "Asafo", "Suame", "Tafo", "Kwadaso", "Ejisu",
 
     # Central Region
     "Cape Coast", "Kasoa", "Assin Foso", "Agona Swedru", "Elmina", 
     "Winneba", "Mankessim", "Dunkwa-on-Offin", "Saltpond", "Apam", 
     "Komenda", "Moree", "Yamoransa", "Anomabo", "Kormantse", "Awutu Bereku", 
-    "Senya Bereku", "Bawjiase", "Kwanyako", "Agona Nsaba",
+    "Senya Bereku", "Bawjiase", "Kwanyako", "Agona Nsaba", "Jukwa", "Twifo Praso",
 
     # Eastern Region
     "Koforidua", "Nkawkaw", "Suhum", "Kyebi", "Akwatia", "Kade", 
     "Asamankese", "Adeiso", "Nsawam", "Akim Oda", "Aburi", "Akuapem Mampong", 
     "Akosombo", "Somanya", "Akropong", "Adukrom", "Mamfe", "Larteh", 
-    "Abetifi", "Mpraeso", "Nkwatia", "Anyinam", "Donkorkrom", "Somanya",
+    "Abetifi", "Mpraeso", "Nkwatia", "Anyinam", "Donkorkrom", "Krobo Odumase",
 
     # Western Region
-    "Sekondi-Takoradi", "Tarkwa", "Shama", "Prestea", "Bogoso", "Axim", 
-    "Asankragwa", "Daboase", "Beposo", "Huni Valley", "Nsuta", "Benso", 
-    "Mpohor", "Wassa Akropong", "Dixcove", "Busua", "Half Assini", "Elubo", 
-    "Nkroful", "Atuabo", "Agona Nkwanta", "Esiama", "Beyin", "Prestea",
-
-    # Volta Region
-    "Ho", "Hohoe", "Keta", "Aflao", "Sogakope", "Kpando", "Peki", 
-    "Amedzofe", "Kpetoe", "Battor", "Akatsi", "Abor", "Denu", "Dabala", 
-    "Agbozume", "Adidome", "Anyako", "Anloga", "Mepe", "Dzodze", 
-
-    # Bono Region
-    "Sunyani", "Fiapre", "Berekum", "Dormaa Ahenkro", "Wenchi", "Wamfie", 
-    "Japekrom", "Sampa", "New Drobo", "Suma Ahenkro", "Chiraa", "Bui", 
-    "Banda Ahenkro", "Jinijini", "Goka", "Nsuatre", "Abesim", "Seikwa", 
-    "Nsawkaw", "Wamanafo",
-
-    # Bono East Region
-    "Techiman", "Kintampo", "Nkoranza", "Atebubu", "Tuobodom", "Jema", 
-    "Prang", "Yeji", "Amantin", "Bono Manso", "Ofuman", "Donkro Nkwanta", 
-    "Busunya", "Kranka", "Krobo", "Bassa", "Tanoso", "Atebubu", " Kwame Danso", "Prang",
-
-    # Ahafo Region
-    "Goaso", "Duayaw Nkwanta", "Mim", "Bechem", "Hwidiem", "Kenyasi", 
-    "Kukuom", "Ntotroso", "Nsuta", "Yamfo", "Bomaa", "Tanoso", 
-    "Techire", "Gambia No. 2", "Fawohoyeden", "Akrodie", "Asumura", "Nkrankwanta", "Sampa", "Nsuatre",
-
-    # Savannah Region
-    "Damongo", "Sawla", "Salaga", "Daboya", "Bole", "Bamboi", 
-    "Buipe", "Yapei", "Tuna", "Kalba", "Makango", "Kpalbe", 
-    "Tinga", "Gbollar", "Sonyo", "Volo", "Buipe", "Damongo", "Salaga", "Sawla",
-
-    # Northern Region
-    "Tamale", "Yendi", "Savelugu", "Bimbilla", "Sagnerigu", "Karaga", 
-    "Tatale", "Tolon", "Nanton", "Zabzugu", "Kumbungu", "Gushiegu", 
-    "Pong Tamale", "Kpandai", "Saboba", "Sang", "Wulensi", "Demon", "Kworli", "Sang",
-
-    # North East Region
-    "Nalerigu", "Walewale", "Chereponi", "Nakpanduri", "Gambaga", "Nasia", 
-    "Bunkprugu", "Yagaba", "Yunyoo", "Kpasenkpe", "Janga", "Wungu", 
-    "Gbintiri", "Sakogu", "Bongo Da", "Loagri", "Karaga", "Zaragad", "Kpemale", "Nalerigu",
-
-    # Upper East Region
-    "Bolgatanga", "Navrongo", "Bawku", "Paga", "Bongo", "Tongo", 
-    "Pwalugu", "Talensi", "Zebilla", "Pusiga", "Sandema", "Fumbisi", 
-    "Garu", "Tempane", "Zuarungu", "Sherigu", "Mirigu", "Yikpien", "Biu", "Katiu",
-
-    # Upper West Region
-    "Wa", "Tumu", "Jirapa", "Lawra", "Nandom", "Nadowli", 
-    "Lambusie", "Hamile", "Han", "Gwolu", "Kaleo", "Vieri", 
-    "Poyentanga", "Bussie", "Daffiama", "Wechiau", "Funsi", "Chirano", "Tumu", "Jirapa",
-
-    # Oti Region
-    "Dambai", "Nkwanta", "Kete Krachi", "Worawora", "Jasikan", "Kadjebi", 
-    "Asato", "Nkonya", "Kpasa", "Dodo Amanfrom", "Apesokubi", "Osramani", 
-    "Brewaniase", "Kecheibi", "Chinderi", "Borada", "Bagjamso", "Papase", "Tapa Amotoe", "Kwamekrom",
+    "Sekondi", "Takoradi", "Tarkwa", "Axim", "Prestea", "Effiakuma", 
+    "Agona Nkwanta", "Bogoso", "Elubo", "Half Assini", "Shama", "Mpohor", 
+    "Daboase", "Apowa", "Dixcove", "Busua", "Kwesimintsim", "Essikado",
 
     # Western North Region
-    "Sefwi Wiawso", "Juaboso", "Sefwi Bekwai", "Bibiani", "Enchi", "Asawinso", 
-    "Chirano", "Anwiaso", "Essam", "Debiso", "Asafo", "Dadieso", 
-    "Amoya", "Aboinso", "Buako", "Akontombra", "Dadieso", "Elluo", "Kwamekrom", "Bodi"
+    "Sefwi Wiawso", "Bibiani", "Enchi", "Juaboso", "Akontombra", "Dadieso", 
+    "Essam", "Bodi", "Sefwi Bekwai", "Awaso",
+
+    # Volta Region
+    "Ho", "Aflao", "Hohoe", "Keta", "Kpandu", "Amlakpe", "Denu", 
+    "Sogakope", "Adidome", "Akatsi", "Anloga", "Jasikan", "Kadjebi", 
+    "Nkonya", "Volo", "Abor", "Agbozume", "Dzodze",
+
+    # Oti Region
+    "Dambai", "Kpandai", "Nkwanta", "Chinderi", "Borada", "Brewaniase", 
+    "Kpassa", "Jasikan", "Likpe", "Guaman",
+
+    # Bono Region
+    "Sunyani", "Berekum", "Dormaa Ahenkro", "Wenchi", "Nsawkaw", "Seikwa", 
+    "Drobo", "Japekrom", "Badu", "Chiraa", "Wamanafo", "Kwatire",
+
+    # Bono East Region
+    "Techiman", "Kintampo", "Atebubu", "Yeji", "Prang", "Nkoranza", 
+    "Amanten", "Kwame Danso", "Tuobodom", "Busunya", "Kajaji",
+
+    # Ahafo Region
+    "Goaso", "Duayaw Nkwanta", "Bechem", "Hwidiem", "Kenyasi", "Yamfo", 
+    "Ntotroso", "Kukuom", "Alavanyo", "Asumura",
+
+    # Northern Region
+    "Tamale", "Yendi", "Bimbilla", "Savelugu", "Zabzugu", "Gushegu", 
+    "Karaga", "Kumbungu", "Tolon", "Nanton", "Saboba", "Salaga",
+
+    # Savannah Region
+    "Damongo", "Bole", "Salaga", "Buipe", "Sawla", "Daboya", "Tuna", 
+    "Larabanga", "Mankarigu", "Kpandae",
+
+    # North East Region
+    "Nalerigu", "Walewale", "Gambaga", "Chereponi", "Nakpanduri", 
+    "Bunkpurugu", "Yagaba", "Kpasenkpe", "Gbintiri", "Wungu",
+
+    # Upper East Region
+    "Bolgatanga", "Bawku", "Navrongo", "Paga", "Zebilla", "Sandema", 
+    "Bongo", "Tongo", "Garu", "Tempane", "Pusiga", "Fumbisi",
+
+    # Upper West Region
+    "Wa", "Tumu", "Lawra", "Nandom", "Jirapa", "Gwollu", "Nadowli", 
+    "Handuri", "Duori", "Eremon", "Funsi", "Lambussie"
 ]
+
 # ==========================================
 
 app = Flask(__name__)
