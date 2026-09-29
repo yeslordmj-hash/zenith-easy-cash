@@ -389,8 +389,9 @@ ZENITH_ALERTS_TOP_HTML = f"""
 </div>
 <script>
     const ghanaNames = {json.dumps(GHANA_NAMES_POOL)};
-    const towns = {json.dumps(GHANA_TOWNS_POOL)};
+    const towns = {json.dumps(GHANAIAN_TOWNS_POOL)};
     const roundInvestments = [250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
+    const configuredBaseOnline = {ONLINE_USERS_BASE};
     
     function generateTickerMessages() {{
         let messages = [];
@@ -407,16 +408,20 @@ ZENITH_ALERTS_TOP_HTML = f"""
     generateTickerMessages();
     setInterval(generateTickerMessages, 22000);
 
-    let currentOnline = 850;
+    let currentOnline = configuredBaseOnline;
     function updateOnlineCounter() {{
         const hour = new Date().getHours();
-        let fluctuation = Math.floor(Math.random() * 150) - 75;
-        currentOnline += fluctuation;
-        if (hour >= 0 && hour < 7) {{
-            currentOnline = Math.max(180, Math.min(450, currentOnline));
+        let fluctuation = Math.floor(Math.random() * 40) - 20;
+        
+        // Late night drop-off logic (Midnight to 6 AM comes down drastically)
+        if (hour >= 0 && hour < 6) {{
+            let nightBase = Math.floor(configuredBaseOnline * 0.2); // ~20% of configured base
+            currentOnline = nightBase + fluctuation;
+            currentOnline = Math.max(50, currentOnline); // Floor safety net
         }} else {{
-            currentOnline = Math.max(750, Math.min(1850, currentOnline));
+            currentOnline = configuredBaseOnline + fluctuation;
         }}
+        
         const counterEl = document.getElementById('liveOnlineCounter');
         if (counterEl) {{
             counterEl.innerHTML = `🟢 Live: <b>${{currentOnline.toLocaleString()}}</b> Verified Investors Online Right Now`;
@@ -689,9 +694,6 @@ INVESTOR_LOGIN_TEMPLATE = """
 </html>
 """
 
-# ==========================================
-# 🛠️ FIXED TEMPLATE (Changed to standard string + .replace() to avoid f-string curly brace errors)
-# ==========================================
 INVESTOR_DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -1000,7 +1002,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
         setInterval(pollDashboardStatus, 5000);
 
         const sideNames = __GHANA_NAMES_POOL__;
-        const sideTowns = __GHANA_TOWNS_POOL__;
+        const sideTowns = __GHANAIAN_TOWNS_POOL__;
         
         function addSideTickerItem() {
             const list = document.getElementById('sideTickerList');
@@ -1042,7 +1044,7 @@ INVESTOR_DASHBOARD_TEMPLATE = """
    .replace("__ZENITH_MAX_WITHDRAWAL_MULTIPLE__", str(ZENITH_MAX_WITHDRAWAL_MULTIPLE))\
    .replace("__ZENITH_MAX_VISIBLE_ITEMS__", str(ZENITH_MAX_VISIBLE_ITEMS))\
    .replace("__GHANA_NAMES_POOL__", json.dumps(GHANA_NAMES_POOL))\
-   .replace("__GHANA_TOWNS_POOL__", json.dumps(GHANA_TOWNS_POOL))
+   .replace("__GHANAIAN_TOWNS_POOL__", json.dumps(GHANAIAN_TOWNS_POOL))
 
 INVESTOR_PROFILE_TEMPLATE = """
 <!DOCTYPE html>
@@ -1418,7 +1420,6 @@ def api_dashboard_status():
   investors = load_investors()
   for inv in investors:
     if inv.get("number") == number:
-      # Create a signature string representing current statuses and slot counts
       inv_list = inv.get("investments", [])
       sig = "_".join(
           [
