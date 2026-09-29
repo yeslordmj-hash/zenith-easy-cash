@@ -33,7 +33,7 @@ COMPANY_ABOUT_TEXT = (
     "Zenith Easy Cash Ghana is a premier online investment and empowerment platform "
     "dedicated to financial growth across Ghana. We connect smart investors with high-yield "
     "opportunities, ensuring transparent 50% profit returns within 7 days backed by secure "
-    "Mobile Money (MoMo) verification."
+    "Mobile Money (MoMo) or Bank verification."
 )
 
 # Zenith Side Ticker Withdrawal Adjustments (Adjust these values anytime)
@@ -435,6 +435,9 @@ HTML_TEMPLATE = """
         .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
         h2, h3 { color: #028a0f; text-align: center; }
         
+        .about-company-card { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 5px solid #0284c7; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        .about-company-card h4 { margin: 0 0 6px 0; color: #0369a1; font-size: 14px; }
+
         .process-guide { background: #111827; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #22c55e; }
         .process-guide h4 { color: #4ade80; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
         .process-steps { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
@@ -465,6 +468,11 @@ HTML_TEMPLATE = """
         {{ zenith_alerts_top_html|safe }}
         <h2>Zenith Easy Cash Ghana</h2>
         <h3>Online Investor Registration & Portal</h3>
+
+        <div class="about-company-card">
+            <h4>ℹ️ About Our Company</h4>
+            <p style="margin:0;">{{ company_about }}</p>
+        </div>
 
         <div class="process-guide">
             <h4>📋 Simple Registration & Investment Process</h4>
@@ -1355,6 +1363,7 @@ def index():
       settings=settings,
       admin_telegram_link=ADMIN_TELEGRAM_LINK,
       zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
+      company_about=COMPANY_ABOUT_TEXT,
   )
 
 
